@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>资源查询插件管理</title>
+  <script src="/api/plugin/page/bridge-sdk.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -75,9 +76,6 @@
       margin-bottom: 12px;
     }
 
-    .account-detail-item { display: flex; align-items: center; gap: 6px; }
-    .account-detail-label { color: #999; }
-
     .account-actions { display: flex; gap: 8px; }
 
     /* Buttons */
@@ -144,16 +142,11 @@
     .modal-title { font-size: 18px; font-weight: 600; }
 
     .modal-close {
-      width: 32px;
-      height: 32px;
-      border: none;
-      background: none;
-      font-size: 20px;
-      cursor: pointer;
+      width: 32px; height: 32px;
+      border: none; background: none;
+      font-size: 20px; cursor: pointer;
       border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
 
     .modal-close:hover { background: #f5f5f5; }
@@ -169,18 +162,12 @@
     }
 
     /* Form */
-    .form-section {
-      margin-bottom: 24px;
-    }
-
+    .form-section { margin-bottom: 24px; }
     .form-section:last-child { margin-bottom: 0; }
 
     .form-section-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #1976d2;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
+      font-size: 14px; font-weight: 600; color: #1976d2;
+      margin-bottom: 16px; padding-bottom: 8px;
       border-bottom: 1px solid #e3f2fd;
     }
 
@@ -190,19 +177,10 @@
       gap: 16px;
     }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group.full-width { grid-column: 1 / -1; }
 
-    .form-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #555;
-    }
+    .form-label { font-size: 13px; font-weight: 500; color: #555; }
 
     .form-input, .form-select, .form-textarea {
       padding: 10px 12px;
@@ -213,91 +191,54 @@
     }
 
     .form-input:focus, .form-select:focus, .form-textarea:focus {
-      outline: none;
-      border-color: #1976d2;
+      outline: none; border-color: #1976d2;
     }
 
     .form-textarea {
       font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 13px;
-      line-height: 1.5;
-      resize: vertical;
+      font-size: 13px; line-height: 1.5; resize: vertical;
     }
 
-    .form-hint {
-      font-size: 12px;
-      color: #888;
-    }
+    .form-hint { font-size: 12px; color: #888; }
 
-    /* Template Editor in Modal */
-    .template-editor-container {
-      display: flex;
-      gap: 12px;
-    }
-
+    /* Template Editor */
+    .template-editor-container { display: flex; gap: 12px; }
     .template-editor-container .editor-area { flex: 1; }
-
     .template-editor-container .preview-area { flex: 1; }
 
     .template-preview {
-      padding: 12px;
-      border: 1px solid #eee;
-      border-radius: 6px;
-      font-size: 13px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      background: #fafafa;
-      min-height: 150px;
+      padding: 12px; border: 1px solid #eee; border-radius: 6px;
+      font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+      background: #fafafa; min-height: 150px;
     }
 
-    .variable-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
+    .variable-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
     .variable-tag {
-      padding: 3px 8px;
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: monospace;
-      cursor: pointer;
-      transition: all 0.15s;
+      padding: 3px 8px; background: #f5f5f5; border: 1px solid #ddd;
+      border-radius: 4px; font-size: 11px; font-family: monospace;
+      cursor: pointer; transition: all 0.15s;
     }
 
     .variable-tag:hover { background: #1976d2; color: white; border-color: #1976d2; }
 
     /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #999;
-    }
-
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
     .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
-
     .empty-state-text { font-size: 14px; }
 
     /* Status */
     .status-toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 2000;
-      transform: translateY(100px);
-      opacity: 0;
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 12px 20px; border-radius: 8px; font-size: 14px;
+      z-index: 2000; transform: translateY(100px); opacity: 0;
       transition: all 0.3s;
     }
-
     .status-toast.show { transform: translateY(0); opacity: 1; }
     .status-toast.success { background: #2e7d32; color: white; }
     .status-toast.error { background: #c62828; color: white; }
+
+    .loading { text-align: center; padding: 40px; color: #888; }
   </style>
 </head>
 <body>
@@ -309,12 +250,8 @@
         <span class="panel-title">账号列表</span>
         <button class="btn btn-primary" onclick="openAddModal()">+ 添加账号</button>
       </div>
-
       <div class="account-list" id="account-list">
-        <div class="empty-state">
-          <div class="empty-state-icon">📭</div>
-          <div class="empty-state-text">暂无账号，点击上方按钮添加</div>
-        </div>
+        <div class="loading">加载中...</div>
       </div>
     </div>
   </div>
@@ -326,9 +263,7 @@
         <span class="modal-title" id="modal-title">添加账号</span>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
-
       <div class="modal-body">
-        <!-- 基本信息 -->
         <div class="form-section">
           <div class="form-section-title">基本信息</div>
           <div class="form-grid">
@@ -341,12 +276,11 @@
             </div>
             <div class="form-group">
               <label class="form-label">显示名称</label>
-              <input class="form-input" id="field-name" placeholder="自定义名称，留空显示账号">
+              <input class="form-input" id="field-name" placeholder="自定义名称">
             </div>
           </div>
         </div>
 
-        <!-- MiMo 专属字段 -->
         <div class="form-section" id="section-mimo">
           <div class="form-section-title">MiMo 账号信息</div>
           <div class="form-grid">
@@ -356,47 +290,33 @@
             </div>
             <div class="form-group">
               <label class="form-label">密码</label>
-              <input class="form-input" id="field-password" type="password" placeholder="小米账号密码">
+              <input class="form-input" id="field-password" type="password">
             </div>
           </div>
         </div>
 
-        <!-- 华数专属字段 -->
         <div class="form-section" id="section-wasu" style="display:none">
           <div class="form-section-title">华数广电账号信息</div>
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">手机号 *</label>
-              <input class="form-input" id="field-phone" placeholder="华数广电绑定的手机号">
+              <input class="form-input" id="field-phone">
             </div>
             <div class="form-group">
               <label class="form-label">User Key *</label>
-              <input class="form-input" id="field-user-key" placeholder="从华数广电小程序获取">
+              <input class="form-input" id="field-user-key">
             </div>
             <div class="form-group">
               <label class="form-label">Token *</label>
-              <input class="form-input" id="field-token" placeholder="从华数广电小程序获取">
+              <input class="form-input" id="field-token">
             </div>
             <div class="form-group">
               <label class="form-label">签名</label>
-              <input class="form-input" id="field-sign" placeholder="可选">
+              <input class="form-input" id="field-sign">
             </div>
           </div>
         </div>
 
-        <!-- 高级配置 -->
-        <div class="form-section">
-          <div class="form-section-title">高级配置</div>
-          <div class="form-grid">
-            <div class="form-group full-width">
-              <label class="form-label">User-Agent</label>
-              <input class="form-input" id="field-ua" placeholder="留空使用默认值">
-              <div class="form-hint">留空将使用平台默认的 User-Agent</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 消息模板 -->
         <div class="form-section">
           <div class="form-section-title">消息模板</div>
           <div class="template-editor-container">
@@ -409,10 +329,11 @@
               <div class="template-preview" id="template-preview"></div>
             </div>
           </div>
-          <div class="form-hint" style="margin-top:8px">点击变量标签插入，留空使用默认模板</div>
+          <div style="margin-top:8px">
+            <button class="btn btn-secondary btn-sm" onclick="resetTemplate()">恢复默认模板</button>
+          </div>
         </div>
       </div>
-
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal()">取消</button>
         <button class="btn btn-primary" onclick="saveAccount()">保存</button>
@@ -420,11 +341,11 @@
     </div>
   </div>
 
-  <!-- 状态提示 -->
   <div class="status-toast" id="toast"></div>
 
   <script>
-    // State
+    const bridge = window.AstrBotPluginPage;
+
     let accounts = [];
     let editingIndex = -1;
 
@@ -451,27 +372,8 @@
     };
 
     const VARIABLES = {
-      mimo: [
-        { name: 'label', desc: '账号名称' },
-        { name: 'balance', desc: '余额' },
-        { name: 'gift_balance', desc: '赠送余额' },
-        { name: 'input_token', desc: '输入Token' },
-        { name: 'output_token', desc: '输出Token' },
-        { name: 'cache_token', desc: '缓存Token' },
-        { name: 'monthly_cost', desc: '本月费用' },
-        { name: 'total_cost', desc: '累计费用' }
-      ],
-      wasu: [
-        { name: 'label', desc: '账号名称' },
-        { name: 'balance', desc: '账户余额' },
-        { name: 'month_fee', desc: '当月话费' },
-        { name: 'arrears', desc: '欠费' },
-        { name: 'total_used', desc: '本月累计使用' },
-        { name: 'total', desc: '总流量' },
-        { name: 'used', desc: '已用流量' },
-        { name: 'remain', desc: '剩余流量' },
-        { name: 'query_time', desc: '查询时间' }
-      ]
+      mimo: ['label', 'balance', 'gift_balance', 'input_token', 'output_token', 'cache_token', 'monthly_cost', 'total_cost'],
+      wasu: ['label', 'balance', 'month_fee', 'arrears', 'total_used', 'total', 'used', 'remain', 'query_time']
     };
 
     const SAMPLE_DATA = {
@@ -480,27 +382,26 @@
     };
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', loadAccounts);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await bridge.ready();
+      loadAccounts();
+    });
 
-    // Load accounts
     async function loadAccounts() {
       try {
-        const resp = await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config');
-        const data = await resp.json();
-        // API 返回 data.config.accounts
-        accounts = data.data?.config?.accounts || data.data?.accounts || [];
+        const result = await bridge.apiGet('config');
+        accounts = result.accounts || [];
         renderAccounts();
       } catch (e) {
         console.error('加载失败:', e);
-        showToast('加载配置失败', 'error');
+        document.getElementById('account-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">加载失败</div></div>';
       }
     }
 
-    // Render account list
     function renderAccounts() {
       const list = document.getElementById('account-list');
 
-      if (accounts.length === 0) {
+      if (!accounts || accounts.length === 0) {
         list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">暂无账号，点击上方按钮添加</div></div>';
         return;
       }
@@ -513,32 +414,14 @@
           </div>
           <div class="account-details">
             ${acc.platform === 'mimo' ? `
-              <div class="account-detail-item">
-                <span class="account-detail-label">账号:</span>
-                <span>${acc.account || '-'}</span>
-              </div>
-              <div class="account-detail-item">
-                <span class="account-detail-label">userId:</span>
-                <span>${acc.userId || '-'}</span>
-              </div>
-              <div class="account-detail-item">
-                <span class="account-detail-label">serviceToken:</span>
-                <span>${acc.serviceToken ? '✅' : '❌'}</span>
-              </div>
+              <div>账号: ${acc.account || '-'}</div>
+              <div>userId: ${acc.userId || '-'}</div>
+              <div>serviceToken: ${acc.serviceToken ? '✅' : '❌'}</div>
             ` : `
-              <div class="account-detail-item">
-                <span class="account-detail-label">手机号:</span>
-                <span>${acc.phone || '-'}</span>
-              </div>
-              <div class="account-detail-item">
-                <span class="account-detail-label">User Key:</span>
-                <span>${acc.user_key ? '✅' : '❌'}</span>
-              </div>
+              <div>手机号: ${acc.phone || '-'}</div>
+              <div>User Key: ${acc.user_key ? '✅' : '❌'}</div>
             `}
-            <div class="account-detail-item">
-              <span class="account-detail-label">模板:</span>
-              <span>${acc.template ? '✅ 自定义' : '📄 默认'}</span>
-            </div>
+            <div>模板: ${acc.template ? '📝 自定义' : '📄 默认'}</div>
           </div>
           <div class="account-actions">
             <button class="btn btn-secondary btn-sm" onclick="editAccount(${i})">✏️ 编辑</button>
@@ -548,7 +431,6 @@
       `).join('');
     }
 
-    // Modal functions
     function openAddModal() {
       editingIndex = -1;
       document.getElementById('modal-title').textContent = '添加账号';
@@ -569,7 +451,6 @@
       document.getElementById('field-user-key').value = acc.user_key || '';
       document.getElementById('field-token').value = acc.token || '';
       document.getElementById('field-sign').value = acc.sign || '';
-      document.getElementById('field-ua').value = acc.ua || '';
       document.getElementById('field-template').value = acc.template || '';
 
       togglePlatformFields();
@@ -578,13 +459,8 @@
       openModal();
     }
 
-    function openModal() {
-      document.getElementById('modal').classList.add('active');
-    }
-
-    function closeModal() {
-      document.getElementById('modal').classList.remove('active');
-    }
+    function openModal() { document.getElementById('modal').classList.add('active'); }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
 
     function resetForm() {
       document.getElementById('field-platform').value = 'mimo';
@@ -595,7 +471,6 @@
       document.getElementById('field-user-key').value = '';
       document.getElementById('field-token').value = '';
       document.getElementById('field-sign').value = '';
-      document.getElementById('field-ua').value = '';
       document.getElementById('field-template').value = '';
       togglePlatformFields();
       updateVariableTags();
@@ -610,20 +485,18 @@
       updateTemplatePreview();
     }
 
-    // Template functions
     function updateVariableTags() {
       const platform = document.getElementById('field-platform').value;
       const tags = document.getElementById('variable-tags');
       tags.innerHTML = VARIABLES[platform].map(v =>
-        `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="${v.desc}">{${v.name}}</span>`
+        `<span class="variable-tag" onclick="insertVariable('${v}')">{${v}}</span>`
       ).join('');
     }
 
     function insertVariable(name) {
       const textarea = document.getElementById('field-template');
       const pos = textarea.selectionStart;
-      const text = textarea.value;
-      textarea.value = text.slice(0, pos) + `{${name}}` + text.slice(pos);
+      textarea.value = textarea.value.slice(0, pos) + `{${name}}` + textarea.value.slice(pos);
       textarea.focus();
       updateTemplatePreview();
     }
@@ -638,29 +511,33 @@
       for (const [key, value] of Object.entries(sample)) {
         result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
       }
-
       document.getElementById('template-preview').textContent = result;
     }
 
-    // Save account
+    function resetTemplate() {
+      const platform = document.getElementById('field-platform').value;
+      document.getElementById('field-template').value = '';
+      updateTemplatePreview();
+      showToast('已恢复为默认模板', 'success');
+    }
+
     async function saveAccount() {
       const platform = document.getElementById('field-platform').value;
-
       const acc = {
         platform,
         name: document.getElementById('field-name').value,
-        ua: document.getElementById('field-ua').value,
+        ua: '',
         template: document.getElementById('field-template').value,
       };
 
       if (platform === 'mimo') {
         acc.account = document.getElementById('field-account').value;
         acc.password = document.getElementById('field-password').value;
-        // 保留已有凭据
         if (editingIndex >= 0) {
           acc.userId = accounts[editingIndex].userId || '';
           acc.passToken = accounts[editingIndex].passToken || '';
           acc.serviceToken = accounts[editingIndex].serviceToken || '';
+          acc.device_id = accounts[editingIndex].device_id || '';
         }
       } else {
         acc.phone = document.getElementById('field-phone').value;
@@ -680,35 +557,24 @@
       showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加', 'success');
     }
 
-    // Delete account
     async function deleteAccount(index) {
-      if (!confirm(`确定删除账号 "${accounts[index].name || accounts[index].account || accounts[index].phone}"？`)) return;
+      const name = accounts[index].name || accounts[index].account || accounts[index].phone;
+      if (!confirm(`确定删除账号 "${name}"？`)) return;
 
       accounts.splice(index, 1);
       await saveAccounts();
       showToast('账号已删除', 'success');
     }
 
-    // Save to server
     async function saveAccounts() {
       try {
-        const resp = await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accounts })
-        });
-
-        if (resp.ok) {
-          renderAccounts();
-        } else {
-          showToast('保存失败', 'error');
-        }
+        await bridge.apiPost('config', { accounts });
+        renderAccounts();
       } catch (e) {
         showToast('保存失败: ' + e.message, 'error');
       }
     }
 
-    // Toast notification
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -716,7 +582,6 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Template input listener
     document.getElementById('field-template')?.addEventListener('input', updateTemplatePreview);
   </script>
 </body>
