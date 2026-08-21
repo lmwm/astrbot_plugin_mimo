@@ -8,7 +8,7 @@ from urllib.request import Request
 
 from .http_utils import inject_cookie, new_opener, parse_resp
 
-__ACCOUNT_BASE = "https://account.xiaomi.com"
+_ACCOUNT_BASE = "https://account.xiaomi.com"
 
 
 class OtpRequired(Exception):
