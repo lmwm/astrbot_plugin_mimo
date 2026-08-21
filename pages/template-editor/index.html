@@ -14,56 +14,38 @@
       color: #333;
     }
 
-    .container { max-width: 1400px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; }
 
     h1 { font-size: 24px; margin-bottom: 20px; color: #1a1a1a; }
 
-    /* Tabs */
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-
-    .tab {
-      padding: 10px 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-
-    .tab:hover { border-color: #1976d2; }
-    .tab.active { background: #1976d2; color: white; border-color: #1976d2; }
-
-    /* Panels */
+    /* Panel */
     .panel {
       background: white;
       border-radius: 12px;
       padding: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
     }
 
-    .panel-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #1976d2;
+    .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 20px;
     }
+
+    .panel-title { font-size: 18px; font-weight: 600; }
 
     /* Account List */
     .account-list { display: flex; flex-direction: column; gap: 12px; }
 
     .account-card {
-      border: 1px solid #eee;
-      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
       padding: 16px;
       transition: all 0.2s;
     }
 
-    .account-card:hover { border-color: #1976d2; }
+    .account-card:hover { border-color: #1976d2; box-shadow: 0 2px 8px rgba(25,118,210,0.1); }
 
     .account-header {
       display: flex;
@@ -72,43 +54,147 @@
       margin-bottom: 12px;
     }
 
-    .account-name {
-      font-weight: 600;
-      font-size: 16px;
-    }
+    .account-name { font-weight: 600; font-size: 16px; }
 
-    .account-platform {
-      padding: 4px 8px;
-      border-radius: 4px;
+    .account-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
       font-size: 12px;
       font-weight: 500;
     }
 
-    .platform-mimo { background: #e3f2fd; color: #1565c0; }
-    .platform-wasu { background: #e8f5e9; color: #2e7d32; }
+    .badge-mimo { background: #e3f2fd; color: #1565c0; }
+    .badge-wasu { background: #e8f5e9; color: #2e7d32; }
 
-    .account-info {
+    .account-details {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 8px;
       font-size: 13px;
       color: #666;
+      margin-bottom: 12px;
     }
 
-    .account-actions {
+    .account-detail-item { display: flex; align-items: center; gap: 6px; }
+    .account-detail-label { color: #999; }
+
+    .account-actions { display: flex; gap: 8px; }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary { background: #1976d2; color: white; }
+    .btn-primary:hover { background: #1565c0; }
+
+    .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+    .btn-secondary:hover { background: #eee; }
+
+    .btn-danger { background: #fff; color: #c62828; border: 1px solid #ffcdd2; }
+    .btn-danger:hover { background: #ffebee; }
+
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
       display: flex;
-      gap: 8px;
-      margin-top: 12px;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
     }
 
-    /* Forms */
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal { transform: translateY(0); }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title { font-size: 18px; font-weight: 600; }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover { background: #f5f5f5; }
+
+    .modal-body { padding: 24px; }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Form */
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .form-section:last-child { margin-bottom: 0; }
+
+    .form-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e3f2fd;
+    }
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
     .form-group.full-width { grid-column: 1 / -1; }
 
@@ -132,8 +218,9 @@
     }
 
     .form-textarea {
-      min-height: 200px;
       font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      line-height: 1.5;
       resize: vertical;
     }
 
@@ -142,263 +229,204 @@
       color: #888;
     }
 
-    /* Buttons */
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary { background: #1976d2; color: white; }
-    .btn-primary:hover { background: #1565c0; }
-
-    .btn-success { background: #2e7d32; color: white; }
-    .btn-success:hover { background: #1b5e20; }
-
-    .btn-danger { background: #c62828; color: white; }
-    .btn-danger:hover { background: #b71c1c; }
-
-    .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-    .btn-secondary:hover { background: #eee; }
-
-    .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
+    /* Template Editor in Modal */
+    .template-editor-container {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
+      gap: 12px;
     }
 
-    .modal {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
+    .template-editor-container .editor-area { flex: 1; }
 
-    .modal-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
+    .template-editor-container .preview-area { flex: 1; }
 
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    /* Status */
-    .status {
-      padding: 10px 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .status.show { display: block; }
-    .status.success { background: #e8f5e9; color: #2e7d32; }
-    .status.error { background: #ffebee; color: #c62828; }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #888;
-    }
-
-    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
-
-    /* Template Editor */
-    .editor-panel { display: flex; gap: 20px; }
-
-    .editor-section { flex: 1; }
-
-    .preview-section { flex: 1; }
-
-    .preview {
-      width: 100%;
-      min-height: 300px;
-      padding: 16px;
+    .template-preview {
+      padding: 12px;
       border: 1px solid #eee;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.8;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.6;
       white-space: pre-wrap;
       background: #fafafa;
+      min-height: 150px;
     }
 
-    .variables {
-      margin-top: 16px;
-      padding: 12px;
-      background: #f0f7ff;
-      border-radius: 8px;
-    }
-
-    .variable-list {
+    .variable-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       margin-top: 8px;
     }
 
-    .variable {
-      padding: 4px 8px;
-      background: white;
+    .variable-tag {
+      padding: 3px 8px;
+      background: #f5f5f5;
       border: 1px solid #ddd;
       border-radius: 4px;
-      font-family: monospace;
       font-size: 11px;
+      font-family: monospace;
       cursor: pointer;
+      transition: all 0.15s;
     }
 
-    .variable:hover { background: #1976d2; color: white; border-color: #1976d2; }
+    .variable-tag:hover { background: #1976d2; color: white; border-color: #1976d2; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+
+    .empty-state-text { font-size: 14px; }
+
+    /* Status */
+    .status-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 2000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .status-toast.show { transform: translateY(0); opacity: 1; }
+    .status-toast.success { background: #2e7d32; color: white; }
+    .status-toast.error { background: #c62828; color: white; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🔧 资源查询插件管理</h1>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="accounts">账号管理</div>
-      <div class="tab" data-tab="templates">消息模板</div>
-    </div>
-
-    <!-- 账号管理面板 -->
-    <div class="panel" id="accounts-panel">
-      <div class="panel-title">
-        <span>账号列表</span>
-        <button class="btn btn-primary" onclick="showAddModal()">+ 添加账号</button>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">账号列表</span>
+        <button class="btn btn-primary" onclick="openAddModal()">+ 添加账号</button>
       </div>
-      <div id="status-accounts" class="status"></div>
+
       <div class="account-list" id="account-list">
         <div class="empty-state">
           <div class="empty-state-icon">📭</div>
-          <div>暂无账号，点击上方按钮添加</div>
+          <div class="empty-state-text">暂无账号，点击上方按钮添加</div>
         </div>
-      </div>
-    </div>
-
-    <!-- 消息模板面板 -->
-    <div class="panel" id="templates-panel" style="display:none">
-      <div class="panel-title">
-        <span>消息模板编辑</span>
-        <div>
-          <button class="btn btn-secondary btn-sm" onclick="resetTemplate()">重置为默认</button>
-          <button class="btn btn-primary btn-sm" onclick="saveTemplate()">保存模板</button>
-        </div>
-      </div>
-      <div id="status-template" class="status"></div>
-
-      <div class="tabs" style="margin-bottom:16px">
-        <div class="tab active" data-tab="mimo" onclick="switchTemplateTab('mimo')">MiMo 模板</div>
-        <div class="tab" data-tab="wasu" onclick="switchTemplateTab('wasu')">华数广电模板</div>
-      </div>
-
-      <div class="editor-panel">
-        <div class="editor-section">
-          <textarea class="form-textarea" id="template-editor" style="min-height:350px;background:#1e1e1e;color:#d4d4d4"></textarea>
-          <div style="font-size:12px;color:#888;margin-top:8px">点击下方变量可快速插入</div>
-        </div>
-        <div class="preview-section">
-          <div style="font-size:14px;font-weight:500;margin-bottom:8px">预览效果</div>
-          <div class="preview" id="template-preview"></div>
-        </div>
-      </div>
-
-      <div class="variables">
-        <div style="font-size:13px;font-weight:500">可用变量</div>
-        <div class="variable-list" id="variable-list"></div>
       </div>
     </div>
   </div>
 
-  <!-- 添加/编辑账号弹窗 -->
-  <div class="modal-overlay" id="account-modal" style="display:none" onclick="closeModal(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-title" id="modal-title">添加账号</div>
+  <!-- 账号编辑弹窗 -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title">添加账号</span>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">账号类型</label>
-          <select class="form-select" id="account-platform" onchange="updateFormFields()">
-            <option value="mimo">小米 MiMo</option>
-            <option value="wasu">华数广电</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">账号名称</label>
-          <input class="form-input" id="account-name" placeholder="自定义显示名称">
-        </div>
-
-        <!-- MiMo 字段 -->
-        <div id="mimo-fields">
-          <div class="form-group">
-            <label class="form-label">小米账号 *</label>
-            <input class="form-input" id="account-account" placeholder="手机号或邮箱">
-          </div>
-          <div class="form-group">
-            <label class="form-label">密码</label>
-            <input class="form-input" id="account-password" type="password" placeholder="小米账号密码">
+      <div class="modal-body">
+        <!-- 基本信息 -->
+        <div class="form-section">
+          <div class="form-section-title">基本信息</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">账号类型 *</label>
+              <select class="form-select" id="field-platform" onchange="togglePlatformFields()">
+                <option value="mimo">小米 MiMo</option>
+                <option value="wasu">华数广电</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">显示名称</label>
+              <input class="form-input" id="field-name" placeholder="自定义名称，留空显示账号">
+            </div>
           </div>
         </div>
 
-        <!-- 华数字段 -->
-        <div id="wasu-fields" style="display:none">
-          <div class="form-group">
-            <label class="form-label">手机号 *</label>
-            <input class="form-input" id="account-phone" placeholder="华数广电绑定的手机号">
-          </div>
-          <div class="form-group">
-            <label class="form-label">User Key *</label>
-            <input class="form-input" id="account-user-key" placeholder="从华数广电小程序获取">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Token *</label>
-            <input class="form-input" id="account-token" placeholder="从华数广电小程序获取">
-          </div>
-          <div class="form-group">
-            <label class="form-label">签名</label>
-            <input class="form-input" id="account-sign" placeholder="可选">
+        <!-- MiMo 专属字段 -->
+        <div class="form-section" id="section-mimo">
+          <div class="form-section-title">MiMo 账号信息</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">小米账号 *</label>
+              <input class="form-input" id="field-account" placeholder="手机号或邮箱">
+            </div>
+            <div class="form-group">
+              <label class="form-label">密码</label>
+              <input class="form-input" id="field-password" type="password" placeholder="小米账号密码">
+            </div>
           </div>
         </div>
 
-        <div class="form-group full-width">
-          <label class="form-label">User-Agent</label>
-          <input class="form-input" id="account-ua" placeholder="留空使用默认值">
-          <div class="form-hint">留空将使用默认 User-Agent</div>
+        <!-- 华数专属字段 -->
+        <div class="form-section" id="section-wasu" style="display:none">
+          <div class="form-section-title">华数广电账号信息</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">手机号 *</label>
+              <input class="form-input" id="field-phone" placeholder="华数广电绑定的手机号">
+            </div>
+            <div class="form-group">
+              <label class="form-label">User Key *</label>
+              <input class="form-input" id="field-user-key" placeholder="从华数广电小程序获取">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Token *</label>
+              <input class="form-input" id="field-token" placeholder="从华数广电小程序获取">
+            </div>
+            <div class="form-group">
+              <label class="form-label">签名</label>
+              <input class="form-input" id="field-sign" placeholder="可选">
+            </div>
+          </div>
+        </div>
+
+        <!-- 高级配置 -->
+        <div class="form-section">
+          <div class="form-section-title">高级配置</div>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">User-Agent</label>
+              <input class="form-input" id="field-ua" placeholder="留空使用默认值">
+              <div class="form-hint">留空将使用平台默认的 User-Agent</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 消息模板 -->
+        <div class="form-section">
+          <div class="form-section-title">消息模板</div>
+          <div class="template-editor-container">
+            <div class="editor-area">
+              <textarea class="form-textarea" id="field-template" rows="8" placeholder="留空使用默认模板"></textarea>
+              <div class="variable-tags" id="variable-tags"></div>
+            </div>
+            <div class="preview-area">
+              <div style="font-size:12px;color:#888;margin-bottom:6px">预览效果</div>
+              <div class="template-preview" id="template-preview"></div>
+            </div>
+          </div>
+          <div class="form-hint" style="margin-top:8px">点击变量标签插入，留空使用默认模板</div>
         </div>
       </div>
 
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="hideModal()">取消</button>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
         <button class="btn btn-primary" onclick="saveAccount()">保存</button>
       </div>
     </div>
   </div>
 
+  <!-- 状态提示 -->
+  <div class="status-toast" id="toast"></div>
+
   <script>
     // State
     let accounts = [];
     let editingIndex = -1;
-    let currentTemplateTab = 'mimo';
 
     const DEFAULT_TEMPLATES = {
       mimo: `📋 {label}
@@ -423,8 +451,27 @@
     };
 
     const VARIABLES = {
-      mimo: ['label', 'balance', 'gift_balance', 'input_token', 'output_token', 'cache_token', 'monthly_cost', 'total_cost'],
-      wasu: ['label', 'balance', 'month_fee', 'arrears', 'total_used', 'total', 'used', 'remain', 'query_time']
+      mimo: [
+        { name: 'label', desc: '账号名称' },
+        { name: 'balance', desc: '余额' },
+        { name: 'gift_balance', desc: '赠送余额' },
+        { name: 'input_token', desc: '输入Token' },
+        { name: 'output_token', desc: '输出Token' },
+        { name: 'cache_token', desc: '缓存Token' },
+        { name: 'monthly_cost', desc: '本月费用' },
+        { name: 'total_cost', desc: '累计费用' }
+      ],
+      wasu: [
+        { name: 'label', desc: '账号名称' },
+        { name: 'balance', desc: '账户余额' },
+        { name: 'month_fee', desc: '当月话费' },
+        { name: 'arrears', desc: '欠费' },
+        { name: 'total_used', desc: '本月累计使用' },
+        { name: 'total', desc: '总流量' },
+        { name: 'used', desc: '已用流量' },
+        { name: 'remain', desc: '剩余流量' },
+        { name: 'query_time', desc: '查询时间' }
+      ]
     };
 
     const SAMPLE_DATA = {
@@ -433,49 +480,27 @@
     };
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      loadAccounts();
-      setupTabs();
-      updateVariableList();
-    });
+    document.addEventListener('DOMContentLoaded', loadAccounts);
 
-    function setupTabs() {
-      document.querySelectorAll('.tabs .tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          const panel = tab.dataset.tab;
-          document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-
-          if (panel === 'accounts') {
-            document.getElementById('accounts-panel').style.display = 'block';
-            document.getElementById('templates-panel').style.display = 'none';
-          } else {
-            document.getElementById('accounts-panel').style.display = 'none';
-            document.getElementById('templates-panel').style.display = 'block';
-          }
-        });
-      });
-    }
-
-    // Account Management
+    // Load accounts
     async function loadAccounts() {
       try {
-        const resp = await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config', {
-          headers: { 'Authorization': 'Bearer ' + getToken() }
-        });
+        const resp = await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config');
         const data = await resp.json();
         accounts = data.data?.accounts || [];
         renderAccounts();
       } catch (e) {
         console.error('加载失败:', e);
+        showToast('加载配置失败', 'error');
       }
     }
 
+    // Render account list
     function renderAccounts() {
       const list = document.getElementById('account-list');
 
       if (accounts.length === 0) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div>暂无账号，点击上方按钮添加</div></div>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">暂无账号，点击上方按钮添加</div></div>';
         return;
       }
 
@@ -483,94 +508,163 @@
         <div class="account-card">
           <div class="account-header">
             <span class="account-name">${acc.name || acc.account || acc.phone || '账号' + (i+1)}</span>
-            <span class="account-platform platform-${acc.platform}">${acc.platform === 'mimo' ? 'MiMo' : '华数广电'}</span>
+            <span class="account-badge badge-${acc.platform}">${acc.platform === 'mimo' ? 'MiMo' : '华数广电'}</span>
           </div>
-          <div class="account-info">
+          <div class="account-details">
             ${acc.platform === 'mimo' ? `
-              <div>账号: ${acc.account || '-'}</div>
-              <div>userId: ${acc.userId || '-'}</div>
-              <div>serviceToken: ${acc.serviceToken ? '✅ 已获取' : '❌ 未获取'}</div>
+              <div class="account-detail-item">
+                <span class="account-detail-label">账号:</span>
+                <span>${acc.account || '-'}</span>
+              </div>
+              <div class="account-detail-item">
+                <span class="account-detail-label">userId:</span>
+                <span>${acc.userId || '-'}</span>
+              </div>
+              <div class="account-detail-item">
+                <span class="account-detail-label">serviceToken:</span>
+                <span>${acc.serviceToken ? '✅' : '❌'}</span>
+              </div>
             ` : `
-              <div>手机号: ${acc.phone || '-'}</div>
-              <div>User Key: ${acc.user_key ? '✅ 已配置' : '❌ 未配置'}</div>
+              <div class="account-detail-item">
+                <span class="account-detail-label">手机号:</span>
+                <span>${acc.phone || '-'}</span>
+              </div>
+              <div class="account-detail-item">
+                <span class="account-detail-label">User Key:</span>
+                <span>${acc.user_key ? '✅' : '❌'}</span>
+              </div>
             `}
+            <div class="account-detail-item">
+              <span class="account-detail-label">模板:</span>
+              <span>${acc.template ? '✅ 自定义' : '📄 默认'}</span>
+            </div>
           </div>
           <div class="account-actions">
-            <button class="btn btn-secondary btn-sm" onclick="editAccount(${i})">编辑</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteAccount(${i})">删除</button>
+            <button class="btn btn-secondary btn-sm" onclick="editAccount(${i})">✏️ 编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteAccount(${i})">🗑️ 删除</button>
           </div>
         </div>
       `).join('');
     }
 
-    function showAddModal() {
+    // Modal functions
+    function openAddModal() {
       editingIndex = -1;
       document.getElementById('modal-title').textContent = '添加账号';
-      document.getElementById('account-platform').value = 'mimo';
-      document.getElementById('account-name').value = '';
-      document.getElementById('account-account').value = '';
-      document.getElementById('account-password').value = '';
-      document.getElementById('account-phone').value = '';
-      document.getElementById('account-user-key').value = '';
-      document.getElementById('account-token').value = '';
-      document.getElementById('account-sign').value = '';
-      document.getElementById('account-ua').value = '';
-      updateFormFields();
-      document.getElementById('account-modal').style.display = 'flex';
+      resetForm();
+      openModal();
     }
 
     function editAccount(index) {
       editingIndex = index;
       const acc = accounts[index];
       document.getElementById('modal-title').textContent = '编辑账号';
-      document.getElementById('account-platform').value = acc.platform || 'mimo';
-      document.getElementById('account-name').value = acc.name || '';
-      document.getElementById('account-account').value = acc.account || '';
-      document.getElementById('account-password').value = acc.password || '';
-      document.getElementById('account-phone').value = acc.phone || '';
-      document.getElementById('account-user-key').value = acc.user_key || '';
-      document.getElementById('account-token').value = acc.token || '';
-      document.getElementById('account-sign').value = acc.sign || '';
-      document.getElementById('account-ua').value = acc.ua || '';
-      updateFormFields();
-      document.getElementById('account-modal').style.display = 'flex';
+
+      document.getElementById('field-platform').value = acc.platform || 'mimo';
+      document.getElementById('field-name').value = acc.name || '';
+      document.getElementById('field-account').value = acc.account || '';
+      document.getElementById('field-password').value = acc.password || '';
+      document.getElementById('field-phone').value = acc.phone || '';
+      document.getElementById('field-user-key').value = acc.user_key || '';
+      document.getElementById('field-token').value = acc.token || '';
+      document.getElementById('field-sign').value = acc.sign || '';
+      document.getElementById('field-ua').value = acc.ua || '';
+      document.getElementById('field-template').value = acc.template || '';
+
+      togglePlatformFields();
+      updateVariableTags();
+      updateTemplatePreview();
+      openModal();
     }
 
-    function hideModal() {
-      document.getElementById('account-modal').style.display = 'none';
+    function openModal() {
+      document.getElementById('modal').classList.add('active');
     }
 
-    function closeModal(e) {
-      if (e.target === document.getElementById('account-modal')) hideModal();
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
     }
 
-    function updateFormFields() {
-      const platform = document.getElementById('account-platform').value;
-      document.getElementById('mimo-fields').style.display = platform === 'mimo' ? 'block' : 'none';
-      document.getElementById('wasu-fields').style.display = platform === 'wasu' ? 'block' : 'none';
+    function resetForm() {
+      document.getElementById('field-platform').value = 'mimo';
+      document.getElementById('field-name').value = '';
+      document.getElementById('field-account').value = '';
+      document.getElementById('field-password').value = '';
+      document.getElementById('field-phone').value = '';
+      document.getElementById('field-user-key').value = '';
+      document.getElementById('field-token').value = '';
+      document.getElementById('field-sign').value = '';
+      document.getElementById('field-ua').value = '';
+      document.getElementById('field-template').value = '';
+      togglePlatformFields();
+      updateVariableTags();
+      updateTemplatePreview();
     }
 
+    function togglePlatformFields() {
+      const platform = document.getElementById('field-platform').value;
+      document.getElementById('section-mimo').style.display = platform === 'mimo' ? 'block' : 'none';
+      document.getElementById('section-wasu').style.display = platform === 'wasu' ? 'block' : 'none';
+      updateVariableTags();
+      updateTemplatePreview();
+    }
+
+    // Template functions
+    function updateVariableTags() {
+      const platform = document.getElementById('field-platform').value;
+      const tags = document.getElementById('variable-tags');
+      tags.innerHTML = VARIABLES[platform].map(v =>
+        `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="${v.desc}">{${v.name}}</span>`
+      ).join('');
+    }
+
+    function insertVariable(name) {
+      const textarea = document.getElementById('field-template');
+      const pos = textarea.selectionStart;
+      const text = textarea.value;
+      textarea.value = text.slice(0, pos) + `{${name}}` + text.slice(pos);
+      textarea.focus();
+      updateTemplatePreview();
+    }
+
+    function updateTemplatePreview() {
+      const platform = document.getElementById('field-platform').value;
+      const template = document.getElementById('field-template').value || DEFAULT_TEMPLATES[platform];
+      const sample = SAMPLE_DATA[platform];
+
+      let result = template;
+      for (const [key, value] of Object.entries(sample)) {
+        result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+      }
+
+      document.getElementById('template-preview').textContent = result;
+    }
+
+    // Save account
     async function saveAccount() {
-      const platform = document.getElementById('account-platform').value;
+      const platform = document.getElementById('field-platform').value;
+
       const acc = {
         platform,
-        name: document.getElementById('account-name').value,
-        ua: document.getElementById('account-ua').value,
+        name: document.getElementById('field-name').value,
+        ua: document.getElementById('field-ua').value,
+        template: document.getElementById('field-template').value,
       };
 
       if (platform === 'mimo') {
-        acc.account = document.getElementById('account-account').value;
-        acc.password = document.getElementById('account-password').value;
+        acc.account = document.getElementById('field-account').value;
+        acc.password = document.getElementById('field-password').value;
+        // 保留已有凭据
         if (editingIndex >= 0) {
           acc.userId = accounts[editingIndex].userId || '';
           acc.passToken = accounts[editingIndex].passToken || '';
           acc.serviceToken = accounts[editingIndex].serviceToken || '';
         }
       } else {
-        acc.phone = document.getElementById('account-phone').value;
-        acc.user_key = document.getElementById('account-user-key').value;
-        acc.token = document.getElementById('account-token').value;
-        acc.sign = document.getElementById('account-sign').value;
+        acc.phone = document.getElementById('field-phone').value;
+        acc.user_key = document.getElementById('field-user-key').value;
+        acc.token = document.getElementById('field-token').value;
+        acc.sign = document.getElementById('field-sign').value;
       }
 
       if (editingIndex >= 0) {
@@ -580,108 +674,48 @@
       }
 
       await saveAccounts();
-      hideModal();
-      showStatus('accounts', '✅ 账号保存成功');
+      closeModal();
+      showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加', 'success');
     }
 
+    // Delete account
     async function deleteAccount(index) {
-      if (!confirm('确定删除此账号？')) return;
+      if (!confirm(`确定删除账号 "${accounts[index].name || accounts[index].account || accounts[index].phone}"？`)) return;
+
       accounts.splice(index, 1);
       await saveAccounts();
-      showStatus('accounts', '✅ 账号已删除');
+      showToast('账号已删除', 'success');
     }
 
+    // Save to server
     async function saveAccounts() {
       try {
-        await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config', {
+        const resp = await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config', {
           method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + getToken(),
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accounts })
         });
-        renderAccounts();
+
+        if (resp.ok) {
+          renderAccounts();
+        } else {
+          showToast('保存失败', 'error');
+        }
       } catch (e) {
-        showStatus('accounts', '❌ 保存失败: ' + e.message, true);
+        showToast('保存失败: ' + e.message, 'error');
       }
     }
 
-    // Template Management
-    function switchTemplateTab(tab) {
-      currentTemplateTab = tab;
-      document.querySelectorAll('#templates-panel .tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tab);
-      });
-      updateVariableList();
-      loadTemplate();
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `status-toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    function updateVariableList() {
-      const list = document.getElementById('variable-list');
-      list.innerHTML = VARIABLES[currentTemplateTab].map(v =>
-        `<div class="variable" onclick="insertVariable('${v}')">{${v}}</div>`
-      ).join('');
-    }
-
-    function insertVariable(varName) {
-      const editor = document.getElementById('template-editor');
-      const pos = editor.selectionStart;
-      editor.value = editor.value.slice(0, pos) + `{${varName}}` + editor.value.slice(pos);
-      editor.focus();
-      updatePreview();
-    }
-
-    function loadTemplate() {
-      const account = accounts.find(a => a.platform === currentTemplateTab);
-      document.getElementById('template-editor').value = account?.template || DEFAULT_TEMPLATES[currentTemplateTab];
-      updatePreview();
-    }
-
-    function updatePreview() {
-      const template = document.getElementById('template-editor').value;
-      const sample = SAMPLE_DATA[currentTemplateTab];
-      let result = template;
-      for (const [key, value] of Object.entries(sample)) {
-        result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
-      }
-      document.getElementById('template-preview').textContent = result;
-    }
-
-    function resetTemplate() {
-      document.getElementById('template-editor').value = DEFAULT_TEMPLATES[currentTemplateTab];
-      updatePreview();
-    }
-
-    async function saveTemplate() {
-      const template = document.getElementById('template-editor').value;
-      let account = accounts.find(a => a.platform === currentTemplateTab);
-
-      if (account) {
-        account.template = template;
-      } else {
-        accounts.push({ platform: currentTemplateTab, template });
-      }
-
-      await saveAccounts();
-      showStatus('template', '✅ 模板保存成功');
-    }
-
-    // Utilities
-    function showStatus(type, message, isError = false) {
-      const el = document.getElementById(`status-${type}`);
-      el.textContent = message;
-      el.className = `status show ${isError ? 'error' : 'success'}`;
-      setTimeout(() => el.className = 'status', 3000);
-    }
-
-    function getToken() {
-      // 从 URL 或 localStorage 获取 token
-      return localStorage.getItem('astrbot_api_token') || '';
-    }
-
-    // Listen for template editor input
-    document.getElementById('template-editor')?.addEventListener('input', updatePreview);
+    // Template input listener
+    document.getElementById('field-template')?.addEventListener('input', updateTemplatePreview);
   </script>
 </body>
 </html>
