@@ -7,41 +7,34 @@
   <script src="/api/plugin/page/bridge-sdk.js"></script>
   <style>
     :root {
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
+      --primary: #3c96ca;
+      --primary-hover: #2d7ab0;
+      --primary-light: rgba(60, 150, 202, 0.1);
       --success: #10b981;
       --danger: #ef4444;
       --warning: #f59e0b;
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-400: #9ca3af;
-      --gray-500: #6b7280;
-      --gray-600: #4b5563;
-      --gray-700: #374151;
-      --gray-800: #1f2937;
-      --gray-900: #111827;
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
       --radius: 12px;
       --radius-sm: 8px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --shadow: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
-      background: var(--gray-50);
-      color: var(--gray-800);
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.5;
     }
 
-    .app {
-      min-height: 100vh;
-      padding: 24px;
-    }
-
+    .app { padding: 20px; }
     .container { max-width: 1100px; margin: 0 auto; }
 
     /* Header */
@@ -49,159 +42,131 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .header-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--gray-900);
+      font-size: 20px;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .header-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      width: 36px; height: 36px;
+      background: var(--primary);
       border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white;
     }
 
     /* Card */
     .card {
-      background: white;
+      background: var(--surface);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      overflow: hidden;
+      border: 1px solid var(--border);
     }
 
     .card-header {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--gray-100);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--gray-800);
-    }
+    .card-title { font-size: 15px; font-weight: 600; }
 
-    .card-body { padding: 24px; }
+    .card-body { padding: 20px; }
 
     /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 10px 20px;
+      gap: 6px;
+      padding: 8px 16px;
       border-radius: var(--radius-sm);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.15s;
       border: none;
       outline: none;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
 
     .btn-secondary {
-      background: white;
-      color: var(--gray-700);
-      border: 1px solid var(--gray-300);
+      background: var(--surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
-    .btn-secondary:hover { background: var(--gray-50); }
+    .btn-secondary:hover { background: var(--bg); }
 
-    .btn-ghost {
-      background: transparent;
-      color: var(--gray-600);
-      padding: 6px 12px;
-    }
+    .btn-ghost { background: transparent; color: var(--text-secondary); padding: 4px 10px; }
+    .btn-ghost:hover { background: var(--bg); }
 
-    .btn-ghost:hover { background: var(--gray-100); }
-
-    .btn-danger {
-      background: white;
-      color: var(--danger);
-      border: 1px solid #fecaca;
-    }
-
+    .btn-danger { background: white; color: var(--danger); border: 1px solid #fecaca; }
     .btn-danger:hover { background: #fef2f2; }
 
-    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
 
     /* Account Grid */
     .account-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
     }
 
     .account-card {
-      border: 1px solid var(--gray-200);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
-      transition: all 0.2s ease;
-      position: relative;
-      background: white;
+      padding: 16px;
+      transition: all 0.15s;
+      background: var(--surface);
     }
 
     .account-card:hover {
       border-color: var(--primary);
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     .account-card-header {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
     }
 
     .account-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: white; flex-shrink: 0;
     }
 
-    .avatar-mimo { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
-    .avatar-wasu { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .avatar-mimo { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .avatar-wasu { background: linear-gradient(135deg, #10b981, #059669); }
 
-    .account-info { flex: 1; margin-left: 16px; }
+    .account-info { flex: 1; min-width: 0; }
 
     .account-name {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--gray-900);
-      margin-bottom: 4px;
+      font-size: 15px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     .account-platform {
       display: inline-block;
       padding: 2px 8px;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
+      margin-top: 4px;
     }
 
     .platform-mimo { background: #dbeafe; color: #1e40af; }
@@ -210,328 +175,243 @@
     .account-stats {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      padding-top: 16px;
-      border-top: 1px solid var(--gray-100);
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
 
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: var(--gray-500);
-    }
-
-    .stat-value {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--gray-700);
-    }
-
+    .stat-label { font-size: 11px; color: var(--text-muted); }
+    .stat-value { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
     .stat-value.success { color: var(--success); }
     .stat-value.warning { color: var(--warning); }
 
     .account-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
+      display: flex; gap: 8px; margin-top: 12px;
     }
 
     .account-actions .btn { flex: 1; }
 
     /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-    }
-
+    .empty-state { text-align: center; padding: 50px 20px; grid-column: 1/-1; }
     .empty-icon {
-      width: 80px;
-      height: 80px;
-      background: var(--gray-100);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      margin: 0 auto 20px;
+      width: 64px; height: 64px;
+      background: var(--bg); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 16px;
     }
-
-    .empty-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--gray-700);
-      margin-bottom: 8px;
-    }
-
-    .empty-text {
-      font-size: 14px;
-      color: var(--gray-500);
-    }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .empty-text { font-size: 13px; color: var(--text-muted); }
 
     /* Modal */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
       z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.2s ease;
+      opacity: 0; visibility: hidden;
+      transition: all 0.2s;
     }
 
     .modal-overlay.active { opacity: 1; visibility: visible; }
 
     .modal {
-      background: white;
+      background: var(--surface);
       border-radius: 16px;
-      width: 90%;
-      max-width: 640px;
-      max-height: 90vh;
+      width: 92%;
+      max-width: 680px;
+      max-height: 92vh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      transform: scale(0.95) translateY(20px);
-      transition: transform 0.2s ease;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
 
-    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-overlay.active .modal { transform: scale(1); }
 
     .modal-header {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--gray-100);
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-title { font-size: 17px; font-weight: 600; }
 
     .modal-close {
-      width: 32px; height: 32px;
-      border: none; background: var(--gray-100);
-      border-radius: 8px; cursor: pointer;
+      width: 30px; height: 30px;
+      border: none; background: var(--bg);
+      border-radius: 6px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: var(--gray-500);
-      transition: all 0.15s;
+      font-size: 16px; color: var(--text-muted);
     }
 
-    .modal-close:hover { background: var(--gray-200); color: var(--gray-700); }
+    .modal-close:hover { background: var(--border); color: var(--text); }
 
-    .modal-body {
-      padding: 24px;
-      overflow-y: auto;
-      flex: 1;
-    }
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
 
     .modal-footer {
-      padding: 16px 24px;
-      border-top: 1px solid var(--gray-100);
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      background: var(--gray-50);
+      gap: 10px;
+      background: var(--bg);
     }
 
     /* Form */
-    .form-section { margin-bottom: 24px; }
+    .form-section { margin-bottom: 20px; }
     .form-section:last-child { margin-bottom: 0; }
 
     .form-section-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
     }
 
     .form-section-icon {
-      width: 28px;
-      height: 28px;
-      background: var(--gray-100);
+      width: 26px; height: 26px;
+      background: var(--primary-light);
       border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
     }
 
-    .form-section-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--gray-700);
-    }
+    .form-section-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      gap: 14px;
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group.full-width { grid-column: 1 / -1; }
 
-    .form-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--gray-600);
-    }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
 
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
 
     .form-input, .form-select {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--gray-300);
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      font-size: 14px;
-      color: var(--gray-800);
-      background: white;
+      font-size: 13px; color: var(--text);
+      background: var(--surface);
       transition: all 0.15s;
     }
 
     .form-input:focus, .form-select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
 
-    .form-input.password { padding-right: 44px; }
+    .form-input.password { padding-right: 40px; }
 
     .input-action {
-      position: absolute;
-      right: 8px;
-      width: 32px;
-      height: 32px;
-      border: none;
-      background: transparent;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: var(--gray-400);
-      transition: all 0.15s;
+      position: absolute; right: 6px;
+      width: 28px; height: 28px;
+      border: none; background: transparent;
+      border-radius: 4px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: var(--text-muted);
     }
 
-    .input-action:hover { background: var(--gray-100); color: var(--gray-600); }
+    .input-action:hover { background: var(--bg); color: var(--text-secondary); }
 
     .form-textarea {
-      width: 100%;
-      min-height: 180px;
-      padding: 12px 14px;
-      border: 1px solid var(--gray-300);
+      width: 100%; height: 100%;
+      min-height: 200px;
+      padding: 12px;
+      border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       font-family: 'SF Mono', 'Consolas', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--gray-800);
-      background: var(--gray-50);
-      resize: vertical;
-      transition: all 0.15s;
+      font-size: 12px; line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      resize: none;
     }
 
     .form-textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-      background: white;
-    }
-
-    .form-hint {
-      font-size: 12px;
-      color: var(--gray-500);
-      margin-top: 4px;
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+      background: var(--surface);
     }
 
     /* Template Editor */
-    .template-layout { display: flex; gap: 16px; }
-    .template-editor { flex: 2; }
-    .template-preview-box { flex: 1; }
+    .template-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      min-height: 240px;
+    }
 
-    .template-preview {
-      padding: 16px;
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      background: var(--gray-50);
-      min-height: 180px;
-      color: var(--gray-700);
+    .template-editor, .template-preview-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .template-editor .form-textarea {
+      flex: 1;
     }
 
     .preview-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--gray-500);
+      font-size: 11px; font-weight: 500;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+    }
+
+    .template-preview {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px; line-height: 1.7;
+      white-space: pre-wrap;
+      background: var(--bg);
+      color: var(--text-secondary);
+      overflow-y: auto;
     }
 
     .variable-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 12px;
+      display: flex; flex-wrap: wrap; gap: 5px;
+      margin-top: 10px;
     }
 
     .variable-tag {
-      padding: 4px 10px;
-      background: var(--gray-100);
-      border: 1px solid var(--gray-200);
-      border-radius: 6px;
-      font-size: 12px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
       font-family: 'SF Mono', 'Consolas', monospace;
-      color: var(--gray-600);
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.1s;
     }
 
-    .variable-tag:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
+    .variable-tag:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
     /* Toast */
     .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 14px 20px;
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 12px 18px;
       border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13px; font-weight: 500;
       z-index: 2000;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      box-shadow: var(--shadow-lg);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-md);
     }
 
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { background: var(--success); color: white; }
     .toast.error { background: var(--danger); color: white; }
 
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--gray-500);
-    }
+    .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -547,9 +427,7 @@
       <div class="card">
         <div class="card-header">
           <span class="card-title">账号列表</span>
-          <button class="btn btn-primary" onclick="openAddModal()">
-            <span>+</span> 添加账号
-          </button>
+          <button class="btn btn-primary" onclick="openAddModal()">+ 添加账号</button>
         </div>
         <div class="card-body">
           <div class="account-grid" id="account-list">
@@ -560,7 +438,6 @@
     </div>
   </div>
 
-  <!-- Modal -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="modal-header">
@@ -568,7 +445,6 @@
         <button class="modal-close" onclick="closeModal()">×</button>
       </div>
       <div class="modal-body">
-        <!-- 基本信息 -->
         <div class="form-section">
           <div class="form-section-header">
             <div class="form-section-icon">📋</div>
@@ -589,7 +465,6 @@
           </div>
         </div>
 
-        <!-- MiMo 账号 -->
         <div class="form-section" id="section-mimo">
           <div class="form-section-header">
             <div class="form-section-icon">🔑</div>
@@ -604,13 +479,12 @@
               <label class="form-label">密码</label>
               <div class="input-wrapper">
                 <input class="form-input password" id="field-password" type="password" placeholder="输入密码">
-                <button type="button" class="input-action" onclick="togglePassword()">👁️</button>
+                <button type="button" class="input-action" onclick="togglePassword()">👁</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 华数账号 -->
         <div class="form-section" id="section-wasu" style="display:none">
           <div class="form-section-header">
             <div class="form-section-icon">📱</div>
@@ -636,7 +510,6 @@
           </div>
         </div>
 
-        <!-- 消息模板 -->
         <div class="form-section">
           <div class="form-section-header">
             <div class="form-section-icon">📝</div>
@@ -652,8 +525,8 @@
               <div class="template-preview" id="template-preview"></div>
             </div>
           </div>
-          <div style="margin-top:12px">
-            <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认模板</button>
+          <div style="margin-top:10px">
+            <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认</button>
           </div>
         </div>
       </div>
@@ -720,17 +593,10 @@
 
     function renderAccounts() {
       const list = document.getElementById('account-list');
-
       if (!accounts || accounts.length === 0) {
-        list.innerHTML = `
-          <div class="empty-state" style="grid-column:1/-1">
-            <div class="empty-icon">📭</div>
-            <div class="empty-title">暂无账号</div>
-            <div class="empty-text">点击上方按钮添加您的第一个账号</div>
-          </div>`;
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">暂无账号</div><div class="empty-text">点击上方按钮添加您的第一个账号</div></div>';
         return;
       }
-
       list.innerHTML = accounts.map((acc, i) => `
         <div class="account-card">
           <div class="account-card-header">
@@ -744,28 +610,13 @@
           </div>
           <div class="account-stats">
             ${acc.platform === 'mimo' ? `
-              <div class="stat-item">
-                <span class="stat-label">账号</span>
-                <span class="stat-value">${acc.account || '-'}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">登录状态</span>
-                <span class="stat-value ${acc.serviceToken ? 'success' : 'warning'}">${acc.serviceToken ? '✓ 已登录' : '○ 未登录'}</span>
-              </div>
+              <div><div class="stat-label">账号</div><div class="stat-value">${acc.account || '-'}</div></div>
+              <div><div class="stat-label">登录状态</div><div class="stat-value ${acc.serviceToken ? 'success' : 'warning'}">${acc.serviceToken ? '✓ 已登录' : '○ 未登录'}</div></div>
             ` : `
-              <div class="stat-item">
-                <span class="stat-label">手机号</span>
-                <span class="stat-value">${acc.phone || '-'}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">配置状态</span>
-                <span class="stat-value ${acc.user_key ? 'success' : 'warning'}">${acc.user_key ? '✓ 已配置' : '○ 未配置'}</span>
-              </div>
+              <div><div class="stat-label">手机号</div><div class="stat-value">${acc.phone || '-'}</div></div>
+              <div><div class="stat-label">配置状态</div><div class="stat-value ${acc.user_key ? 'success' : 'warning'}">${acc.user_key ? '✓ 已配置' : '○ 未配置'}</div></div>
             `}
-            <div class="stat-item">
-              <span class="stat-label">消息模板</span>
-              <span class="stat-value">${acc.template ? '📝 自定义' : '📄 默认'}</span>
-            </div>
+            <div><div class="stat-label">消息模板</div><div class="stat-value">${acc.template ? '📝 自定义' : '📄 默认'}</div></div>
           </div>
           <div class="account-actions">
             <button class="btn btn-secondary btn-sm" onclick="editAccount(${i})">✏️ 编辑</button>
@@ -775,12 +626,7 @@
       `).join('');
     }
 
-    function openAddModal() {
-      editingIndex = -1;
-      document.getElementById('modal-title').textContent = '添加账号';
-      resetForm();
-      openModal();
-    }
+    function openAddModal() { editingIndex = -1; document.getElementById('modal-title').textContent = '添加账号'; resetForm(); openModal(); }
 
     function editAccount(index) {
       editingIndex = index;
@@ -795,10 +641,7 @@
       document.getElementById('field-token').value = acc.token || '';
       document.getElementById('field-sign').value = acc.sign || '';
       document.getElementById('field-template').value = acc.template || '';
-      togglePlatformFields();
-      updateVariableTags();
-      updateTemplatePreview();
-      openModal();
+      togglePlatformFields(); updateVariableTags(); updateTemplatePreview(); openModal();
     }
 
     function openModal() { document.getElementById('modal').classList.add('active'); }
@@ -806,112 +649,78 @@
 
     function resetForm() {
       document.getElementById('field-platform').value = 'mimo';
-      document.getElementById('field-name').value = '';
-      document.getElementById('field-account').value = '';
-      document.getElementById('field-password').value = '';
-      document.getElementById('field-phone').value = '';
-      document.getElementById('field-user-key').value = '';
-      document.getElementById('field-token').value = '';
-      document.getElementById('field-sign').value = '';
-      document.getElementById('field-template').value = '';
-      togglePlatformFields();
-      updateVariableTags();
-      updateTemplatePreview();
+      ['field-name','field-account','field-password','field-phone','field-user-key','field-token','field-sign','field-template'].forEach(id => document.getElementById(id).value = '');
+      togglePlatformFields(); updateVariableTags(); updateTemplatePreview();
     }
 
     function togglePlatformFields() {
-      const platform = document.getElementById('field-platform').value;
-      document.getElementById('section-mimo').style.display = platform === 'mimo' ? 'block' : 'none';
-      document.getElementById('section-wasu').style.display = platform === 'wasu' ? 'block' : 'none';
-      updateVariableTags();
-      updateTemplatePreview();
+      const p = document.getElementById('field-platform').value;
+      document.getElementById('section-mimo').style.display = p === 'mimo' ? 'block' : 'none';
+      document.getElementById('section-wasu').style.display = p === 'wasu' ? 'block' : 'none';
+      updateVariableTags(); updateTemplatePreview();
     }
 
     function updateVariableTags() {
-      const platform = document.getElementById('field-platform').value;
-      document.getElementById('variable-tags').innerHTML = VARIABLES[platform].map(v =>
-        `<span class="variable-tag" onclick="insertVariable('${v}')">{${v}}</span>`
-      ).join('');
+      const p = document.getElementById('field-platform').value;
+      document.getElementById('variable-tags').innerHTML = VARIABLES[p].map(v => `<span class="variable-tag" onclick="insertVariable('${v}')">{${v}}</span>`).join('');
     }
 
     function insertVariable(name) {
       const ta = document.getElementById('field-template');
       const pos = ta.selectionStart;
       ta.value = ta.value.slice(0, pos) + `{${name}}` + ta.value.slice(pos);
-      ta.focus();
-      updateTemplatePreview();
+      ta.focus(); updateTemplatePreview();
     }
 
     function updateTemplatePreview() {
-      const platform = document.getElementById('field-platform').value;
-      const template = document.getElementById('field-template').value || DEFAULT_TEMPLATES[platform];
-      const sample = SAMPLE_DATA[platform];
-      let result = template;
-      for (const [k, v] of Object.entries(sample)) {
-        result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
-      }
-      document.getElementById('template-preview').textContent = result;
+      const p = document.getElementById('field-platform').value;
+      const t = document.getElementById('field-template').value || DEFAULT_TEMPLATES[p];
+      const s = SAMPLE_DATA[p];
+      let r = t;
+      for (const [k, v] of Object.entries(s)) r = r.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+      document.getElementById('template-preview').textContent = r;
     }
 
     function resetTemplate() {
-      const platform = document.getElementById('field-platform').value;
-      document.getElementById('field-template').value = DEFAULT_TEMPLATES[platform];
-      updateTemplatePreview();
-      showToast('已恢复默认模板');
+      document.getElementById('field-template').value = DEFAULT_TEMPLATES[document.getElementById('field-platform').value];
+      updateTemplatePreview(); showToast('已恢复默认模板');
     }
 
     function togglePassword() {
-      const input = document.getElementById('field-password');
-      input.type = input.type === 'password' ? 'text' : 'password';
+      const i = document.getElementById('field-password');
+      i.type = i.type === 'password' ? 'text' : 'password';
     }
 
     async function saveAccount() {
-      const platform = document.getElementById('field-platform').value;
-      const acc = { platform, name: document.getElementById('field-name').value, ua: '', template: document.getElementById('field-template').value };
-
-      if (platform === 'mimo') {
+      const p = document.getElementById('field-platform').value;
+      const acc = { platform: p, name: document.getElementById('field-name').value, ua: '', template: document.getElementById('field-template').value };
+      if (p === 'mimo') {
         acc.account = document.getElementById('field-account').value;
         acc.password = document.getElementById('field-password').value;
-        if (editingIndex >= 0) {
-          Object.assign(acc, { userId: accounts[editingIndex].userId || '', passToken: accounts[editingIndex].passToken || '', serviceToken: accounts[editingIndex].serviceToken || '', device_id: accounts[editingIndex].device_id || '' });
-        }
+        if (editingIndex >= 0) Object.assign(acc, { userId: accounts[editingIndex].userId || '', passToken: accounts[editingIndex].passToken || '', serviceToken: accounts[editingIndex].serviceToken || '', device_id: accounts[editingIndex].device_id || '' });
       } else {
         acc.phone = document.getElementById('field-phone').value;
         acc.user_key = document.getElementById('field-user-key').value;
         acc.token = document.getElementById('field-token').value;
         acc.sign = document.getElementById('field-sign').value;
       }
-
-      if (editingIndex >= 0) accounts[editingIndex] = acc;
-      else accounts.push(acc);
-
-      await saveAccounts();
-      closeModal();
-      showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加');
+      if (editingIndex >= 0) accounts[editingIndex] = acc; else accounts.push(acc);
+      await saveAccounts(); closeModal(); showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加');
     }
 
     async function deleteAccount(index) {
-      const name = accounts[index].name || accounts[index].account || accounts[index].phone;
-      if (!confirm(`确定删除账号「${name}」？`)) return;
-      accounts.splice(index, 1);
-      await saveAccounts();
-      showToast('账号已删除');
+      if (!confirm(`确定删除账号「${accounts[index].name || accounts[index].account || accounts[index].phone}」？`)) return;
+      accounts.splice(index, 1); await saveAccounts(); showToast('账号已删除');
     }
 
     async function saveAccounts() {
-      try {
-        await bridge.apiPost('config', { accounts });
-        renderAccounts();
-      } catch (e) {
-        showToast('保存失败', 'error');
-      }
+      try { await bridge.apiPost('config', { accounts }); renderAccounts(); } catch (e) { showToast('保存失败', 'error'); }
     }
 
-    function showToast(message, type = 'success') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.className = `toast ${type} show`;
-      setTimeout(() => toast.classList.remove('show'), 3000);
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     document.getElementById('field-template')?.addEventListener('input', updateTemplatePreview);
