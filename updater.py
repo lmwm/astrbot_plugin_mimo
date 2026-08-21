@@ -44,18 +44,17 @@ async def check_update(config) -> dict:
     def _fetch():
         def _do():
             opener, _ = new_opener()
-            url = proxy_url(f"{_GITHUB_API}/contents/metadata.yaml", proxy)
+            # 使用 raw.githubusercontent.com 直接获取文件，避免 API 速率限制
+            raw_url = f"https://raw.githubusercontent.com/{_REPO_OWNER}/{_REPO_NAME}/main/metadata.yaml"
+            url = proxy_url(raw_url, proxy)
             req = Request(
                 url,
                 headers={
                     "User-Agent": "astrbot-plugin-resource-query-updater",
-                    "Accept": "application/vnd.github.v3+json",
                 },
             )
             with opener.open(req, timeout=15) as r:
-                data = json.loads(r.read())
-
-            content = base64.b64decode(data["content"]).decode("utf-8")
+                content = r.read().decode("utf-8")
 
             for line in content.splitlines():
                 line = line.strip()

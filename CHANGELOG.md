@@ -1,3 +1,11 @@
+## v2.8.3 (2026-XX-XX)
+
+### 🐛 修复
+- 修复版本检查使用 GitHub API 导致的 403 错误
+- 改用 raw.githubusercontent.com 直接获取 metadata.yaml
+
+---
+
 ## v2.8.2 (2026-XX-XX)
 
 ### 🐛 修复
