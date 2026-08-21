@@ -19,12 +19,14 @@
 """
 
 import asyncio
+import json
 import os
 from pathlib import Path
 
 from astrbot.api import AstrBotConfig
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star, register
+from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 from astrbot.core.utils.session_waiter import SessionController, session_waiter
 
 from .base import QueryResult
@@ -61,11 +63,6 @@ class ResourceQueryPlugin(Star):
         self._plugin_dir = Path(__file__).parent
         self._limits = LimitTracker(self._plugin_dir)
         self._wasu = WasuPlatform()
-
-        # 确保配置中有 accounts 字段
-        if "accounts" not in self.config:
-            self.config["accounts"] = []
-            self.config.save_config()
 
         # 为现有账号填充默认 device_id 和 ua
         self._fill_default_fields()
@@ -121,14 +118,34 @@ class ResourceQueryPlugin(Star):
 
     # ── 账号管理 ──
 
+    def _get_data_path(self) -> Path:
+        """获取插件数据目录"""
+        data_path = Path(get_astrbot_data_path()) / "plugin_data" / self.name
+        data_path.mkdir(parents=True, exist_ok=True)
+        return data_path
+
+    def _get_accounts_file(self) -> Path:
+        """获取账号配置文件路径"""
+        return self._get_data_path() / "accounts.json"
+
     def _get_all_accounts(self) -> list:
         """获取所有账号"""
+        accounts_file = self._get_accounts_file()
+        if accounts_file.exists():
+            try:
+                return json.loads(accounts_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                return []
+        # 兼容旧版本：从 config 中读取
         return self.config.get("accounts") or []
 
     def _save_all_accounts(self, accounts: list):
-        """保存所有账号"""
-        self.config["accounts"] = accounts
-        self.config.save_config()
+        """保存所有账号到 plugin_data 目录"""
+        accounts_file = self._get_accounts_file()
+        accounts_file.write_text(
+            json.dumps(accounts, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
 
     def _get_mimo_accounts(self) -> list:
         """获取 MiMo 账号"""

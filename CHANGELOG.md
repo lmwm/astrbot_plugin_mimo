@@ -1,3 +1,12 @@
+## v2.7.0 (2026-XX-XX)
+
+### ✨ 优化
+- 账号配置保存到 `data/plugin_data/astrbot_plugin_resource_query/accounts.json`
+- 插件更新/重装时配置不会丢失
+- 兼容旧版本配置迁移
+
+---
+
 ## v2.6.1 (2026-XX-XX)
 
 ### 🐛 修复
