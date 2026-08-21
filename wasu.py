@@ -9,15 +9,7 @@ from .http_utils import new_opener
 
 _BASE_URL = "https://ups.wasu.cn"
 _HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 16; 23127PN0CC Build/BP2A.250605.031.A3; wv) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.181 "
-                  "Mobile Safari/537.36 XWEB/1500047 MMWEBSDK/20260502 MMWEBID/9289 "
-                  "MicroMessenger/8.0.76.3141(0x28004C3C) WeChat/arm64 Weixin "
-                  "NetType/5G Language/zh_CN ABI/arm64 MiniProgramEnv/android",
-    "Referer": "https://servicewechat.com/wxdd03803da05c5f59/192/page-frame.html",
-    "emp-id": "0000",
-    "siteId": "30003",
-    "charset": "utf-8",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 16; 23127PN0CC Build/BP2A.250605.031.A3; wv) ",
     "content-type": "application/json;charset=utf-8",
 }
 
