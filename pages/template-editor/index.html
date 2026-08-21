@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>消息模板编辑器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #1a1a1a;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      border-color: #1976d2;
+    }
+
+    .tab.active {
+      background: #1976d2;
+      color: white;
+      border-color: #1976d2;
+    }
+
+    .editor-panel {
+      display: flex;
+      gap: 20px;
+    }
+
+    .editor-section {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1976d2;
+    }
+
+    .editor {
+      width: 100%;
+      min-height: 400px;
+      padding: 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    .editor:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+
+    .preview-section {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .preview {
+      width: 100%;
+      min-height: 400px;
+      padding: 16px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      background: #fafafa;
+    }
+
+    .variables {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f0f7ff;
+      border-radius: 8px;
+    }
+
+    .variables-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #1976d2;
+    }
+
+    .variable-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .variable {
+      padding: 4px 10px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .variable:hover {
+      background: #1976d2;
+      color: white;
+      border-color: #1976d2;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #1976d2;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1565c0;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+      background: #eee;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status.success {
+      display: block;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status.error {
+      display: block;
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 消息模板编辑器</h1>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="mimo">MiMo 模板</div>
+      <div class="tab" data-tab="wasu">华数广电模板</div>
+    </div>
+
+    <div class="editor-panel">
+      <div class="editor-section">
+        <div class="section-title">模板内容</div>
+        <textarea class="editor" id="template-editor" placeholder="在此输入模板内容..."></textarea>
+        <div class="help-text">点击右侧变量可快速插入</div>
+      </div>
+
+      <div class="preview-section">
+        <div class="section-title">预览效果</div>
+        <div class="preview" id="template-preview"></div>
+      </div>
+    </div>
+
+    <div class="variables">
+      <div class="variables-title">可用变量（点击插入）</div>
+      <div class="variable-list" id="variable-list"></div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn btn-primary" id="save-btn">保存模板</button>
+      <button class="btn btn-secondary" id="reset-btn">重置为默认</button>
+      <button class="btn btn-secondary" id="refresh-btn">刷新配置</button>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const VARIABLES = {
+      mimo: [
+        { name: 'label', desc: '账号名称' },
+        { name: 'balance', desc: '余额' },
+        { name: 'gift_balance', desc: '赠送余额' },
+        { name: 'input_token', desc: '输入Token' },
+        { name: 'output_token', desc: '输出Token' },
+        { name: 'cache_token', desc: '缓存Token' },
+        { name: 'monthly_cost', desc: '本月费用' },
+        { name: 'total_cost', desc: '累计费用' }
+      ],
+      wasu: [
+        { name: 'label', desc: '账号名称' },
+        { name: 'balance', desc: '账户余额' },
+        { name: 'month_fee', desc: '当月话费' },
+        { name: 'arrears', desc: '欠费' },
+        { name: 'total_used', desc: '本月累计使用' },
+        { name: 'total', desc: '总流量' },
+        { name: 'used', desc: '已用流量' },
+        { name: 'remain', desc: '剩余流量' },
+        { name: 'query_time', desc: '查询时间' }
+      ]
+    };
+
+    const DEFAULT_TEMPLATES = {
+      mimo: `📋 {label}
+────────────────
+  余额        {balance}元
+  赠送        {gift_balance}元
+  输入        {input_token}
+  输出        {output_token}
+  缓存        {cache_token}
+  本月费用    {monthly_cost}元
+  累计费用    {total_cost}元`,
+      wasu: `📺 {label}
+────────────────
+💰 账户余额: {balance}
+   当月话费: {month_fee}
+   欠费: {arrears}
+
+📶 本月累计使用: {total_used}
+   总流量: {total} | 已用: {used} | 剩余: {remain}
+
+🕐 查询时间: {query_time}`
+    };
+
+    let currentTab = 'mimo';
+    let currentTemplate = '';
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadConfig();
+      setupEventListeners();
+      updateVariables();
+    });
+
+    function setupEventListeners() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentTab = tab.dataset.tab;
+          updateVariables();
+          loadConfig();
+        });
+      });
+
+      document.getElementById('template-editor').addEventListener('input', updatePreview);
+      document.getElementById('save-btn').addEventListener('click', saveConfig);
+      document.getElementById('reset-btn').addEventListener('click', resetTemplate);
+      document.getElementById('refresh-btn').addEventListener('click', loadConfig);
+    }
+
+    function updateVariables() {
+      const list = document.getElementById('variable-list');
+      list.innerHTML = VARIABLES[currentTab].map(v =>
+        `<div class="variable" data-var="${v.name}" title="${v.desc}">{${v.name}}</div>`
+      ).join('');
+
+      list.querySelectorAll('.variable').forEach(el => {
+        el.addEventListener('click', () => {
+          const editor = document.getElementById('template-editor');
+          const pos = editor.selectionStart;
+          const text = editor.value;
+          editor.value = text.slice(0, pos) + `{${el.dataset.var}}` + text.slice(pos);
+          editor.focus();
+          updatePreview();
+        });
+      });
+    }
+
+    function updatePreview() {
+      const editor = document.getElementById('template-editor');
+      const preview = document.getElementById('template-preview');
+      const template = editor.value;
+
+      // 生成示例数据
+      const sampleData = currentTab === 'mimo' ? {
+        label: '我的MiMo账号',
+        balance: '177.40',
+        gift_balance: '177.40',
+        input_token: '10.3亿',
+        output_token: '324.0万',
+        cache_token: '9.8亿',
+        monthly_cost: '120.93',
+        total_cost: '132.60'
+      } : {
+        label: '138****8888',
+        balance: '¥56.80',
+        month_fee: '¥38.50',
+        arrears: '¥0.00',
+        total_used: '15.62 GB',
+        total: '30.00 GB',
+        used: '15.62 GB',
+        remain: '14.38 GB',
+        query_time: '2026-08-21 23:00:00'
+      };
+
+      // 替换变量
+      let result = template;
+      for (const [key, value] of Object.entries(sampleData)) {
+        result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+      }
+
+      preview.textContent = result;
+    }
+
+    async function loadConfig() {
+      try {
+        const resp = await fetch(`/api/file/astrbot_plugin_resource_query`);
+        // 通过 bridge 获取配置
+        if (window.AstrBotPluginPage) {
+          const config = await window.AstrBotPluginPage.getConfig();
+          const accounts = config.accounts || [];
+          const account = accounts.find(a => a.platform === currentTab);
+          const template = account?.template || DEFAULT_TEMPLATES[currentTab];
+          document.getElementById('template-editor').value = template;
+          updatePreview();
+        }
+      } catch (e) {
+        document.getElementById('template-editor').value = DEFAULT_TEMPLATES[currentTab];
+        updatePreview();
+      }
+    }
+
+    async function saveConfig() {
+      const template = document.getElementById('template-editor').value;
+      const status = document.getElementById('status');
+
+      try {
+        if (window.AstrBotPluginPage) {
+          const config = await window.AstrBotPluginPage.getConfig();
+          const accounts = config.accounts || [];
+
+          // 找到或创建对应平台的账号模板
+          let account = accounts.find(a => a.platform === currentTab);
+          if (!account) {
+            account = { platform: currentTab, template: template };
+            accounts.push(account);
+          } else {
+            account.template = template;
+          }
+
+          await window.AstrBotPluginPage.saveConfig({ accounts });
+          status.textContent = '✅ 模板保存成功！';
+          status.className = 'status success';
+        }
+      } catch (e) {
+        status.textContent = '❌ 保存失败：' + e.message;
+        status.className = 'status error';
+      }
+
+      setTimeout(() => {
+        status.className = 'status';
+      }, 3000);
+    }
+
+    function resetTemplate() {
+      document.getElementById('template-editor').value = DEFAULT_TEMPLATES[currentTab];
+      updatePreview();
+    }
+  </script>
+</body>
+</html>

@@ -57,6 +57,37 @@ class ResourceQueryPlugin(Star):
         self._limits = LimitTracker(self._plugin_dir)
         self._wasu = WasuPlatform()
 
+        # 注册 Pages API
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/config",
+            self.get_config,
+            ["GET"],
+            "获取插件配置",
+        )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/config",
+            self.save_config,
+            ["POST"],
+            "保存插件配置",
+        )
+
+    # ── Pages API ──
+
+    async def get_config(self):
+        """获取配置"""
+        from astrbot.api.web import json_response
+        return json_response({
+            "accounts": self._get_all_accounts(),
+        })
+
+    async def save_config(self):
+        """保存配置"""
+        from astrbot.api.web import json_response, request
+        payload = await request.json(default={})
+        if "accounts" in payload:
+            self._save_all_accounts(payload["accounts"])
+        return json_response({"status": "ok"})
+
     # ── 账号管理 ──
 
     def _get_all_accounts(self) -> list:
