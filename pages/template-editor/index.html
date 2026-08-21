@@ -203,7 +203,7 @@
 
     /* Template Editor */
     .template-editor-container { display: flex; gap: 12px; }
-    .template-editor-container .editor-area { flex: 1; }
+    .template-editor-container .editor-area { flex: 2; }
     .template-editor-container .preview-area { flex: 1; }
 
     .template-preview {
@@ -288,9 +288,12 @@
               <label class="form-label">小米账号 *</label>
               <input class="form-input" id="field-account" placeholder="手机号或邮箱">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position:relative">
               <label class="form-label">密码</label>
-              <input class="form-input" id="field-password" type="password">
+              <div style="display:flex;gap:8px">
+                <input class="form-input" id="field-password" type="password" style="flex:1">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="togglePassword()" style="padding:6px 10px">👁️</button>
+              </div>
             </div>
           </div>
         </div>
@@ -516,9 +519,14 @@
 
     function resetTemplate() {
       const platform = document.getElementById('field-platform').value;
-      document.getElementById('field-template').value = '';
+      document.getElementById('field-template').value = DEFAULT_TEMPLATES[platform];
       updateTemplatePreview();
       showToast('已恢复为默认模板', 'success');
+    }
+
+    function togglePassword() {
+      const input = document.getElementById('field-password');
+      input.type = input.type === 'password' ? 'text' : 'password';
     }
 
     async function saveAccount() {
