@@ -4,7 +4,6 @@
         "type": "template_list",
         "hint": "点击添加按钮选择账号类型新增账号",
         "default": [],
-        "disable_reset": true,
         "templates": {
             "xiaomi_account": {
                 "name": "小米 MiMo 账号",

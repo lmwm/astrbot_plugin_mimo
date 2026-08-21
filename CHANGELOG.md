@@ -1,12 +1,7 @@
-## v2.2.0 (2026-XX-XX)
+## v2.1.1 (2026-XX-XX)
 
-### 🔧 优化
-- 禁用账号列表的整体重置按钮，防止误操作
-- 为 `template_list` 配置添加 `disable_reset: true` 属性支持
-
-### 📝 注意事项
-- 需要配合 AstrBot Dashboard 修改（`ConfigDefaultReset.vue`）
-- 每个账号的字段仍可单独重置
+### 🐛 修复
+- 移除无效的 `disable_reset` 配置（AstrBot 不支持此属性）
 
 ---
 
