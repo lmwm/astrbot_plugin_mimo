@@ -61,6 +61,13 @@
                         "type": "string",
                         "default": "",
                         "hint": "登录成功后自动保存，无需填写"
+                    },
+                    "template": {
+                        "description": "消息模板（留空使用默认）",
+                        "type": "text",
+                        "default": "",
+                        "hint": "可用变量: {label} {balance} {gift_balance} {input_token} {output_token} {cache_token} {monthly_cost} {total_cost}\n留空使用默认模板",
+                        "invisible": true
                     }
                 }
             },
@@ -109,24 +116,17 @@
                         "type": "string",
                         "default": "Mozilla/5.0 (Linux; Android 16; 23127PN0CC Build/BP2A.250605.031.A3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.181 Mobile Safari/537.36",
                         "hint": "默认: Android Chrome UA"
+                    },
+                    "template": {
+                        "description": "消息模板（留空使用默认）",
+                        "type": "text",
+                        "default": "",
+                        "hint": "可用变量: {label} {balance} {month_fee} {arrears} {total_used} {total} {used} {remain} {query_time}\n留空使用默认模板",
+                        "invisible": true
                     }
                 }
             }
         }
-    },
-
-    "mimo_template": {
-        "description": "MiMo 消息模板",
-        "type": "text",
-        "default": "📋 {label}\n────────────────\n  余额        {balance}元\n  赠送        {gift_balance}元\n  输入        {input_token}\n  输出        {output_token}\n  缓存        {cache_token}\n  本月费用    {monthly_cost}元\n  累计费用    {total_cost}元",
-        "hint": "可用变量: {label} {balance} {gift_balance} {input_token} {output_token} {cache_token} {monthly_cost} {total_cost}"
-    },
-
-    "wasu_template": {
-        "description": "华数广电消息模板",
-        "type": "text",
-        "default": "📺 {label}\n────────────────\n💰 账户余额: {balance}\n   当月话费: {month_fee}\n   欠费: {arrears}\n\n📶 本月累计使用: {total_used}\n   总流量: {total} | 已用: {used} | 剩余: {remain}\n\n🕐 查询时间: {query_time}",
-        "hint": "可用变量: {label} {balance} {month_fee} {arrears} {total_used} {total} {used} {remain} {query_time}"
     },
 
     "proxy": {

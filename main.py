@@ -271,7 +271,6 @@ class ResourceQueryPlugin(Star):
                 all_accounts[idx] = await loop.run_in_executor(None, self._ensure_account, acc)
             self._save_all_accounts(all_accounts)
 
-            mimo_template = self.config.get("mimo_template")
             for idx, acc in mimo_indices:
                 results = await self._query_one_mimo(acc)
                 self._save_all_accounts(all_accounts)
@@ -280,7 +279,8 @@ class ResourceQueryPlugin(Star):
                     yield event.plain_result(f"📋 {label}\n❌ {results['error']}")
                 else:
                     prev = self._limits.get_prev(acc)
-                    yield event.plain_result(format_report(results, label, prev, self._plugin_dir, mimo_template))
+                    template = acc.get("template") or None
+                    yield event.plain_result(format_report(results, label, prev, self._plugin_dir, template))
                     usage = results.get("usage", {}).get("data", {})
                     self._limits.update(acc, usage.get("accountRateLimit", {}))
             return
@@ -340,12 +340,12 @@ class ResourceQueryPlugin(Star):
                 results = await self._query_one_mimo(acc)
                 self._save_all_accounts(all_accounts)
                 label = acc.get("name") or acc.get("account") or f"账号{query_idx + 1}"
-                mimo_template = self.config.get("mimo_template")
+                template = acc.get("template") or None
                 if "error" in results:
                     yield event.plain_result(f"📋 {label}\n❌ {results['error']}")
                 else:
                     prev = self._limits.get_prev(acc)
-                    yield event.plain_result(format_report(results, label, prev, self._plugin_dir, mimo_template))
+                    yield event.plain_result(format_report(results, label, prev, self._plugin_dir, template))
                     usage = results.get("usage", {}).get("data", {})
                     self._limits.update(acc, usage.get("accountRateLimit", {}))
             else:
@@ -524,9 +524,9 @@ class ResourceQueryPlugin(Star):
                 return
 
             yield event.plain_result("🔍 正在查询华数广电...")
-            wasu_template = self.config.get("wasu_template")
             for i, (idx, acc) in enumerate(wasu_indices):
-                result = await self._wasu.query(acc, wasu_template)
+                template = acc.get("template") or None
+                result = await self._wasu.query(acc, template)
                 label = acc.get("name") or acc.get("phone") or f"华数账号{i+1}"
                 result.account_name = label
                 yield event.plain_result(result.to_text())
@@ -576,8 +576,8 @@ class ResourceQueryPlugin(Star):
             if 0 <= query_idx < len(wasu_indices):
                 idx, acc = wasu_indices[query_idx]
                 yield event.plain_result("🔍 正在查询...")
-                wasu_template = self.config.get("wasu_template")
-                result = await self._wasu.query(acc, wasu_template)
+                template = acc.get("template") or None
+                result = await self._wasu.query(acc, template)
                 label = acc.get("name") or acc.get("phone") or f"华数账号{query_idx+1}"
                 result.account_name = label
                 yield event.plain_result(result.to_text())
