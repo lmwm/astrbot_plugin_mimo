@@ -779,7 +779,7 @@ class ResourceQueryPlugin(Star):
             return
 
         if not check["has_update"]:
-            yield event.plain_result(f"✅ 已是最新版本 v{_PLUGIN_VERSION}")
+            yield event.plain_result(f"✅ 已是最新版本 v{check['current']}")
             return
 
         yield event.plain_result(
