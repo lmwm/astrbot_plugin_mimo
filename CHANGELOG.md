@@ -1,3 +1,14 @@
+## v2.5.2 (2026-XX-XX)
+
+### ✨ 优化
+- 编辑区和预览区标题对齐（均为独立标签行）
+- 切换不同账号时自动同步切换模板
+- 变量名与实际 JSON 数据结构一致
+- 新增 MiMo tpm/rpm/concurrency 变量
+- 新增华数 traffic_detail/voice_detail 变量
+
+---
+
 ## v2.5.1 (2026-XX-XX)
 
 ### ✨ 优化
