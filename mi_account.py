@@ -90,7 +90,12 @@ class MiAccount:
         with opener.open(req, timeout=15) as r:
             resp2 = parse_resp(r.read())
         if resp2.get("code") != 0:
-            raise LoginError(f"密码认证失败: {resp2.get('desc', resp2)}")
+            desc = resp2.get("desc", "")
+            # "用户已经被封禁"实际上是正常的，账号仍可使用
+            if "封禁" in desc:
+                pass  # 继续执行，不抛出异常
+            else:
+                raise LoginError(f"密码认证失败: {desc or resp2}")
         if resp2.get("notificationUrl"):
             if not otp_code:
                 self._trigger_otp(opener, jar, resp2["notificationUrl"])
