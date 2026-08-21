@@ -124,28 +124,62 @@ class ResourceQueryPlugin(Star):
         data_path.mkdir(parents=True, exist_ok=True)
         return data_path
 
-    def _get_accounts_file(self) -> Path:
-        """获取账号配置文件路径"""
-        return self._get_data_path() / "accounts.json"
+    def _get_account_filename(self, acc: dict) -> str:
+        """获取账号配置文件名"""
+        platform = acc.get("platform", "unknown")
+        if platform == "mimo":
+            identifier = acc.get("account") or acc.get("name") or "unknown"
+        else:
+            identifier = acc.get("phone") or acc.get("name") or "unknown"
+        # 清理文件名中的非法字符
+        identifier = "".join(c for c in identifier if c.isalnum() or c in "-_")
+        return f"{platform}_{identifier}.json"
 
     def _get_all_accounts(self) -> list:
         """获取所有账号"""
-        accounts_file = self._get_accounts_file()
-        if accounts_file.exists():
+        accounts = []
+        data_path = self._get_data_path()
+        # 读取所有 json 文件
+        for json_file in data_path.glob("*.json"):
             try:
-                return json.loads(accounts_file.read_text(encoding="utf-8"))
+                acc = json.loads(json_file.read_text(encoding="utf-8"))
+                acc["_config_file"] = json_file.name  # 记录配置文件名
+                accounts.append(acc)
             except (json.JSONDecodeError, OSError):
-                return []
-        # 兼容旧版本：从 config 中读取
-        return self.config.get("accounts") or []
+                continue
+        # 兼容旧版本：从 accounts.json 读取并迁移
+        old_file = data_path / "accounts.json"
+        if old_file.exists():
+            try:
+                old_accounts = json.loads(old_file.read_text(encoding="utf-8"))
+                if isinstance(old_accounts, list):
+                    for acc in old_accounts:
+                        filename = self._get_account_filename(acc)
+                        filepath = data_path / filename
+                        if not filepath.exists():
+                            filepath.write_text(
+                                json.dumps(acc, ensure_ascii=False, indent=2),
+                                encoding="utf-8"
+                            )
+                            accounts.append(acc)
+                    old_file.unlink()  # 删除旧文件
+            except (json.JSONDecodeError, OSError):
+                pass
+        return accounts
 
     def _save_all_accounts(self, accounts: list):
-        """保存所有账号到 plugin_data 目录"""
-        accounts_file = self._get_accounts_file()
-        accounts_file.write_text(
-            json.dumps(accounts, ensure_ascii=False, indent=2),
-            encoding="utf-8"
-        )
+        """保存所有账号到单独的配置文件"""
+        data_path = self._get_data_path()
+        # 为每个账号保存到单独文件
+        for acc in accounts:
+            filename = self._get_account_filename(acc)
+            filepath = data_path / filename
+            # 移除内部字段
+            save_acc = {k: v for k, v in acc.items() if not k.startswith("_")}
+            filepath.write_text(
+                json.dumps(save_acc, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
 
     def _get_mimo_accounts(self) -> list:
         """获取 MiMo 账号"""
