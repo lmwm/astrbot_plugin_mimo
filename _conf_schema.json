@@ -66,8 +66,7 @@
                         "description": "消息模板（留空使用默认）",
                         "type": "text",
                         "default": "",
-                        "hint": "可用变量: {label} {balance} {gift_balance} {input_token} {output_token} {cache_token} {monthly_cost} {total_cost}\n留空使用默认模板",
-                        "invisible": true
+                        "hint": "可用变量: {label} {balance} {gift_balance} {input_token} {output_token} {cache_token} {monthly_cost} {total_cost}\n留空使用默认模板"
                     }
                 }
             },
@@ -121,8 +120,7 @@
                         "description": "消息模板（留空使用默认）",
                         "type": "text",
                         "default": "",
-                        "hint": "可用变量: {label} {balance} {month_fee} {arrears} {total_used} {total} {used} {remain} {query_time}\n留空使用默认模板",
-                        "invisible": true
+                        "hint": "可用变量: {label} {balance} {month_fee} {arrears} {total_used} {total} {used} {remain} {query_time}\n留空使用默认模板"
                     }
                 }
             }
