@@ -63,10 +63,12 @@
                         "hint": "登录成功后自动保存，无需填写"
                     },
                     "template": {
-                        "description": "消息模板（留空使用默认）",
+                        "description": "消息模板",
                         "type": "text",
-                        "default": "",
-                        "hint": "可用变量: {label} {balance} {gift_balance} {input_token} {output_token} {cache_token} {monthly_cost} {total_cost}\n留空使用默认模板"
+                        "default": "📋 {label}\n────────────────\n  余额        {balance}元\n  赠送        {gift_balance}元\n  输入        {input_token}\n  输出        {output_token}\n  缓存        {cache_token}\n  本月费用    {monthly_cost}元\n  累计费用    {total_cost}元",
+                        "hint": "可用变量: {label} {balance} {gift_balance} {input_token} {output_token} {cache_token} {monthly_cost} {total_cost}",
+                        "editor_mode": true,
+                        "editor_theme": "vs-dark"
                     }
                 }
             },
@@ -117,10 +119,12 @@
                         "hint": "默认: Android Chrome UA"
                     },
                     "template": {
-                        "description": "消息模板（留空使用默认）",
+                        "description": "消息模板",
                         "type": "text",
-                        "default": "",
-                        "hint": "可用变量: {label} {balance} {month_fee} {arrears} {total_used} {total} {used} {remain} {query_time}\n留空使用默认模板"
+                        "default": "📺 {label}\n────────────────\n💰 账户余额: {balance}\n   当月话费: {month_fee}\n   欠费: {arrears}\n\n📶 本月累计使用: {total_used}\n   总流量: {total} | 已用: {used} | 剩余: {remain}\n\n🕐 查询时间: {query_time}",
+                        "hint": "可用变量: {label} {balance} {month_fee} {arrears} {total_used} {total} {used} {remain} {query_time}",
+                        "editor_mode": true,
+                        "editor_theme": "vs-dark"
                     }
                 }
             }
