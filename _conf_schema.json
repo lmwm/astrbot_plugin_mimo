@@ -1,0 +1,88 @@
+{
+    "accounts": {
+        "description": "小米账号列表",
+        "type": "template_list",
+        "hint": "点击添加按钮新增账号，首次填写 account+password，登录后自动补全其他字段",
+        "default": [],
+        "templates": {
+            "xiaomi_account": {
+                "name": "小米账号",
+                "display_item": "name",
+                "items": {
+                    "name": {
+                        "description": "账号名称",
+                        "type": "string",
+                        "default": "",
+                        "hint": "自定义显示名称，留空则显示账号"
+                    },
+                    "account": {
+                        "description": "小米账号",
+                        "type": "string",
+                        "default": "",
+                        "hint": "手机号或邮箱"
+                    },
+                    "password": {
+                        "description": "小米密码",
+                        "type": "string",
+                        "default": ""
+                    },
+                    "device_id": {
+                        "description": "设备标识",
+                        "type": "string",
+                        "default": "",
+                        "hint": "留空自动补全全局配置\n默认: wb_MIQUERY000001\n固定 deviceId 可避免反复触发 OTP"
+                    },
+                    "ua": {
+                        "description": "User-Agent",
+                        "type": "string",
+                        "default": "",
+                        "hint": "留空自动补全全局配置\n默认: APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1"
+                    },
+                    "userId": {
+                        "description": "用户 ID（自动填入）",
+                        "type": "string",
+                        "default": "",
+                        "hint": "登录成功后自动保存，无需填写"
+                    },
+                    "passToken": {
+                        "description": "通行令牌（自动填入）",
+                        "type": "string",
+                        "default": "",
+                        "hint": "登录成功后自动保存，无需填写"
+                    },
+                    "serviceToken": {
+                        "description": "serviceToken（自动填入）",
+                        "type": "string",
+                        "default": "",
+                        "hint": "登录成功后自动保存，无需填写"
+                    }
+                }
+            }
+        }
+    },
+
+    "device_id": {
+        "description": "全局设备标识",
+        "type": "string",
+        "default": "wb_MIQUERY000001",
+        "hint": "所有账号的默认 deviceId，留空自动使用\n默认: wb_MIQUERY000001\n单个账号可在账号配置中单独覆盖"
+    },
+    "ua": {
+        "description": "全局 User-Agent",
+        "type": "string",
+        "default": "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1",
+        "hint": "所有账号的默认 UA，留空自动使用\n默认: APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1\n单个账号可在账号配置中单独覆盖"
+    },
+    "proxy": {
+        "description": "网络代理",
+        "type": "string",
+        "default": "https://gh-proxy.cn/",
+        "hint": "用于 GitHub 更新请求的代理地址，留空禁用代理\n默认: https://gh-proxy.cn/\n格式: https://gh-proxy.cn/ 或 http://host:port"
+    },
+    "update_max_retries": {
+        "description": "更新最大重试次数",
+        "type": "int",
+        "default": 3,
+        "hint": "自动更新时网络请求失败的重试次数\n默认: 3，设为 0 禁用重试"
+    }
+}

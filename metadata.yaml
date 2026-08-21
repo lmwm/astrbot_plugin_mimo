@@ -1,0 +1,35 @@
+# 插件唯一标识（全小写，以 astrbot_plugin_ 开头）
+name: astrbot_plugin_mimo
+
+# 插件展示名（在 WebUI 插件市场中显示）
+display_name: "MiMo 用量查询"
+
+# 插件完整描述（支持多行）
+desc: "小米 MiMo 平台用量查询插件（多账号支持），支持查询余额、Token 用量、费用和限额"
+
+# 插件市场卡片上的短描述（一句话）
+short_desc: "查询小米 MiMo 平台用量"
+
+# 插件作者（与仓库 owner 一致时便于插件市场识别）
+author: "MiMo"
+
+# 插件版本号（每次更新递增，触发 AstrBot 更新检测）
+version: "1.7.0"
+
+# 插件仓库地址（用于插件市场来源归属和安装）
+repo: "https://github.com/lmwm/astrbot_plugin_mimo"
+
+# 声明支持的消息平台（可选，WebUI 插件页会展示）
+# 可选值: aiocqhttp, qq_official, telegram, discord, wecom, lark, dingtalk, slack, kook 等
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - telegram
+  - discord
+  - wecom
+  - lark
+  - dingtalk
+
+# 声明兼容的 AstrBot 版本范围（可选，PEP 440 格式）
+# 4.9.2 引入了 KV 存储，本插件使用 config 系统，无最低版本硬性要求
+astrbot_version: ">=4.0.0"
