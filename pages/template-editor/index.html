@@ -6,134 +6,308 @@
   <title>资源查询插件管理</title>
   <script src="/api/plugin/page/bridge-sdk.js"></script>
   <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 20px;
-      background: #f5f5f5;
-      color: #333;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
     }
 
-    .container { max-width: 1200px; margin: 0 auto; }
-
-    h1 { font-size: 24px; margin-bottom: 20px; color: #1a1a1a; }
-
-    /* Panel */
-    .panel {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .app {
+      min-height: 100vh;
+      padding: 24px;
     }
 
-    .panel-header {
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
-    .panel-title { font-size: 18px; font-weight: 600; }
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-    /* Account List */
-    .account-list { display: flex; flex-direction: column; gap: 12px; }
+    .header-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .card-body { padding: 24px; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: white;
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover { background: var(--gray-50); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--gray-600);
+      padding: 6px 12px;
+    }
+
+    .btn-ghost:hover { background: var(--gray-100); }
+
+    .btn-danger {
+      background: white;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover { background: #fef2f2; }
+
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+    /* Account Grid */
+    .account-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
 
     .account-card {
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
-      padding: 16px;
-      transition: all 0.2s;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all 0.2s ease;
+      position: relative;
+      background: white;
     }
 
-    .account-card:hover { border-color: #1976d2; box-shadow: 0 2px 8px rgba(25,118,210,0.1); }
+    .account-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
 
-    .account-header {
+    .account-card-header {
       display: flex;
+      align-items: flex-start;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
-    .account-name { font-weight: 600; font-size: 16px; }
+    .account-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
 
-    .account-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
+    .avatar-mimo { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+    .avatar-wasu { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+
+    .account-info { flex: 1; margin-left: 16px; }
+
+    .account-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+
+    .account-platform {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
       font-size: 12px;
       font-weight: 500;
     }
 
-    .badge-mimo { background: #e3f2fd; color: #1565c0; }
-    .badge-wasu { background: #e8f5e9; color: #2e7d32; }
+    .platform-mimo { background: #dbeafe; color: #1e40af; }
+    .platform-wasu { background: #d1fae5; color: #065f46; }
 
-    .account-details {
+    .account-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .stat-value {
       font-size: 13px;
-      color: #666;
-      margin-bottom: 12px;
+      font-weight: 500;
+      color: var(--gray-700);
     }
 
-    .account-actions { display: flex; gap: 8px; }
+    .stat-value.success { color: var(--success); }
+    .stat-value.warning { color: var(--warning); }
 
-    /* Buttons */
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
+    .account-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .account-actions .btn { flex: 1; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 20px;
     }
 
-    .btn-primary { background: #1976d2; color: white; }
-    .btn-primary:hover { background: #1565c0; }
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
 
-    .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-    .btn-secondary:hover { background: #eee; }
-
-    .btn-danger { background: #fff; color: #c62828; border: 1px solid #ffcdd2; }
-    .btn-danger:hover { background: #ffebee; }
-
-    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .empty-text {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
 
     /* Modal */
     .modal-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
     .modal-overlay.active { opacity: 1; visibility: visible; }
 
     .modal {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       width: 90%;
-      max-width: 700px;
+      max-width: 640px;
       max-height: 90vh;
-      overflow-y: auto;
-      transform: translateY(20px);
-      transition: transform 0.2s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95) translateY(20px);
+      transition: transform 0.2s ease;
     }
 
-    .modal-overlay.active .modal { transform: translateY(0); }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
 
     .modal-header {
       padding: 20px 24px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--gray-100);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -143,32 +317,56 @@
 
     .modal-close {
       width: 32px; height: 32px;
-      border: none; background: none;
-      font-size: 20px; cursor: pointer;
-      border-radius: 6px;
+      border: none; background: var(--gray-100);
+      border-radius: 8px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--gray-500);
+      transition: all 0.15s;
     }
 
-    .modal-close:hover { background: #f5f5f5; }
+    .modal-close:hover { background: var(--gray-200); color: var(--gray-700); }
 
-    .modal-body { padding: 24px; }
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
 
     .modal-footer {
       padding: 16px 24px;
-      border-top: 1px solid #eee;
+      border-top: 1px solid var(--gray-100);
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 12px;
+      background: var(--gray-50);
     }
 
     /* Form */
     .form-section { margin-bottom: 24px; }
     .form-section:last-child { margin-bottom: 0; }
 
+    .form-section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-section-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--gray-100);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
     .form-section-title {
-      font-size: 14px; font-weight: 600; color: #1976d2;
-      margin-bottom: 16px; padding-bottom: 8px;
-      border-bottom: 1px solid #e3f2fd;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-700);
     }
 
     .form-grid {
@@ -180,95 +378,205 @@
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group.full-width { grid-column: 1 / -1; }
 
-    .form-label { font-size: 13px; font-weight: 500; color: #555; }
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+    }
 
-    .form-input, .form-select, .form-textarea {
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
       font-size: 14px;
-      transition: border-color 0.2s;
+      color: var(--gray-800);
+      background: white;
+      transition: all 0.15s;
     }
 
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      outline: none; border-color: #1976d2;
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
     }
+
+    .form-input.password { padding-right: 44px; }
+
+    .input-action {
+      position: absolute;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--gray-400);
+      transition: all 0.15s;
+    }
+
+    .input-action:hover { background: var(--gray-100); color: var(--gray-600); }
 
     .form-textarea {
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 13px; line-height: 1.5; resize: vertical;
+      width: 100%;
+      min-height: 180px;
+      padding: 12px 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      resize: vertical;
+      transition: all 0.15s;
     }
 
-    .form-hint { font-size: 12px; color: #888; }
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+      background: white;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
 
     /* Template Editor */
-    .template-editor-container { display: flex; gap: 12px; }
-    .template-editor-container .editor-area { flex: 2; }
-    .template-editor-container .preview-area { flex: 1; }
+    .template-layout { display: flex; gap: 16px; }
+    .template-editor { flex: 2; }
+    .template-preview-box { flex: 1; }
 
     .template-preview {
-      padding: 12px; border: 1px solid #eee; border-radius: 6px;
-      font-size: 13px; line-height: 1.6; white-space: pre-wrap;
-      background: #fafafa; min-height: 150px;
+      padding: 16px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      background: var(--gray-50);
+      min-height: 180px;
+      color: var(--gray-700);
     }
 
-    .variable-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .preview-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .variable-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
 
     .variable-tag {
-      padding: 3px 8px; background: #f5f5f5; border: 1px solid #ddd;
-      border-radius: 4px; font-size: 11px; font-family: monospace;
-      cursor: pointer; transition: all 0.15s;
+      padding: 4px 10px;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.15s;
     }
 
-    .variable-tag:hover { background: #1976d2; color: white; border-color: #1976d2; }
-
-    /* Empty State */
-    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state-text { font-size: 14px; }
-
-    /* Status */
-    .status-toast {
-      position: fixed; bottom: 20px; right: 20px;
-      padding: 12px 20px; border-radius: 8px; font-size: 14px;
-      z-index: 2000; transform: translateY(100px); opacity: 0;
-      transition: all 0.3s;
+    .variable-tag:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
     }
-    .status-toast.show { transform: translateY(0); opacity: 1; }
-    .status-toast.success { background: #2e7d32; color: white; }
-    .status-toast.error { background: #c62828; color: white; }
 
-    .loading { text-align: center; padding: 40px; color: #888; }
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 2000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--success); color: white; }
+    .toast.error { background: var(--danger); color: white; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-500);
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🔧 资源查询插件管理</h1>
-
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">账号列表</span>
-        <button class="btn btn-primary" onclick="openAddModal()">+ 添加账号</button>
+  <div class="app">
+    <div class="container">
+      <div class="header">
+        <div class="header-title">
+          <div class="header-icon">📡</div>
+          资源查询管理
+        </div>
       </div>
-      <div class="account-list" id="account-list">
-        <div class="loading">加载中...</div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">账号列表</span>
+          <button class="btn btn-primary" onclick="openAddModal()">
+            <span>+</span> 添加账号
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="account-grid" id="account-list">
+            <div class="loading">加载中...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 账号编辑弹窗 -->
+  <!-- Modal -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title" id="modal-title">添加账号</span>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <button class="modal-close" onclick="closeModal()">×</button>
       </div>
       <div class="modal-body">
+        <!-- 基本信息 -->
         <div class="form-section">
-          <div class="form-section-title">基本信息</div>
+          <div class="form-section-header">
+            <div class="form-section-icon">📋</div>
+            <span class="form-section-title">基本信息</span>
+          </div>
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">账号类型 *</label>
+              <label class="form-label">账号类型</label>
               <select class="form-select" id="field-platform" onchange="togglePlatformFields()">
                 <option value="mimo">小米 MiMo</option>
                 <option value="wasu">华数广电</option>
@@ -276,64 +584,76 @@
             </div>
             <div class="form-group">
               <label class="form-label">显示名称</label>
-              <input class="form-input" id="field-name" placeholder="自定义名称">
+              <input class="form-input" id="field-name" placeholder="自定义名称，留空自动显示">
             </div>
           </div>
         </div>
 
+        <!-- MiMo 账号 -->
         <div class="form-section" id="section-mimo">
-          <div class="form-section-title">MiMo 账号信息</div>
+          <div class="form-section-header">
+            <div class="form-section-icon">🔑</div>
+            <span class="form-section-title">MiMo 账号</span>
+          </div>
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">小米账号 *</label>
               <input class="form-input" id="field-account" placeholder="手机号或邮箱">
             </div>
-            <div class="form-group" style="position:relative">
+            <div class="form-group">
               <label class="form-label">密码</label>
-              <div style="display:flex;gap:8px">
-                <input class="form-input" id="field-password" type="password" style="flex:1">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="togglePassword()" style="padding:6px 10px">👁️</button>
+              <div class="input-wrapper">
+                <input class="form-input password" id="field-password" type="password" placeholder="输入密码">
+                <button type="button" class="input-action" onclick="togglePassword()">👁️</button>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- 华数账号 -->
         <div class="form-section" id="section-wasu" style="display:none">
-          <div class="form-section-title">华数广电账号信息</div>
+          <div class="form-section-header">
+            <div class="form-section-icon">📱</div>
+            <span class="form-section-title">华数广电账号</span>
+          </div>
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">手机号 *</label>
-              <input class="form-input" id="field-phone">
+              <input class="form-input" id="field-phone" placeholder="华数广电手机号">
             </div>
             <div class="form-group">
               <label class="form-label">User Key *</label>
-              <input class="form-input" id="field-user-key">
+              <input class="form-input" id="field-user-key" placeholder="从小程序获取">
             </div>
             <div class="form-group">
               <label class="form-label">Token *</label>
-              <input class="form-input" id="field-token">
+              <input class="form-input" id="field-token" placeholder="从小程序获取">
             </div>
             <div class="form-group">
               <label class="form-label">签名</label>
-              <input class="form-input" id="field-sign">
+              <input class="form-input" id="field-sign" placeholder="可选">
             </div>
           </div>
         </div>
 
+        <!-- 消息模板 -->
         <div class="form-section">
-          <div class="form-section-title">消息模板</div>
-          <div class="template-editor-container">
-            <div class="editor-area">
-              <textarea class="form-textarea" id="field-template" rows="8" placeholder="留空使用默认模板"></textarea>
+          <div class="form-section-header">
+            <div class="form-section-icon">📝</div>
+            <span class="form-section-title">消息模板</span>
+          </div>
+          <div class="template-layout">
+            <div class="template-editor">
+              <textarea class="form-textarea" id="field-template" placeholder="留空使用默认模板"></textarea>
               <div class="variable-tags" id="variable-tags"></div>
             </div>
-            <div class="preview-area">
-              <div style="font-size:12px;color:#888;margin-bottom:6px">预览效果</div>
+            <div class="template-preview-box">
+              <div class="preview-label">预览效果</div>
               <div class="template-preview" id="template-preview"></div>
             </div>
           </div>
-          <div style="margin-top:8px">
-            <button class="btn btn-secondary btn-sm" onclick="resetTemplate()">恢复默认模板</button>
+          <div style="margin-top:12px">
+            <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认模板</button>
           </div>
         </div>
       </div>
@@ -344,11 +664,10 @@
     </div>
   </div>
 
-  <div class="status-toast" id="toast"></div>
+  <div class="toast" id="toast"></div>
 
   <script>
     const bridge = window.AstrBotPluginPage;
-
     let accounts = [];
     let editingIndex = -1;
 
@@ -381,10 +700,9 @@
 
     const SAMPLE_DATA = {
       mimo: { label: 'MiMo账号', balance: '177.40', gift_balance: '177.40', input_token: '10.3亿', output_token: '324.0万', cache_token: '9.8亿', monthly_cost: '120.93', total_cost: '132.60' },
-      wasu: { label: '138****8888', balance: '¥56.80', month_fee: '¥38.50', arrears: '¥0.00', total_used: '15.62 GB', total: '30.00 GB', used: '15.62 GB', remain: '14.38 GB', query_time: '2026-08-21 23:00:00' }
+      wasu: { label: '138****8888', balance: '¥56.80', month_fee: '¥38.50', arrears: '¥0.00', total_used: '15.62 GB', total: '30.00 GB', used: '15.62 GB', remain: '14.38 GB', query_time: '2026-08-21 23:00' }
     };
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
       await bridge.ready();
       loadAccounts();
@@ -396,8 +714,7 @@
         accounts = result.accounts || [];
         renderAccounts();
       } catch (e) {
-        console.error('加载失败:', e);
-        document.getElementById('account-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">加载失败</div></div>';
+        document.getElementById('account-list').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">加载失败</div></div>';
       }
     }
 
@@ -405,26 +722,50 @@
       const list = document.getElementById('account-list');
 
       if (!accounts || accounts.length === 0) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">暂无账号，点击上方按钮添加</div></div>';
+        list.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">暂无账号</div>
+            <div class="empty-text">点击上方按钮添加您的第一个账号</div>
+          </div>`;
         return;
       }
 
       list.innerHTML = accounts.map((acc, i) => `
         <div class="account-card">
-          <div class="account-header">
-            <span class="account-name">${acc.name || acc.account || acc.phone || '账号' + (i+1)}</span>
-            <span class="account-badge badge-${acc.platform}">${acc.platform === 'mimo' ? 'MiMo' : '华数广电'}</span>
+          <div class="account-card-header">
+            <div class="account-avatar ${acc.platform === 'mimo' ? 'avatar-mimo' : 'avatar-wasu'}">
+              ${acc.platform === 'mimo' ? '🤖' : '📺'}
+            </div>
+            <div class="account-info">
+              <div class="account-name">${acc.name || acc.account || acc.phone || '账号' + (i+1)}</div>
+              <span class="account-platform platform-${acc.platform}">${acc.platform === 'mimo' ? 'MiMo' : '华数广电'}</span>
+            </div>
           </div>
-          <div class="account-details">
+          <div class="account-stats">
             ${acc.platform === 'mimo' ? `
-              <div>账号: ${acc.account || '-'}</div>
-              <div>userId: ${acc.userId || '-'}</div>
-              <div>serviceToken: ${acc.serviceToken ? '✅' : '❌'}</div>
+              <div class="stat-item">
+                <span class="stat-label">账号</span>
+                <span class="stat-value">${acc.account || '-'}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">登录状态</span>
+                <span class="stat-value ${acc.serviceToken ? 'success' : 'warning'}">${acc.serviceToken ? '✓ 已登录' : '○ 未登录'}</span>
+              </div>
             ` : `
-              <div>手机号: ${acc.phone || '-'}</div>
-              <div>User Key: ${acc.user_key ? '✅' : '❌'}</div>
+              <div class="stat-item">
+                <span class="stat-label">手机号</span>
+                <span class="stat-value">${acc.phone || '-'}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">配置状态</span>
+                <span class="stat-value ${acc.user_key ? 'success' : 'warning'}">${acc.user_key ? '✓ 已配置' : '○ 未配置'}</span>
+              </div>
             `}
-            <div>模板: ${acc.template ? '📝 自定义' : '📄 默认'}</div>
+            <div class="stat-item">
+              <span class="stat-label">消息模板</span>
+              <span class="stat-value">${acc.template ? '📝 自定义' : '📄 默认'}</span>
+            </div>
           </div>
           <div class="account-actions">
             <button class="btn btn-secondary btn-sm" onclick="editAccount(${i})">✏️ 编辑</button>
@@ -445,7 +786,6 @@
       editingIndex = index;
       const acc = accounts[index];
       document.getElementById('modal-title').textContent = '编辑账号';
-
       document.getElementById('field-platform').value = acc.platform || 'mimo';
       document.getElementById('field-name').value = acc.name || '';
       document.getElementById('field-account').value = acc.account || '';
@@ -455,7 +795,6 @@
       document.getElementById('field-token').value = acc.token || '';
       document.getElementById('field-sign').value = acc.sign || '';
       document.getElementById('field-template').value = acc.template || '';
-
       togglePlatformFields();
       updateVariableTags();
       updateTemplatePreview();
@@ -490,29 +829,26 @@
 
     function updateVariableTags() {
       const platform = document.getElementById('field-platform').value;
-      const tags = document.getElementById('variable-tags');
-      tags.innerHTML = VARIABLES[platform].map(v =>
+      document.getElementById('variable-tags').innerHTML = VARIABLES[platform].map(v =>
         `<span class="variable-tag" onclick="insertVariable('${v}')">{${v}}</span>`
       ).join('');
     }
 
     function insertVariable(name) {
-      const textarea = document.getElementById('field-template');
-      const pos = textarea.selectionStart;
-      textarea.value = textarea.value.slice(0, pos) + `{${name}}` + textarea.value.slice(pos);
-      textarea.focus();
+      const ta = document.getElementById('field-template');
+      const pos = ta.selectionStart;
+      ta.value = ta.value.slice(0, pos) + `{${name}}` + ta.value.slice(pos);
+      ta.focus();
       updateTemplatePreview();
     }
 
     function updateTemplatePreview() {
       const platform = document.getElementById('field-platform').value;
-      const template = document.getElementById('field-template').value;
-      const displayTemplate = template || DEFAULT_TEMPLATES[platform];
+      const template = document.getElementById('field-template').value || DEFAULT_TEMPLATES[platform];
       const sample = SAMPLE_DATA[platform];
-
-      let result = displayTemplate;
-      for (const [key, value] of Object.entries(sample)) {
-        result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+      let result = template;
+      for (const [k, v] of Object.entries(sample)) {
+        result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
       }
       document.getElementById('template-preview').textContent = result;
     }
@@ -521,7 +857,7 @@
       const platform = document.getElementById('field-platform').value;
       document.getElementById('field-template').value = DEFAULT_TEMPLATES[platform];
       updateTemplatePreview();
-      showToast('已恢复为默认模板', 'success');
+      showToast('已恢复默认模板');
     }
 
     function togglePassword() {
@@ -531,21 +867,13 @@
 
     async function saveAccount() {
       const platform = document.getElementById('field-platform').value;
-      const acc = {
-        platform,
-        name: document.getElementById('field-name').value,
-        ua: '',
-        template: document.getElementById('field-template').value,
-      };
+      const acc = { platform, name: document.getElementById('field-name').value, ua: '', template: document.getElementById('field-template').value };
 
       if (platform === 'mimo') {
         acc.account = document.getElementById('field-account').value;
         acc.password = document.getElementById('field-password').value;
         if (editingIndex >= 0) {
-          acc.userId = accounts[editingIndex].userId || '';
-          acc.passToken = accounts[editingIndex].passToken || '';
-          acc.serviceToken = accounts[editingIndex].serviceToken || '';
-          acc.device_id = accounts[editingIndex].device_id || '';
+          Object.assign(acc, { userId: accounts[editingIndex].userId || '', passToken: accounts[editingIndex].passToken || '', serviceToken: accounts[editingIndex].serviceToken || '', device_id: accounts[editingIndex].device_id || '' });
         }
       } else {
         acc.phone = document.getElementById('field-phone').value;
@@ -554,24 +882,20 @@
         acc.sign = document.getElementById('field-sign').value;
       }
 
-      if (editingIndex >= 0) {
-        accounts[editingIndex] = acc;
-      } else {
-        accounts.push(acc);
-      }
+      if (editingIndex >= 0) accounts[editingIndex] = acc;
+      else accounts.push(acc);
 
       await saveAccounts();
       closeModal();
-      showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加', 'success');
+      showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加');
     }
 
     async function deleteAccount(index) {
       const name = accounts[index].name || accounts[index].account || accounts[index].phone;
-      if (!confirm(`确定删除账号 "${name}"？`)) return;
-
+      if (!confirm(`确定删除账号「${name}」？`)) return;
       accounts.splice(index, 1);
       await saveAccounts();
-      showToast('账号已删除', 'success');
+      showToast('账号已删除');
     }
 
     async function saveAccounts() {
@@ -579,14 +903,14 @@
         await bridge.apiPost('config', { accounts });
         renderAccounts();
       } catch (e) {
-        showToast('保存失败: ' + e.message, 'error');
+        showToast('保存失败', 'error');
       }
     }
 
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.className = `status-toast ${type} show`;
+      toast.className = `toast ${type} show`;
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
