@@ -32,12 +32,62 @@ def _fmt_yuan(val) -> str:
     return f"¥{int(val) / 100:.2f}"
 
 
+_DEFAULT_WASU_TEMPLATE = """📺 {label}
+────────────────
+💰 账户余额: {balance}
+   当月话费: {month_fee}
+   欠费: {arrears}
+
+📶 本月累计使用: {total_used}
+   总流量: {total} | 已用: {used} | 剩余: {remain}
+
+🕐 查询时间: {query_time}"""
+
+
 class WasuResult(QueryResult):
     """华数广电查询结果"""
+
+    def __init__(self, success: bool, platform: str, account_name: str, data: dict, error: str = "", template: str | None = None):
+        super().__init__(success, platform, account_name, data, error)
+        self.template = template
 
     def _format_data(self) -> str:
         """格式化华数广电查询结果"""
         data = self.data
+
+        # 如果有模板，使用模板格式化
+        if self.template:
+            try:
+                # 提取流量详细信息
+                traffic_items = data.get("traffic", {}).get("items", [])
+                traffic_detail = ""
+                for item in traffic_items:
+                    tag = "结转" if item.get("is_carry") else ""
+                    traffic_detail += f"\n     · {item['name']} {tag}: {item['total']} (已用 {item['used']} / 剩 {item['remain']})"
+
+                # 提取语音信息
+                voice_items = data.get("voice", [])
+                voice_detail = ""
+                for item in voice_items:
+                    voice_detail += f"\n📞 语音: {item['name']}: {item['total']}分钟 | 剩余 {item['remain']}分钟"
+
+                return self.template.format(
+                    label=self.account_name,
+                    balance=data.get("balance", {}).get("balance", "?"),
+                    month_fee=data.get("balance", {}).get("month_fee", "?"),
+                    arrears=data.get("balance", {}).get("arrears", "?"),
+                    total_used=data.get("traffic", {}).get("total_used", "?"),
+                    total=data.get("traffic", {}).get("total", "?"),
+                    used=data.get("traffic", {}).get("used", "?"),
+                    remain=data.get("traffic", {}).get("remain", "?"),
+                    query_time=data.get("query_time", ""),
+                    traffic_detail=traffic_detail,
+                    voice_detail=voice_detail,
+                )
+            except (KeyError, ValueError):
+                pass
+
+        # 使用默认格式
         lines = [
             f"📺 {self.platform} - {self.account_name}",
             "────────────────",
@@ -84,12 +134,13 @@ class WasuPlatform(BasePlatform):
     def platform_icon(self) -> str:
         return "📺"
 
-    async def query(self, account: dict) -> QueryResult:
+    async def query(self, account: dict, template: str | None = None) -> QueryResult:
         """查询华数广电账号"""
         user_key = account.get("user_key", "")
         token = account.get("token", "")
         phone = account.get("phone", "")
         sign = account.get("sign", "")
+        ua = account.get("ua", "")
 
         if not user_key or not token or not phone:
             return WasuResult(
@@ -97,19 +148,21 @@ class WasuPlatform(BasePlatform):
                 platform=self.platform_name,
                 account_name=self.get_account_label(account),
                 data={},
-                error="缺少必要参数（user_key, token, phone）"
+                error="缺少必要参数（user_key, token, phone）",
+                template=template
             )
 
         try:
             loop = asyncio.get_event_loop()
             data = await loop.run_in_executor(
-                None, self._do_query, user_key, token, phone, sign
+                None, self._do_query, user_key, token, phone, sign, ua
             )
             return WasuResult(
                 success=True,
                 platform=self.platform_name,
                 account_name=self.get_account_label(account),
-                data=data
+                data=data,
+                template=template
             )
         except Exception as e:
             return WasuResult(
@@ -117,18 +170,23 @@ class WasuPlatform(BasePlatform):
                 platform=self.platform_name,
                 account_name=self.get_account_label(account),
                 data={},
-                error=str(e)
+                error=str(e),
+                template=template
             )
 
-    def _do_query(self, user_key: str, token: str, phone: str, sign: str) -> dict:
+    def _do_query(self, user_key: str, token: str, phone: str, sign: str, ua: str = "") -> dict:
         """执行查询（同步）"""
+        headers = {**_HEADERS}
+        if ua:
+            headers["User-Agent"] = ua
+
         def _post(path: str, payload: dict) -> dict:
             body = json.dumps(payload, separators=(",", ":"))
             opener, _ = new_opener()
             req = Request(
                 _BASE_URL + path,
                 data=body.encode("utf-8"),
-                headers={**_HEADERS, "x-sign": sign},
+                headers={**headers, "x-sign": sign},
                 method="POST"
             )
             with opener.open(req, timeout=10) as r:

@@ -99,6 +99,7 @@ def format_report(
     label: str = "",
     prev_limit: dict | None = None,
     plugin_dir: Path | None = None,
+    template: str | None = None,
 ) -> str:
     """使用模板格式化用量报告"""
     bal = results.get("balance", {}).get("data", {})
@@ -125,7 +126,8 @@ def format_report(
             f"\n  并发        {concurrency or '-'}"
         )
 
-    tpl = _load_template(plugin_dir)
+    # 使用传入的模板，否则从文件加载
+    tpl = template if template else _load_template(plugin_dir)
     return tpl.format(
         label=label or "MiMo用量",
         balance=bal.get("balance", "?"),
