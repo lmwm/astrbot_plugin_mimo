@@ -145,7 +145,7 @@ class ResourceQueryPlugin(Star):
         return f"账号{count:03d}"
 
     def _get_all_accounts(self) -> list:
-        """获取所有账号"""
+        """获取所有账号（包括模板）"""
         accounts = []
         data_path = self._get_data_path()
         # 读取所有 json 文件（排除 accounts.json）
@@ -156,6 +156,13 @@ class ResourceQueryPlugin(Star):
                 acc = json.loads(json_file.read_text(encoding="utf-8"))
                 if isinstance(acc, dict):
                     acc["_config_file"] = json_file.name  # 记录配置文件名
+                    # 读取对应的模板文件
+                    template_file = data_path / json_file.name.replace(".json", ".txt")
+                    if template_file.exists():
+                        acc["template"] = template_file.read_text(encoding="utf-8")
+                    elif not acc.get("template"):
+                        # 如果没有模板文件且没有模板内容，使用默认模板
+                        acc["template"] = self._get_default_template(acc.get("platform", ""))
                     accounts.append(acc)
             except (json.JSONDecodeError, OSError):
                 continue
@@ -181,8 +188,15 @@ class ResourceQueryPlugin(Star):
                 pass
         return accounts
 
+    def _get_default_template(self, platform: str) -> str:
+        """获取默认模板内容"""
+        template_file = self._plugin_dir / "templates" / f"{platform}_default.txt"
+        if template_file.exists():
+            return template_file.read_text(encoding="utf-8")
+        return ""
+
     def _save_all_accounts(self, accounts: list):
-        """保存所有账号到单独的配置文件"""
+        """保存所有账号到单独的配置文件和模板文件"""
         data_path = self._get_data_path()
         # 为每个账号保存到单独文件
         for acc in accounts:
@@ -194,6 +208,12 @@ class ResourceQueryPlugin(Star):
                 json.dumps(save_acc, ensure_ascii=False, indent=2),
                 encoding="utf-8"
             )
+            # 保存模板文件（与配置文件同名，扩展名为 .txt）
+            template = acc.get("template", "")
+            if template:
+                template_filename = filename.replace(".json", ".txt")
+                template_filepath = data_path / template_filename
+                template_filepath.write_text(template, encoding="utf-8")
 
     def _get_mimo_accounts(self) -> list:
         """获取 MiMo 账号"""
