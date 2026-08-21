@@ -14,20 +14,15 @@ short_desc: "查询小米 MiMo 用量、华数广电流量话费"
 author: "御命"
 
 # 插件版本号（每次更新递增，触发 AstrBot 更新检测）
-version: "2.0.0"
+version: "2.1.0"
 
 # 插件仓库地址（用于插件市场来源归属和安装）
-repo: "https://github.com/lmwm/astrbot_plugin_mimo"
+repo: "https://github.com/lmwm/astrbot_plugin_resource_query"
 
 # 声明支持的消息平台
 support_platforms:
   - aiocqhttp
   - qq_official
-  - telegram
-  - discord
-  - wecom
-  - lark
-  - dingtalk
 
 # 声明兼容的 AstrBot 版本范围
 astrbot_version: ">=4.0.0"
