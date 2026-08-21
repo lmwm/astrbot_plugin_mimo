@@ -487,7 +487,8 @@
       try {
         const resp = await fetch('/api/v1/plugins/astrbot_plugin_resource_query/config');
         const data = await resp.json();
-        accounts = data.data?.accounts || [];
+        // API 返回 data.config.accounts
+        accounts = data.data?.config?.accounts || data.data?.accounts || [];
         renderAccounts();
       } catch (e) {
         console.error('加载失败:', e);
@@ -629,10 +630,11 @@
 
     function updateTemplatePreview() {
       const platform = document.getElementById('field-platform').value;
-      const template = document.getElementById('field-template').value || DEFAULT_TEMPLATES[platform];
+      const template = document.getElementById('field-template').value;
+      const displayTemplate = template || DEFAULT_TEMPLATES[platform];
       const sample = SAMPLE_DATA[platform];
 
-      let result = template;
+      let result = displayTemplate;
       for (const [key, value] of Object.entries(sample)) {
         result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
       }
