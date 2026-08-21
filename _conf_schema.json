@@ -1,6 +1,6 @@
 {
-    "accounts": {
-        "description": "小米账号列表",
+    "mimo_accounts": {
+        "description": "小米 MiMo 账号列表",
         "type": "template_list",
         "hint": "点击添加按钮新增账号，首次填写 account+password，登录后自动补全其他字段",
         "default": [],
@@ -36,7 +36,7 @@
                         "description": "User-Agent",
                         "type": "string",
                         "default": "",
-                        "hint": "留空自动补全全局配置\n默认: APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1"
+                        "hint": "留空自动补全全局配置"
                     },
                     "userId": {
                         "description": "用户 ID（自动填入）",
@@ -61,28 +61,73 @@
         }
     },
 
+    "wasu_accounts": {
+        "description": "华数广电账号列表",
+        "type": "template_list",
+        "hint": "点击添加按钮新增账号，需要从华数广电小程序获取 user_key、token、phone、sign",
+        "default": [],
+        "templates": {
+            "wasu_account": {
+                "name": "华数账号",
+                "display_item": "phone",
+                "items": {
+                    "name": {
+                        "description": "账号名称",
+                        "type": "string",
+                        "default": "",
+                        "hint": "自定义显示名称，留空则显示手机号"
+                    },
+                    "user_key": {
+                        "description": "User Key",
+                        "type": "string",
+                        "default": "",
+                        "hint": "从华数广电小程序获取"
+                    },
+                    "token": {
+                        "description": "Token",
+                        "type": "string",
+                        "default": "",
+                        "hint": "从华数广电小程序获取"
+                    },
+                    "phone": {
+                        "description": "手机号",
+                        "type": "string",
+                        "default": "",
+                        "hint": "华数广电绑定的手机号"
+                    },
+                    "sign": {
+                        "description": "签名",
+                        "type": "string",
+                        "default": "",
+                        "hint": "从华数广电小程序获取（可选）"
+                    }
+                }
+            }
+        }
+    },
+
     "device_id": {
-        "description": "全局设备标识",
+        "description": "MiMo 全局设备标识",
         "type": "string",
         "default": "wb_MIQUERY000001",
-        "hint": "所有账号的默认 deviceId，留空自动使用\n默认: wb_MIQUERY000001\n单个账号可在账号配置中单独覆盖"
+        "hint": "所有 MiMo 账号的默认 deviceId\n单个账号可在账号配置中单独覆盖"
     },
     "ua": {
-        "description": "全局 User-Agent",
+        "description": "MiMo 全局 User-Agent",
         "type": "string",
         "default": "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1",
-        "hint": "所有账号的默认 UA，留空自动使用\n默认: APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1\n单个账号可在账号配置中单独覆盖"
+        "hint": "所有 MiMo 账号的默认 UA\n单个账号可在账号配置中单独覆盖"
     },
     "proxy": {
         "description": "网络代理",
         "type": "string",
         "default": "https://gh-proxy.cn/",
-        "hint": "用于 GitHub 更新请求的代理地址，留空禁用代理\n默认: https://gh-proxy.cn/\n格式: https://gh-proxy.cn/ 或 http://host:port"
+        "hint": "用于 GitHub 更新请求的代理地址，留空禁用代理"
     },
     "update_max_retries": {
         "description": "更新最大重试次数",
         "type": "int",
         "default": 3,
-        "hint": "自动更新时网络请求失败的重试次数\n默认: 3，设为 0 禁用重试"
+        "hint": "自动更新时网络请求失败的重试次数"
     }
 }
