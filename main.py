@@ -125,15 +125,24 @@ class ResourceQueryPlugin(Star):
         return data_path
 
     def _get_account_filename(self, acc: dict) -> str:
-        """获取账号配置文件名"""
+        """获取账号配置文件名（格式：平台_账号名称.json）"""
         platform = acc.get("platform", "unknown")
-        if platform == "mimo":
-            identifier = acc.get("account") or acc.get("name") or "unknown"
-        else:
-            identifier = acc.get("phone") or acc.get("name") or "unknown"
+        # 优先使用账号名称
+        name = acc.get("name", "").strip()
+        # 如果没有名称，使用默认格式
+        if not name:
+            name = self._generate_default_name(platform)
         # 清理文件名中的非法字符
-        identifier = "".join(c for c in identifier if c.isalnum() or c in "-_")
-        return f"{platform}_{identifier}.json"
+        name = "".join(c for c in name if c.isalnum() or c in "-_\u4e00-\u9fff")
+        return f"{platform}_{name}.json"
+
+    def _generate_default_name(self, platform: str) -> str:
+        """生成默认账号名称（如：账号001）"""
+        data_path = self._get_data_path()
+        # 获取该平台已有的账号数量
+        existing = list(data_path.glob(f"{platform}_*.json"))
+        count = len(existing) + 1
+        return f"账号{count:03d}"
 
     def _get_all_accounts(self) -> list:
         """获取所有账号"""
