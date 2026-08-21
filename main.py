@@ -60,24 +60,13 @@ class ResourceQueryPlugin(Star):
         # 初始化华数平台
         self._wasu = WasuPlatform()
 
-        # 全局 device_id / UA 为空时自动填入默认值
-        changed = False
-        if not self.config.get("device_id"):
-            self.config["device_id"] = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
-            changed = True
-        if not self.config.get("ua"):
-            self.config["ua"] = os.getenv("MIMO_UA", "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1")
-            changed = True
-        if changed:
-            self.config.save_config()
-
     # ── MiMo 配置读取 ──
 
     def _get_device_id(self) -> str:
-        return self.config.get("device_id") or os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
+        return "wb_MIQUERY000001"
 
     def _get_ua(self) -> str:
-        return self.config.get("ua") or os.getenv("MIMO_UA", "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1")
+        return "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1"
 
     def _resolve_device_id(self, acc: dict) -> str:
         return acc.get("device_id") or self._get_device_id()

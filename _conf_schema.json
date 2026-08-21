@@ -29,14 +29,14 @@
                     "device_id": {
                         "description": "设备标识",
                         "type": "string",
-                        "default": "",
-                        "hint": "留空自动补全全局配置\n默认: wb_MIQUERY000001\n固定 deviceId 可避免反复触发 OTP"
+                        "default": "wb_MIQUERY000001",
+                        "hint": "固定 deviceId 可避免反复触发 OTP\n默认: wb_MIQUERY000001"
                     },
                     "ua": {
                         "description": "User-Agent",
                         "type": "string",
-                        "default": "",
-                        "hint": "留空自动补全全局配置"
+                        "default": "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1",
+                        "hint": "默认: APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1"
                     },
                     "userId": {
                         "description": "用户 ID（自动填入）",
@@ -106,18 +106,6 @@
         }
     },
 
-    "device_id": {
-        "description": "MiMo 全局设备标识",
-        "type": "string",
-        "default": "wb_MIQUERY000001",
-        "hint": "所有 MiMo 账号的默认 deviceId\n单个账号可在账号配置中单独覆盖"
-    },
-    "ua": {
-        "description": "MiMo 全局 User-Agent",
-        "type": "string",
-        "default": "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1",
-        "hint": "所有 MiMo 账号的默认 UA\n单个账号可在账号配置中单独覆盖"
-    },
     "proxy": {
         "description": "网络代理",
         "type": "string",
