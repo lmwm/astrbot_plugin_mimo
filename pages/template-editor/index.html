@@ -490,7 +490,7 @@
           <div class="template-layout">
             <div class="template-editor">
               <div class="template-label">模板编辑</div>
-              <textarea class="form-textarea" id="field-template" placeholder="留空使用默认模板"></textarea>
+              <textarea class="form-textarea" id="field-template"></textarea>
               <div class="variable-tags" id="variable-tags"></div>
             </div>
             <div class="template-preview-box">
@@ -641,14 +641,19 @@
       editingIndex = -1;
       document.getElementById('modal-title').textContent = '添加账号';
       resetForm();
+      // 新建账号时显示默认模板
+      const p = document.getElementById('field-platform').value;
+      document.getElementById('field-template').value = DEFAULT_TEMPLATES[p];
+      updateTemplatePreview();
       openModal();
     }
 
     function editAccount(index) {
       editingIndex = index;
       const acc = accounts[index];
+      const platform = acc.platform || 'mimo';
       document.getElementById('modal-title').textContent = '编辑账号';
-      document.getElementById('field-platform').value = acc.platform || 'mimo';
+      document.getElementById('field-platform').value = platform;
       document.getElementById('field-name').value = acc.name || '';
       document.getElementById('field-account').value = acc.account || '';
       document.getElementById('field-password').value = acc.password || '';
@@ -657,7 +662,7 @@
       document.getElementById('field-token').value = acc.token || '';
       document.getElementById('field-sign').value = acc.sign || '';
       // 切换账号时同步切换模板：使用账号自己的模板，否则显示默认模板
-      document.getElementById('field-template').value = acc.template || '';
+      document.getElementById('field-template').value = acc.template || DEFAULT_TEMPLATES[platform];
       togglePlatformFields();
       openModal();
     }
@@ -721,7 +726,13 @@
 
     async function saveAccount() {
       const p = document.getElementById('field-platform').value;
-      const acc = { platform: p, name: document.getElementById('field-name').value, ua: '', template: document.getElementById('field-template').value };
+      let template = document.getElementById('field-template').value.trim();
+      // 如果模板为空，自动填充默认模板
+      if (!template) {
+        template = DEFAULT_TEMPLATES[p];
+        document.getElementById('field-template').value = template;
+      }
+      const acc = { platform: p, name: document.getElementById('field-name').value, ua: '', template: template };
       if (p === 'mimo') {
         acc.account = document.getElementById('field-account').value;
         acc.password = document.getElementById('field-password').value;
