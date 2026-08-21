@@ -15,17 +15,31 @@ import jwt
 
 from .http_utils import new_opener, proxy_url, retry
 
-_PLUGIN_NAME = "astrbot_plugin_mimo"
-_PLUGIN_VERSION = "1.6.3"
 _REPO_OWNER = "lmwm"
-_REPO_NAME = "astrbot_plugin_mimo"
+_REPO_NAME = "astrbot_plugin_resource_query"
 _GITHUB_API = f"https://api.github.com/repos/{_REPO_OWNER}/{_REPO_NAME}"
+
+
+def _get_plugin_version() -> str:
+    """从 metadata.yaml 动态读取版本号"""
+    try:
+        metadata_path = Path(__file__).parent / "metadata.yaml"
+        if metadata_path.exists():
+            content = metadata_path.read_text(encoding="utf-8")
+            for line in content.splitlines():
+                line = line.strip()
+                if line.startswith("version:"):
+                    return line.split(":", 1)[1].strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return "0.0.0"
 
 
 async def check_update(config) -> dict:
     """检查 GitHub 是否有新版本（支持代理和重试）"""
     proxy = config.get("proxy") or os.getenv("MIMO_GH_PROXY", "https://gh-proxy.cn/")
     max_retries = int(config.get("update_max_retries") or 3)
+    current_version = _get_plugin_version()
 
     def _fetch():
         def _do():
@@ -34,7 +48,7 @@ async def check_update(config) -> dict:
             req = Request(
                 url,
                 headers={
-                    "User-Agent": "astrbot-plugin-mimo-updater",
+                    "User-Agent": "astrbot-plugin-resource-query-updater",
                     "Accept": "application/vnd.github.v3+json",
                 },
             )
@@ -49,24 +63,24 @@ async def check_update(config) -> dict:
                     version = line.split(":", 1)[1].strip().strip('"').strip("'")
                     return {
                         "latest": version,
-                        "current": _PLUGIN_VERSION,
+                        "current": current_version,
                         "error": "",
                     }
             return {
                 "latest": "",
-                "current": _PLUGIN_VERSION,
+                "current": current_version,
                 "error": "metadata.yaml 中未找到 version",
             }
 
         try:
             return retry(_do, max_retries)
         except (OSError, TimeoutError, json.JSONDecodeError, KeyError) as e:
-            return {"latest": "", "current": _PLUGIN_VERSION, "error": str(e)}
+            return {"latest": "", "current": current_version, "error": str(e)}
 
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(None, _fetch)
     result["has_update"] = bool(
-        result["latest"] and result["latest"] != _PLUGIN_VERSION
+        result["latest"] and result["latest"] != current_version
     )
     return result
 
@@ -87,7 +101,7 @@ async def do_update(config) -> str:
                 req = Request(
                     commits_url,
                     headers={
-                        "User-Agent": "astrbot-plugin-mimo-updater",
+                        "User-Agent": "astrbot-plugin-resource-query-updater",
                         "Accept": "application/vnd.github.v3+json",
                     },
                 )
@@ -104,7 +118,7 @@ async def do_update(config) -> str:
                 )
                 req = Request(
                     zip_url,
-                    headers={"User-Agent": "astrbot-plugin-mimo-updater"},
+                    headers={"User-Agent": "astrbot-plugin-resource-query-updater"},
                 )
                 with opener.open(req, timeout=30) as r:
                     return r.read()
@@ -112,7 +126,7 @@ async def do_update(config) -> str:
             zip_data = retry(_download_zip, max_retries)
 
             plugin_dir = Path(__file__).parent
-            tmp_dir = plugin_dir.parent / f"{_PLUGIN_NAME}_tmp_update"
+            tmp_dir = plugin_dir.parent / f"{_REPO_NAME}_tmp_update"
             if tmp_dir.exists():
                 shutil.rmtree(tmp_dir)
 
@@ -180,7 +194,7 @@ async def reload_plugin(context) -> str:
 
             opener, _ = new_opener()
             reload_url = f"http://{host}:{port}/api/plugin/reload"
-            body = json.dumps({"name": _PLUGIN_NAME}).encode()
+            body = json.dumps({"name": _REPO_NAME}).encode()
             req = Request(
                 reload_url,
                 data=body,
