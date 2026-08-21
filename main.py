@@ -19,6 +19,7 @@
 """
 
 import asyncio
+import os
 from pathlib import Path
 
 from astrbot.api import AstrBotConfig
