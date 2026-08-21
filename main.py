@@ -139,29 +139,34 @@ class ResourceQueryPlugin(Star):
         """获取所有账号"""
         accounts = []
         data_path = self._get_data_path()
-        # 读取所有 json 文件
+        # 读取所有 json 文件（排除 accounts.json）
         for json_file in data_path.glob("*.json"):
+            if json_file.name == "accounts.json":
+                continue
             try:
                 acc = json.loads(json_file.read_text(encoding="utf-8"))
-                acc["_config_file"] = json_file.name  # 记录配置文件名
-                accounts.append(acc)
+                if isinstance(acc, dict):
+                    acc["_config_file"] = json_file.name  # 记录配置文件名
+                    accounts.append(acc)
             except (json.JSONDecodeError, OSError):
                 continue
         # 兼容旧版本：从 accounts.json 读取并迁移
         old_file = data_path / "accounts.json"
         if old_file.exists():
             try:
-                old_accounts = json.loads(old_file.read_text(encoding="utf-8"))
-                if isinstance(old_accounts, list):
-                    for acc in old_accounts:
-                        filename = self._get_account_filename(acc)
-                        filepath = data_path / filename
-                        if not filepath.exists():
-                            filepath.write_text(
-                                json.dumps(acc, ensure_ascii=False, indent=2),
-                                encoding="utf-8"
-                            )
-                            accounts.append(acc)
+                old_data = json.loads(old_file.read_text(encoding="utf-8"))
+                if isinstance(old_data, list):
+                    for acc in old_data:
+                        if isinstance(acc, dict):
+                            filename = self._get_account_filename(acc)
+                            filepath = data_path / filename
+                            if not filepath.exists():
+                                filepath.write_text(
+                                    json.dumps(acc, ensure_ascii=False, indent=2),
+                                    encoding="utf-8"
+                                )
+                                acc["_config_file"] = filename
+                                accounts.append(acc)
                     old_file.unlink()  # 删除旧文件
             except (json.JSONDecodeError, OSError):
                 pass
