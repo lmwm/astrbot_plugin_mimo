@@ -45,7 +45,11 @@ from .updater import check_update, do_update, reload_plugin
 from .wasu import WasuPlatform
 
 _PLUGIN_NAME = "astrbot_plugin_resource_query"
-_PLUGIN_VERSION = "2.0.1"
+_PLUGIN_VERSION = "2.1.0"
+
+# 默认设备标识和 User-Agent
+_DEFAULT_DEVICE_ID = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
+_DEFAULT_UA = os.getenv("MIMO_UA", "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1")
 
 
 @register(_PLUGIN_NAME, "资源查询", "多平台资源查询插件（MiMo/华数广电）", _PLUGIN_VERSION)
@@ -56,6 +60,14 @@ class ResourceQueryPlugin(Star):
         self._plugin_dir = Path(__file__).parent
         self._limits = LimitTracker(self._plugin_dir)
         self._wasu = WasuPlatform()
+
+        # 确保配置中有 accounts 字段
+        if "accounts" not in self.config:
+            self.config["accounts"] = []
+            self.config.save_config()
+
+        # 为现有账号填充默认 device_id 和 ua
+        self._fill_default_fields()
 
         # 注册 Pages API
         context.register_web_api(
@@ -70,6 +82,24 @@ class ResourceQueryPlugin(Star):
             ["POST"],
             "保存插件配置",
         )
+
+    def _fill_default_fields(self):
+        """为缺少 device_id 和 ua 的账号填充默认值"""
+        accounts = self._get_all_accounts()
+        changed = False
+        # 使用配置中的默认值，如果没有则使用环境变量
+        default_device_id = self.config.get("device_id") or _DEFAULT_DEVICE_ID
+        default_ua = self.config.get("ua") or _DEFAULT_UA
+        for acc in accounts:
+            if acc.get("platform") == "mimo":
+                if not acc.get("device_id"):
+                    acc["device_id"] = default_device_id
+                    changed = True
+                if not acc.get("ua"):
+                    acc["ua"] = default_ua
+                    changed = True
+        if changed:
+            self._save_all_accounts(accounts)
 
     # ── Pages API ──
 

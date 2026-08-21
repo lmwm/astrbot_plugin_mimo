@@ -1,4 +1,16 @@
 {
+    "device_id": {
+        "description": "默认设备标识",
+        "type": "string",
+        "default": "wb_MIQUERY000001",
+        "hint": "MiMo 账号的默认设备标识，可在账号中单独覆盖"
+    },
+    "ua": {
+        "description": "默认 User-Agent",
+        "type": "string",
+        "default": "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1",
+        "hint": "MiMo 账号的默认 User-Agent，可在账号中单独覆盖"
+    },
     "proxy": {
         "description": "网络代理",
         "type": "string",

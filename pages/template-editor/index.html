@@ -454,6 +454,16 @@
                 <button type="button" class="input-action" onclick="togglePassword()">👁</button>
               </div>
             </div>
+            <div class="form-group">
+              <label class="form-label">设备标识</label>
+              <input class="form-input" id="field-device-id" placeholder="留空使用默认值">
+              <div class="form-hint">留空使用默认: wb_MIQUERY000001</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">User-Agent</label>
+              <input class="form-input" id="field-ua" placeholder="留空使用默认值">
+              <div class="form-hint">留空使用默认 UA</div>
+            </div>
           </div>
         </div>
 
@@ -657,6 +667,8 @@
       document.getElementById('field-name').value = acc.name || '';
       document.getElementById('field-account').value = acc.account || '';
       document.getElementById('field-password').value = acc.password || '';
+      document.getElementById('field-device-id').value = acc.device_id || '';
+      document.getElementById('field-ua').value = acc.ua || '';
       document.getElementById('field-phone').value = acc.phone || '';
       document.getElementById('field-user-key').value = acc.user_key || '';
       document.getElementById('field-token').value = acc.token || '';
@@ -672,7 +684,7 @@
 
     function resetForm() {
       document.getElementById('field-platform').value = 'mimo';
-      ['field-name','field-account','field-password','field-phone','field-user-key','field-token','field-sign','field-template'].forEach(id => document.getElementById(id).value = '');
+      ['field-name','field-account','field-password','field-device-id','field-ua','field-phone','field-user-key','field-token','field-sign','field-template'].forEach(id => document.getElementById(id).value = '');
       togglePlatformFields();
     }
 
@@ -732,11 +744,23 @@
         template = DEFAULT_TEMPLATES[p];
         document.getElementById('field-template').value = template;
       }
-      const acc = { platform: p, name: document.getElementById('field-name').value, ua: '', template: template };
+      const acc = {
+        platform: p,
+        name: document.getElementById('field-name').value,
+        ua: document.getElementById('field-ua').value || '',
+        template: template
+      };
       if (p === 'mimo') {
         acc.account = document.getElementById('field-account').value;
         acc.password = document.getElementById('field-password').value;
-        if (editingIndex >= 0) Object.assign(acc, { userId: accounts[editingIndex].userId || '', passToken: accounts[editingIndex].passToken || '', serviceToken: accounts[editingIndex].serviceToken || '', device_id: accounts[editingIndex].device_id || '' });
+        acc.device_id = document.getElementById('field-device-id').value || '';
+        if (editingIndex >= 0) {
+          Object.assign(acc, {
+            userId: accounts[editingIndex].userId || '',
+            passToken: accounts[editingIndex].passToken || '',
+            serviceToken: accounts[editingIndex].serviceToken || ''
+          });
+        }
       } else {
         acc.phone = document.getElementById('field-phone').value;
         acc.user_key = document.getElementById('field-user-key').value;
