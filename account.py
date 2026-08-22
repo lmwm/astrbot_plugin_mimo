@@ -82,8 +82,12 @@ class AccountManager:
     def save_all_accounts(self, accounts: list):
         """保存所有账号到单独的配置文件和模板文件"""
         data_path = self._get_data_path()
+        
+        # 收集新账号的文件名
+        new_filenames = set()
         for acc in accounts:
             filename = self._get_account_filename(acc)
+            new_filenames.add(filename)
             filepath = data_path / filename
             # 移除内部字段和 template（template 单独保存到 TXT 文件）
             save_acc = {k: v for k, v in acc.items() if not k.startswith("_") and k != "template"}
@@ -96,6 +100,17 @@ class AccountManager:
             template_filename = filename.replace(".json", ".txt")
             template_filepath = data_path / template_filename
             template_filepath.write_text(template, encoding="utf-8")
+        
+        # 删除不在新列表中的旧文件
+        for old_file in data_path.glob("*.json"):
+            if old_file.name == "accounts.json":
+                continue
+            if old_file.name not in new_filenames:
+                old_file.unlink()
+                # 同时删除对应的模板文件
+                template_file = data_path / old_file.name.replace(".json", ".txt")
+                if template_file.exists():
+                    template_file.unlink()
 
     def _migrate_old_accounts(self, data_path: Path, accounts: list):
         """兼容旧版本：从 accounts.json 迁移"""
