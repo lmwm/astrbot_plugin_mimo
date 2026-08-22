@@ -41,7 +41,7 @@ from .updater import check_update, do_update, reload_plugin
 from .wasu import WasuPlatform
 
 _PLUGIN_NAME = "astrbot_plugin_resource_query"
-_PLUGIN_VERSION = "3.1.0"
+_PLUGIN_VERSION = "3.2.0"
 
 # 默认设备标识和 User-Agent
 _DEFAULT_DEVICE_ID = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
@@ -72,6 +72,9 @@ class ResourceQueryPlugin(Star):
         )
         context.register_web_api(
             f"/{_PLUGIN_NAME}/config", self.save_config, ["POST"], "保存插件配置"
+        )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/templates", self.get_templates, ["GET"], "获取默认模板"
         )
 
     def _fill_default_fields(self):
@@ -105,6 +108,20 @@ class ResourceQueryPlugin(Star):
         if "accounts" in payload:
             self._accounts.save_all_accounts(payload["accounts"])
         return json_response({"status": "ok"})
+
+    async def get_templates(self):
+        """获取默认模板（从 templates/ 文件夹读取）"""
+        from astrbot.api.web import json_response
+        templates = {}
+        templates_dir = self._plugin_dir / "templates"
+        if templates_dir.exists():
+            for txt_file in templates_dir.glob("*.txt"):
+                platform = txt_file.stem.replace("_default", "")
+                try:
+                    templates[platform] = txt_file.read_text(encoding="utf-8")
+                except OSError:
+                    pass
+        return json_response(templates)
 
     # ================== 主指令 ==================
 
