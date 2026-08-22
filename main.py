@@ -6,7 +6,7 @@
   - 华数广电：流量/通话/余额查询
 
 指令：
-  /query                    — 查询所有平台
+  /query                    — 查询帮助
   /query mimo               — 查询所有 MiMo 账号
   /query mimo <序号>        — 查询指定 MiMo 账号
   /query mimo login         — MiMo 登录
@@ -19,40 +19,36 @@
 """
 
 import asyncio
-import json
 import os
 from pathlib import Path
 
 from astrbot.api import AstrBotConfig
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.star import Context, Star, register
-from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 from astrbot.core.utils.session_waiter import SessionController, session_waiter
 
-from .base import QueryResult
-from .mi_account import (
+from .account import AccountManager
+from .mimo import (
     LoginError,
-    MiAccount,
+    MimoPlatform,
+    MimoResult,
     OtpRequired,
     PassTokenExpired,
     StsError,
-)
-from .query import (
-    LimitTracker,
-    format_report,
-    is_auth_error,
-    is_valid_response,
-    query_mimo,
+    _sync_login_account,
 )
 from .updater import check_update, do_update, reload_plugin
 from .wasu import WasuPlatform
 
 _PLUGIN_NAME = "astrbot_plugin_resource_query"
-_PLUGIN_VERSION = "2.1.0"
+_PLUGIN_VERSION = "3.1.0"
 
 # 默认设备标识和 User-Agent
 _DEFAULT_DEVICE_ID = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
-_DEFAULT_UA = os.getenv("MIMO_UA", "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1")
+_DEFAULT_UA = os.getenv(
+    "MIMO_UA",
+    "APP/com.xiaomi.mihome APPV/11.3.203 iosPassportSDK/4.2.50 iOS/26.3.1",
+)
 
 
 @register(_PLUGIN_NAME, "资源查询", "多平台资源查询插件（MiMo/华数广电）", _PLUGIN_VERSION)
@@ -61,7 +57,10 @@ class ResourceQueryPlugin(Star):
         super().__init__(context)
         self.config = config
         self._plugin_dir = Path(__file__).parent
-        self._limits = LimitTracker(self._plugin_dir)
+
+        # 初始化管理器和平台模块
+        self._accounts = AccountManager(_PLUGIN_NAME, self._plugin_dir)
+        self._mimo = MimoPlatform(self._plugin_dir)
         self._wasu = WasuPlatform()
 
         # 为现有账号填充默认 device_id 和 ua
@@ -69,23 +68,16 @@ class ResourceQueryPlugin(Star):
 
         # 注册 Pages API
         context.register_web_api(
-            f"/{_PLUGIN_NAME}/config",
-            self.get_config,
-            ["GET"],
-            "获取插件配置",
+            f"/{_PLUGIN_NAME}/config", self.get_config, ["GET"], "获取插件配置"
         )
         context.register_web_api(
-            f"/{_PLUGIN_NAME}/config",
-            self.save_config,
-            ["POST"],
-            "保存插件配置",
+            f"/{_PLUGIN_NAME}/config", self.save_config, ["POST"], "保存插件配置"
         )
 
     def _fill_default_fields(self):
         """为缺少 device_id 和 ua 的账号填充默认值"""
-        accounts = self._get_all_accounts()
+        accounts = self._accounts.get_all_accounts()
         changed = False
-        # 使用配置中的默认值，如果没有则使用环境变量
         default_device_id = self.config.get("device_id") or _DEFAULT_DEVICE_ID
         default_ua = self.config.get("ua") or _DEFAULT_UA
         for acc in accounts:
@@ -97,269 +89,22 @@ class ResourceQueryPlugin(Star):
                     acc["ua"] = default_ua
                     changed = True
         if changed:
-            self._save_all_accounts(accounts)
+            self._accounts.save_all_accounts(accounts)
 
     # ── Pages API ──
 
     async def get_config(self):
         """获取配置"""
         from astrbot.api.web import json_response
-        return json_response({
-            "accounts": self._get_all_accounts(),
-        })
+        return json_response({"accounts": self._accounts.get_all_accounts()})
 
     async def save_config(self):
         """保存配置"""
         from astrbot.api.web import json_response, request
         payload = await request.json(default={})
         if "accounts" in payload:
-            self._save_all_accounts(payload["accounts"])
+            self._accounts.save_all_accounts(payload["accounts"])
         return json_response({"status": "ok"})
-
-    # ── 账号管理 ──
-
-    def _get_data_path(self) -> Path:
-        """获取插件数据目录"""
-        data_path = Path(get_astrbot_data_path()) / "plugin_data" / self.name
-        data_path.mkdir(parents=True, exist_ok=True)
-        return data_path
-
-    def _get_account_filename(self, acc: dict) -> str:
-        """获取账号配置文件名（格式：平台_账号名称.json）"""
-        platform = acc.get("platform", "unknown")
-        # 优先使用账号名称
-        name = acc.get("name", "").strip()
-        # 如果没有名称，使用默认格式
-        if not name:
-            name = self._generate_default_name(platform)
-        # 清理文件名中的非法字符
-        name = "".join(c for c in name if c.isalnum() or c in "-_\u4e00-\u9fff")
-        return f"{platform}_{name}.json"
-
-    def _generate_default_name(self, platform: str) -> str:
-        """生成默认账号名称（如：账号001）"""
-        data_path = self._get_data_path()
-        # 获取该平台已有的账号数量
-        existing = list(data_path.glob(f"{platform}_*.json"))
-        count = len(existing) + 1
-        return f"账号{count:03d}"
-
-    def _get_all_accounts(self) -> list:
-        """获取所有账号（包括模板）"""
-        accounts = []
-        data_path = self._get_data_path()
-        # 读取所有 json 文件（排除 accounts.json）
-        for json_file in data_path.glob("*.json"):
-            if json_file.name == "accounts.json":
-                continue
-            try:
-                acc = json.loads(json_file.read_text(encoding="utf-8"))
-                if isinstance(acc, dict):
-                    acc["_config_file"] = json_file.name  # 记录配置文件名
-                    # 读取对应的模板文件
-                    template_file = data_path / json_file.name.replace(".json", ".txt")
-                    if template_file.exists():
-                        acc["template"] = template_file.read_text(encoding="utf-8")
-                    elif not acc.get("template"):
-                        # 如果没有模板文件且没有模板内容，使用默认模板
-                        acc["template"] = self._get_default_template(acc.get("platform", ""))
-                    accounts.append(acc)
-            except (json.JSONDecodeError, OSError):
-                continue
-        # 兼容旧版本：从 accounts.json 读取并迁移
-        old_file = data_path / "accounts.json"
-        if old_file.exists():
-            try:
-                old_data = json.loads(old_file.read_text(encoding="utf-8"))
-                if isinstance(old_data, list):
-                    for acc in old_data:
-                        if isinstance(acc, dict):
-                            filename = self._get_account_filename(acc)
-                            filepath = data_path / filename
-                            if not filepath.exists():
-                                filepath.write_text(
-                                    json.dumps(acc, ensure_ascii=False, indent=2),
-                                    encoding="utf-8"
-                                )
-                                acc["_config_file"] = filename
-                                accounts.append(acc)
-                    old_file.unlink()  # 删除旧文件
-            except (json.JSONDecodeError, OSError):
-                pass
-        return accounts
-
-    def _get_default_template(self, platform: str) -> str:
-        """获取默认模板内容"""
-        template_file = self._plugin_dir / "templates" / f"{platform}_default.txt"
-        if template_file.exists():
-            return template_file.read_text(encoding="utf-8")
-        return ""
-
-    def _save_all_accounts(self, accounts: list):
-        """保存所有账号到单独的配置文件和模板文件"""
-        data_path = self._get_data_path()
-        # 为每个账号保存到单独文件
-        for acc in accounts:
-            filename = self._get_account_filename(acc)
-            filepath = data_path / filename
-            # 移除内部字段
-            save_acc = {k: v for k, v in acc.items() if not k.startswith("_")}
-            filepath.write_text(
-                json.dumps(save_acc, ensure_ascii=False, indent=2),
-                encoding="utf-8"
-            )
-            # 保存模板文件（与配置文件同名，扩展名为 .txt）
-            template = acc.get("template", "")
-            if template:
-                template_filename = filename.replace(".json", ".txt")
-                template_filepath = data_path / template_filename
-                template_filepath.write_text(template, encoding="utf-8")
-
-    def _get_mimo_accounts(self) -> list:
-        """获取 MiMo 账号"""
-        return [acc for acc in self._get_all_accounts() if acc.get("platform") == "mimo"]
-
-    def _get_mimo_account_indices(self) -> list:
-        """获取 MiMo 账号在总列表中的索引"""
-        all_accounts = self._get_all_accounts()
-        return [(i, acc) for i, acc in enumerate(all_accounts) if acc.get("platform") == "mimo"]
-
-    def _get_wasu_accounts(self) -> list:
-        """获取华数账号"""
-        return [acc for acc in self._get_all_accounts() if acc.get("platform") == "wasu"]
-
-    def _get_wasu_account_indices(self) -> list:
-        """获取华数账号在总列表中的索引"""
-        all_accounts = self._get_all_accounts()
-        return [(i, acc) for i, acc in enumerate(all_accounts) if acc.get("platform") == "wasu"]
-
-    def _find_mimo_account_index(self, account: str) -> int:
-        """查找 MiMo 账号在 MiMo 列表中的索引"""
-        mimo_accounts = self._get_mimo_accounts()
-        for i, acc in enumerate(mimo_accounts):
-            if acc.get("account") == account:
-                return i
-        return -1
-
-    # ── MiMo 凭据管理 ──
-
-    def _ensure_account(self, acc: dict) -> dict:
-        """确保账号有可用的凭据。优先级：serviceToken > passToken > account+password"""
-        service_token = acc.get("serviceToken", "")
-        pass_token = acc.get("passToken", "")
-        user_id = acc.get("userId", "")
-
-        if service_token and user_id:
-            return acc
-
-        if pass_token and user_id:
-            mi = MiAccount(acc.get("device_id", ""), acc.get("ua", ""))
-            try:
-                acc["serviceToken"] = mi.login_with_passtoken(user_id, pass_token)
-                return acc
-            except PassTokenExpired:
-                acc["passToken"] = ""
-            except (OSError, StsError):
-                pass
-
-        account = acc.get("account", "")
-        password = acc.get("password", "")
-        if account and password:
-            mi = MiAccount(acc.get("device_id", ""), acc.get("ua", ""))
-            try:
-                result = mi.login_with_password(account, password)
-                acc["userId"] = result["userId"]
-                acc["passToken"] = result["passToken"]
-                acc["serviceToken"] = result["serviceToken"]
-                return acc
-            except OtpRequired:
-                acc["_otp_required"] = True
-            except LoginError as e:
-                acc["_login_error"] = f"登录失败: {e}"
-            except (OSError, StsError) as e:
-                acc["_login_error"] = f"网络错误: {e}"
-            return acc
-
-        acc["_login_error"] = "令牌过期，请使用 /query mimo login 重新登录"
-        return acc
-
-    def _re_login_account(self, acc: dict) -> dict:
-        """查询失败后重新登录。优先级：passToken > account+password"""
-        acc["serviceToken"] = ""
-        pass_token = acc.get("passToken", "")
-        user_id = acc.get("userId", "")
-
-        if pass_token and user_id:
-            mi = MiAccount(acc.get("device_id", ""), acc.get("ua", ""))
-            try:
-                acc["serviceToken"] = mi.login_with_passtoken(user_id, pass_token)
-                return acc
-            except PassTokenExpired:
-                acc["passToken"] = ""
-            except (OSError, StsError):
-                pass
-
-        account = acc.get("account", "")
-        password = acc.get("password", "")
-        if account and password:
-            mi = MiAccount(acc.get("device_id", ""), acc.get("ua", ""))
-            try:
-                result = mi.login_with_password(account, password)
-                acc["userId"] = result["userId"]
-                acc["passToken"] = result["passToken"]
-                acc["serviceToken"] = result["serviceToken"]
-                return acc
-            except OtpRequired:
-                acc["_otp_required"] = True
-            except LoginError as e:
-                acc["_login_error"] = f"重新登录失败: {e}"
-            except (OSError, StsError) as e:
-                acc["_login_error"] = f"网络错误: {e}"
-            return acc
-
-        acc["_login_error"] = "令牌过期，请使用 /query mimo login 重新登录"
-        return acc
-
-    def _login_account(self, acc: dict, otp_code: str | None = None) -> dict:
-        """完整登录流程，返回凭据 dict"""
-        mi = MiAccount(acc.get("device_id", ""), acc.get("ua", ""))
-        result = mi.login_with_password(acc["account"], acc["password"], otp_code=otp_code)
-        return {
-            "account": acc["account"],
-            "password": acc["password"],
-            "userId": result["userId"],
-            "passToken": result["passToken"],
-            "serviceToken": result["serviceToken"],
-        }
-
-    # ── MiMo 查询 ──
-
-    async def _query_one_mimo(self, acc: dict) -> dict:
-        """查询单个 MiMo 账号，失败时自动重登录并重试"""
-        if acc.pop("_otp_required", False):
-            return {"error": "需要短信验证，请使用 /query mimo login 账号 密码 手动登录"}
-
-        login_error = acc.pop("_login_error", "")
-        if login_error:
-            return {"error": login_error}
-
-        service_token = acc.get("serviceToken", "")
-        user_id = acc.get("userId", "")
-        ua = acc.get("ua", "")
-
-        if not service_token or not user_id:
-            return {"error": "无有效凭据，请使用 /query mimo login 账号 密码 登录"}
-
-        results = await query_mimo(service_token, user_id, ua)
-
-        if not is_auth_error(results) and is_valid_response(results):
-            return results
-
-        acc = self._re_login_account(acc)
-        if acc.get("serviceToken"):
-            results = await query_mimo(acc["serviceToken"], user_id, ua)
-
-        return results
 
     # ================== 主指令 ==================
 
@@ -368,7 +113,6 @@ class ResourceQueryPlugin(Star):
         """/query — 资源查询主指令"""
         args = event.get_message_str().strip().split()
 
-        # /query — 显示帮助
         if len(args) == 1:
             yield event.plain_result(
                 "📊 资源查询插件\n"
@@ -382,7 +126,6 @@ class ResourceQueryPlugin(Star):
             return
 
         platform = args[1].lower()
-
         if platform == "mimo":
             async for r in self._handle_mimo(event, args[2:]):
                 yield r
@@ -400,48 +143,41 @@ class ResourceQueryPlugin(Star):
 
     async def _handle_mimo(self, event: AstrMessageEvent, args: list):
         """处理 MiMo 相关命令"""
-        mimo_indices = self._get_mimo_account_indices()
+        mimo_indices = self._accounts.get_account_indices("mimo")
 
         # /query mimo — 查询所有账号
         if not args:
             if not mimo_indices:
-                yield event.plain_result(
-                    "❌ 还没有配置 MiMo 账号\n使用 /query mimo login 账号 密码 添加"
-                )
+                yield event.plain_result("❌ 还没有配置 MiMo 账号\n使用 /query mimo login 账号 密码 添加")
                 return
-
             yield event.plain_result("🔍 正在查询所有 MiMo 账号...")
-            all_accounts = self._get_all_accounts()
-            loop = asyncio.get_event_loop()
-
+            all_accounts = self._accounts.get_all_accounts()
             for idx, acc in mimo_indices:
-                all_accounts[idx] = await loop.run_in_executor(None, self._ensure_account, acc)
-            self._save_all_accounts(all_accounts)
-
+                all_accounts[idx] = await self._mimo.ensure_account(acc)
+            self._accounts.save_all_accounts(all_accounts)
             for idx, acc in mimo_indices:
-                results = await self._query_one_mimo(acc)
-                self._save_all_accounts(all_accounts)
+                result = await self._mimo.query_one(acc)
+                self._accounts.save_all_accounts(all_accounts)
                 label = acc.get("name") or acc.get("account") or f"账号{idx + 1}"
-                if "error" in results:
-                    yield event.plain_result(f"📋 {label}\n❌ {results['error']}")
+                if "error" in result:
+                    yield event.plain_result(f"📋 {label}\n❌ {result['error']}")
                 else:
-                    prev = self._limits.get_prev(acc)
+                    prev = self._mimo.limits.get_prev(acc)
                     template = acc.get("template") or None
-                    yield event.plain_result(format_report(results, label, prev, self._plugin_dir, template))
-                    usage = results.get("usage", {}).get("data", {})
-                    self._limits.update(acc, usage.get("accountRateLimit", {}))
+                    usage = result.get("usage", {}).get("data", {})
+                    self._mimo.limits.update(acc, usage.get("accountRateLimit", {}))
+                    mr = MimoResult(success=True, account_name=label, data=result, prev_limit=prev, template=template)
+                    yield event.plain_result(mr.to_text())
             return
 
         sub_cmd = args[0].lower()
 
-        # /query mimo login
         if sub_cmd == "login":
             yield event.plain_result("🔑 正在处理 MiMo 登录...")
             async for r in self._handle_mimo_login(event, args[1:]):
                 yield r
             return
 
-        # /query mimo list
         if sub_cmd == "list":
             if not mimo_indices:
                 yield event.plain_result("还没有配置 MiMo 账号")
@@ -451,50 +187,46 @@ class ResourceQueryPlugin(Star):
                 has_st = bool(acc.get("serviceToken"))
                 has_pt = bool(acc.get("passToken"))
                 status = "✅" if has_st else ("⚠️ 无serviceToken" if has_pt else "❌ 未登录")
-                lines.append(
-                    f"  {i + 1}. {acc.get('name') or acc.get('account') or f'账号{i+1}'} | userId: {acc.get('userId', '无')} | {status}"
-                )
+                lines.append(f"  {i + 1}. {acc.get('name') or acc.get('account') or f'账号{i+1}'} | userId: {acc.get('userId', '无')} | {status}")
             yield event.plain_result("\n".join(lines))
             return
 
-        # /query mimo del <序号>
         if sub_cmd == "del":
             if len(args) < 2 or not args[1].isdigit():
                 yield event.plain_result("用法: /query mimo del <序号>")
                 return
             del_idx = int(args[1]) - 1
             if 0 <= del_idx < len(mimo_indices):
-                all_accounts = self._get_all_accounts()
+                all_accounts = self._accounts.get_all_accounts()
                 real_idx, acc = mimo_indices[del_idx]
                 all_accounts.pop(real_idx)
-                self._save_all_accounts(all_accounts)
+                self._accounts.save_all_accounts(all_accounts)
                 yield event.plain_result(f"✅ 已删除: {acc.get('name') or acc.get('account')}")
             else:
                 yield event.plain_result(f"❌ 序号 {args[1]} 不存在")
             return
 
-        # /query mimo <序号> — 查询指定账号
         if sub_cmd.isdigit():
             query_idx = int(sub_cmd) - 1
             if 0 <= query_idx < len(mimo_indices):
                 real_idx, acc = mimo_indices[query_idx]
                 yield event.plain_result("🔍 正在查询...")
-                loop = asyncio.get_event_loop()
-                all_accounts = self._get_all_accounts()
-                all_accounts[real_idx] = await loop.run_in_executor(None, self._ensure_account, acc)
+                all_accounts = self._accounts.get_all_accounts()
+                all_accounts[real_idx] = await self._mimo.ensure_account(acc)
                 acc = all_accounts[real_idx]
-                self._save_all_accounts(all_accounts)
-                results = await self._query_one_mimo(acc)
-                self._save_all_accounts(all_accounts)
+                self._accounts.save_all_accounts(all_accounts)
+                result = await self._mimo.query_one(acc)
+                self._accounts.save_all_accounts(all_accounts)
                 label = acc.get("name") or acc.get("account") or f"账号{query_idx + 1}"
                 template = acc.get("template") or None
-                if "error" in results:
-                    yield event.plain_result(f"📋 {label}\n❌ {results['error']}")
+                if "error" in result:
+                    yield event.plain_result(f"📋 {label}\n❌ {result['error']}")
                 else:
-                    prev = self._limits.get_prev(acc)
-                    yield event.plain_result(format_report(results, label, prev, self._plugin_dir, template))
-                    usage = results.get("usage", {}).get("data", {})
-                    self._limits.update(acc, usage.get("accountRateLimit", {}))
+                    prev = self._mimo.limits.get_prev(acc)
+                    usage = result.get("usage", {}).get("data", {})
+                    self._mimo.limits.update(acc, usage.get("accountRateLimit", {}))
+                    mr = MimoResult(success=True, account_name=label, data=result, prev_limit=prev, template=template)
+                    yield event.plain_result(mr.to_text())
             else:
                 yield event.plain_result(f"❌ 序号 {query_idx + 1} 不存在，共 {len(mimo_indices)} 个账号")
             return
@@ -510,9 +242,8 @@ class ResourceQueryPlugin(Star):
 
     async def _handle_mimo_login(self, event: AstrMessageEvent, args: list):
         """处理 MiMo 登录命令"""
-        mimo_indices = self._get_mimo_account_indices()
+        mimo_indices = self._accounts.get_account_indices("mimo")
 
-        # /query mimo login — 显示所有账号状态
         if not args:
             if not mimo_indices:
                 yield event.plain_result("还没有配置账号\n用法: /query mimo login 账号 密码")
@@ -521,10 +252,7 @@ class ResourceQueryPlugin(Star):
             for i, (idx, acc) in enumerate(mimo_indices):
                 has_st = bool(acc.get("serviceToken"))
                 has_pt = bool(acc.get("passToken"))
-                lines.append(
-                    f"  {i + 1}. {acc.get('name') or acc.get('account') or f'账号{i+1}'} "
-                    f"{'✅' if has_st else ('⚠️' if has_pt else '❌')}"
-                )
+                lines.append(f"  {i + 1}. {acc.get('name') or acc.get('account') or f'账号{i+1}'} {'✅' if has_st else ('⚠️' if has_pt else '❌')}")
             lines.append("\n用法: /query mimo login 账号 密码（添加或更新）")
             yield event.plain_result("\n".join(lines))
             return
@@ -532,26 +260,22 @@ class ResourceQueryPlugin(Star):
         # /query mimo login passtoken <账号> <userId> <token>
         if len(args) == 4 and args[0] == "passtoken":
             account, user_id, pass_token = args[1], args[2], args[3]
-            all_accounts = self._get_all_accounts()
-            mimo_accounts = self._get_mimo_accounts()
-            find_idx = self._find_mimo_account_index(account)
+            all_accounts = self._accounts.get_all_accounts()
+            find_idx = self._accounts.find_account_index("mimo", account)
 
             if find_idx < 0:
-                # 新建账号
                 acc = {"platform": "mimo", "account": account}
-                mimo_accounts.append(acc)
             else:
+                mimo_accounts = self._accounts.get_accounts_by_platform("mimo")
                 acc = mimo_accounts[find_idx]
 
             acc["userId"] = user_id
             acc["passToken"] = pass_token
             acc["serviceToken"] = ""
 
-            loop = asyncio.get_event_loop()
-            acc = await loop.run_in_executor(None, self._ensure_account, acc)
+            acc = await self._mimo.ensure_account(acc)
 
-            # 更新到总列表
-            all_accounts = self._get_all_accounts()
+            all_accounts = self._accounts.get_all_accounts()
             for i, a in enumerate(all_accounts):
                 if a.get("platform") == "mimo" and a.get("account") == account:
                     all_accounts[i] = acc
@@ -559,21 +283,20 @@ class ResourceQueryPlugin(Star):
             else:
                 all_accounts.append(acc)
 
-            self._save_all_accounts(all_accounts)
+            self._accounts.save_all_accounts(all_accounts)
             yield event.plain_result(f"✅ {account} passToken 设置成功\n  userId: {user_id}")
             return
 
         # /query mimo login account password
         if len(args) >= 2:
             account, password = args[0], args[1]
-            all_accounts = self._get_all_accounts()
-            mimo_accounts = self._get_mimo_accounts()
-            find_idx = self._find_mimo_account_index(account)
+            all_accounts = self._accounts.get_all_accounts()
+            find_idx = self._accounts.find_account_index("mimo", account)
 
             if find_idx < 0:
                 acc = {"platform": "mimo", "account": account}
-                mimo_accounts.append(acc)
             else:
+                mimo_accounts = self._accounts.get_accounts_by_platform("mimo")
                 acc = mimo_accounts[find_idx]
 
             acc["account"] = account
@@ -582,14 +305,13 @@ class ResourceQueryPlugin(Star):
             loop = asyncio.get_event_loop()
 
             def _try_login(otp_code=None):
-                return self._login_account(acc, otp_code=otp_code)
+                return self._mimo.login_account(acc, otp_code=otp_code)
 
             try:
                 result = await loop.run_in_executor(None, _try_login)
                 acc.update(result)
 
-                # 更新到总列表
-                all_accounts = self._get_all_accounts()
+                all_accounts = self._accounts.get_all_accounts()
                 for i, a in enumerate(all_accounts):
                     if a.get("platform") == "mimo" and a.get("account") == account:
                         all_accounts[i] = acc
@@ -597,7 +319,7 @@ class ResourceQueryPlugin(Star):
                 else:
                     all_accounts.append(acc)
 
-                self._save_all_accounts(all_accounts)
+                self._accounts.save_all_accounts(all_accounts)
                 yield event.plain_result(f"✅ {account} 登录成功!\n  userId: {result['userId']}")
                 return
             except OtpRequired:
@@ -609,7 +331,6 @@ class ResourceQueryPlugin(Star):
                 yield event.plain_result(f"❌ {account} 网络错误: {e}")
                 return
 
-            # OTP 会话等待
             @session_waiter(timeout=120, record_history_chains=False)
             async def otp_waiter(controller: SessionController, otp_event: AstrMessageEvent):
                 code = otp_event.message_str.strip()
@@ -621,17 +342,14 @@ class ResourceQueryPlugin(Star):
                 try:
                     result = await loop.run_in_executor(None, lambda: _try_login(otp_code=code))
                     acc.update(result)
-
-                    # 更新到总列表
-                    all_accounts = self._get_all_accounts()
+                    all_accounts = self._accounts.get_all_accounts()
                     for i, a in enumerate(all_accounts):
                         if a.get("platform") == "mimo" and a.get("account") == account:
                             all_accounts[i] = acc
                             break
                     else:
                         all_accounts.append(acc)
-
-                    self._save_all_accounts(all_accounts)
+                    self._accounts.save_all_accounts(all_accounts)
                     await otp_event.send(otp_event.plain_result(f"✅ {account} 登录成功!\n  userId: {result['userId']}"))
                 except (LoginError, OtpRequired, StsError) as e:
                     await otp_event.send(otp_event.plain_result(f"❌ 登录失败: {e}"))
@@ -660,16 +378,12 @@ class ResourceQueryPlugin(Star):
 
     async def _handle_wasu(self, event: AstrMessageEvent, args: list):
         """处理华数广电相关命令"""
-        wasu_indices = self._get_wasu_account_indices()
+        wasu_indices = self._accounts.get_account_indices("wasu")
 
-        # /query wasu — 查询所有账号
         if not args:
             if not wasu_indices:
-                yield event.plain_result(
-                    "❌ 还没有配置华数账号\n使用 /query wasu login 添加"
-                )
+                yield event.plain_result("❌ 还没有配置华数账号\n使用 /query wasu login 添加")
                 return
-
             yield event.plain_result("🔍 正在查询华数广电...")
             for i, (idx, acc) in enumerate(wasu_indices):
                 template = acc.get("template") or None
@@ -681,43 +395,37 @@ class ResourceQueryPlugin(Star):
 
         sub_cmd = args[0].lower()
 
-        # /query wasu login
         if sub_cmd == "login":
             yield event.plain_result("🔑 正在处理华数登录...")
             async for r in self._handle_wasu_login(event, args[1:]):
                 yield r
             return
 
-        # /query wasu list
         if sub_cmd == "list":
             if not wasu_indices:
                 yield event.plain_result("还没有配置华数账号")
                 return
             lines = [f"📋 共 {len(wasu_indices)} 个华数账号:"]
             for i, (idx, acc) in enumerate(wasu_indices):
-                lines.append(
-                    f"  {i + 1}. {acc.get('name') or acc.get('phone') or f'华数账号{i+1}'} | 手机号: {acc.get('phone', '无')}"
-                )
+                lines.append(f"  {i + 1}. {acc.get('name') or acc.get('phone') or f'华数账号{i+1}'} | 手机号: {acc.get('phone', '无')}")
             yield event.plain_result("\n".join(lines))
             return
 
-        # /query wasu del <序号>
         if sub_cmd == "del":
             if len(args) < 2 or not args[1].isdigit():
                 yield event.plain_result("用法: /query wasu del <序号>")
                 return
             del_idx = int(args[1]) - 1
             if 0 <= del_idx < len(wasu_indices):
-                all_accounts = self._get_all_accounts()
+                all_accounts = self._accounts.get_all_accounts()
                 real_idx, acc = wasu_indices[del_idx]
                 all_accounts.pop(real_idx)
-                self._save_all_accounts(all_accounts)
+                self._accounts.save_all_accounts(all_accounts)
                 yield event.plain_result(f"✅ 已删除: {acc.get('name') or acc.get('phone')}")
             else:
                 yield event.plain_result(f"❌ 序号 {args[1]} 不存在")
             return
 
-        # /query wasu <序号> — 查询指定账号
         if sub_cmd.isdigit():
             query_idx = int(sub_cmd) - 1
             if 0 <= query_idx < len(wasu_indices):
@@ -743,52 +451,35 @@ class ResourceQueryPlugin(Star):
 
     async def _handle_wasu_login(self, event: AstrMessageEvent, args: list):
         """处理华数登录命令"""
-        wasu_indices = self._get_wasu_account_indices()
+        wasu_indices = self._accounts.get_account_indices("wasu")
 
-        # /query wasu login — 显示所有账号状态
         if not args:
             if not wasu_indices:
                 yield event.plain_result("还没有配置账号\n用法: /query wasu login user_key token phone sign")
                 return
             lines = [f"📋 共 {len(wasu_indices)} 个账号:"]
             for i, (idx, acc) in enumerate(wasu_indices):
-                lines.append(
-                    f"  {i + 1}. {acc.get('name') or acc.get('phone') or f'华数账号{i+1}'} | 手机号: {acc.get('phone', '无')}"
-                )
+                lines.append(f"  {i + 1}. {acc.get('name') or acc.get('phone') or f'华数账号{i+1}'} | 手机号: {acc.get('phone', '无')}")
             lines.append("\n用法: /query wasu login user_key token phone sign")
             yield event.plain_result("\n".join(lines))
             return
 
-        # /query wasu login user_key token phone sign
         if len(args) >= 4:
             user_key, token, phone = args[0], args[1], args[2]
             sign = args[3] if len(args) > 3 else ""
 
-            all_accounts = self._get_all_accounts()
-
-            # 查找已有账号
-            find_idx = -1
-            for i, acc in enumerate(all_accounts):
-                if acc.get("platform") == "wasu" and acc.get("phone") == phone:
-                    find_idx = i
-                    break
+            all_accounts = self._accounts.get_all_accounts()
+            find_idx = self._accounts.find_account_index("wasu", phone, key="phone")
 
             if find_idx < 0:
-                # 新建账号
-                acc = {
-                    "platform": "wasu",
-                    "phone": phone,
-                    "user_key": user_key,
-                    "token": token,
-                    "sign": sign,
-                }
+                acc = {"platform": "wasu", "phone": phone, "user_key": user_key, "token": token, "sign": sign}
                 all_accounts.append(acc)
             else:
                 all_accounts[find_idx]["user_key"] = user_key
                 all_accounts[find_idx]["token"] = token
                 all_accounts[find_idx]["sign"] = sign
 
-            self._save_all_accounts(all_accounts)
+            self._accounts.save_all_accounts(all_accounts)
             yield event.plain_result(f"✅ 华数账号 {phone} 配置成功")
             return
 
@@ -806,17 +497,11 @@ class ResourceQueryPlugin(Star):
         if check.get("error"):
             yield event.plain_result(f"❌ 检查更新失败: {check['error']}")
             return
-
         if not check["has_update"]:
             yield event.plain_result(f"✅ 已是最新版本 v{check['current']}")
             return
-
-        yield event.plain_result(
-            f"🆕 发现新版本 v{check['latest']}（当前 v{check['current']}）\n"
-            f"正在下载并安装..."
-        )
+        yield event.plain_result(f"🆕 发现新版本 v{check['latest']}（当前 v{check['current']}）\n正在下载并安装...")
         result = await do_update(self.config)
-
         if "✅" in result:
             reload_result = await reload_plugin(self.context)
             yield event.plain_result(f"{result}\n{reload_result}")

@@ -1,3 +1,53 @@
+## v3.1.0 (2026-XX-XX)
+
+### ♻️ 重构
+- 新增 `account.py` - 账号管理模块
+  - 集中管理所有账号的增删改查
+  - 集中管理配置文件和模板文件的读写
+  - 提供跨平台的账号筛选方法
+- 精简 `main.py` - 从 712 行减至 509 行（减少 29%）
+  - 仅保留命令处理和协调逻辑
+  - 账号管理委托给 AccountManager
+
+### 📁 文件变更
+- 新增 `account.py` - 账号管理模块（151行）
+- 修改 `main.py` - 使用 AccountManager，代码更简洁
+
+### 🎯 架构改进
+```
+v3.0.0 架构：              v3.1.0 架构：
+main.py (712行)            main.py (509行)    ← 精简
+  ├─ 命令处理                └─ 命令处理
+  └─ 账号管理              
+                          account.py (151行)  ← 新增
+                            └─ 账号管理
+```
+
+---
+
+## v3.0.0 (2026-XX-XX)
+
+### ♻️ 重构
+- 整合 MiMo 查询代码到统一的 `mimo.py` 模块
+- 新增 `MimoPlatform(BasePlatform)` 类，统一管理 MiMo 查询和登录
+- 新增 `MimoResult(QueryResult)` 类，封装 MiMo 结果格式化
+- 将 `MiAccount` 登录类从 `mi_account.py` 迁移到 `mimo.py`
+- 将 `LimitTracker` 限额追踪从 `query.py` 迁移到 `mimo.py`
+- 将所有同步凭据操作封装为 `_sync_ensure_account` 等独立函数
+- `MimoPlatform.ensure_account` 和 `re_login_account` 使用 `run_in_executor` 避免阻塞事件循环
+
+### 📁 文件变更
+- 新增 `mimo.py` - MiMo 平台统一模块
+- 删除 `query.py` - 代码已整合到 `mimo.py`
+- 删除 `mi_account.py` - 代码已整合到 `mimo.py`
+
+### 🎯 代码质量
+- MiMo 相关的所有逻辑现在集中在 `mimo.py` 中，便于维护
+- 与 `wasu.py` 保持一致的设计模式（Platform + Result + BasePlatform）
+- 消除了 `main.py` 中的 MiMo 业务逻辑，仅保留命令处理和账号管理
+
+---
+
 ## v2.9.0 (2026-XX-XX)
 
 ### ✨ 优化
