@@ -37,8 +37,9 @@ def _get_plugin_version() -> str:
 
 async def check_update(config) -> dict:
     """检查 GitHub 是否有新版本（支持代理和重试）"""
-    proxy = config.get("proxy") or os.getenv("MIMO_GH_PROXY", "https://gh-proxy.cn/")
-    max_retries = int(config.get("update_max_retries") or 3)
+    cfg = config if config else {}
+    proxy = cfg.get("proxy") or os.getenv("MIMO_GH_PROXY", "https://gh-proxy.cn/")
+    max_retries = int(cfg.get("update_max_retries") or 3)
     current_version = _get_plugin_version()
 
     def _fetch():
@@ -86,8 +87,9 @@ async def check_update(config) -> dict:
 
 async def do_update(config) -> str:
     """从 GitHub 下载最新版本并替换当前插件文件（支持代理和重试）"""
-    proxy = config.get("proxy") or os.getenv("MIMO_GH_PROXY", "https://gh-proxy.cn/")
-    max_retries = int(config.get("update_max_retries") or 3)
+    cfg = config if config else {}
+    proxy = cfg.get("proxy") or os.getenv("MIMO_GH_PROXY", "https://gh-proxy.cn/")
+    max_retries = int(cfg.get("update_max_retries") or 3)
 
     def _download_and_extract():
         try:

@@ -53,7 +53,7 @@ _DEFAULT_UA = os.getenv(
 
 @register(_PLUGIN_NAME, "资源查询", "多平台资源查询插件（MiMo/华数广电）", _PLUGIN_VERSION)
 class ResourceQueryPlugin(Star):
-    def __init__(self, context: Context, config: AstrBotConfig):
+    def __init__(self, context: Context, config: AstrBotConfig | None = None):
         super().__init__(context)
         self.config = config
         self._plugin_dir = Path(__file__).parent
@@ -81,8 +81,9 @@ class ResourceQueryPlugin(Star):
         """为缺少 device_id 和 ua 的账号填充默认值"""
         accounts = self._accounts.get_all_accounts()
         changed = False
-        default_device_id = self.config.get("device_id") or _DEFAULT_DEVICE_ID
-        default_ua = self.config.get("ua") or _DEFAULT_UA
+        cfg = self.config if self.config else {}
+        default_device_id = cfg.get("device_id") or _DEFAULT_DEVICE_ID
+        default_ua = cfg.get("ua") or _DEFAULT_UA
         for acc in accounts:
             if acc.get("platform") == "mimo":
                 if not acc.get("device_id"):
