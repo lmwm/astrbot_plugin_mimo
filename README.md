@@ -157,3 +157,7 @@ class NewPlatform(BasePlatform):
         # 实现查询逻辑
         pass
 ```
+
+## 更新日志
+
+- 2025-01: 网络连接测试提交
