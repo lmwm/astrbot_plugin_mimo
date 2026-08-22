@@ -1,0 +1,14 @@
+{
+    "proxy": {
+        "description": "GitHub 更新代理",
+        "type": "string",
+        "default": "https://gh-proxy.cn/",
+        "hint": "用于 GitHub 更新请求的代理地址，留空禁用代理"
+    },
+    "update_max_retries": {
+        "description": "更新最大重试次数",
+        "type": "int",
+        "default": 3,
+        "hint": "自动更新时网络请求失败的重试次数"
+    }
+}
