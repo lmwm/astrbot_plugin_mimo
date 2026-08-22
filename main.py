@@ -41,7 +41,7 @@ from .updater import check_update, do_update, reload_plugin
 from .wasu import WasuPlatform
 
 _PLUGIN_NAME = "astrbot_plugin_resource_query"
-_PLUGIN_VERSION = "3.2.0"
+_PLUGIN_VERSION = "3.5.0"
 
 # 默认设备标识和 User-Agent
 _DEFAULT_DEVICE_ID = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
@@ -72,6 +72,9 @@ class ResourceQueryPlugin(Star):
         )
         context.register_web_api(
             f"/{_PLUGIN_NAME}/config", self.save_config, ["POST"], "保存插件配置"
+        )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/config/delete", self.delete_config, ["POST"], "删除账号配置"
         )
         context.register_web_api(
             f"/{_PLUGIN_NAME}/templates", self.get_templates, ["GET"], "获取默认模板"
@@ -109,6 +112,24 @@ class ResourceQueryPlugin(Star):
         if "accounts" in payload:
             self._accounts.save_all_accounts(payload["accounts"])
         return json_response({"status": "ok"})
+
+    async def delete_config(self):
+        """删除指定账号"""
+        from astrbot.api.web import error_response, json_response, request
+        payload = await request.json(default={})
+        platform = payload.get("platform", "").strip()
+        index = payload.get("index")
+        if not platform or index is None:
+            return error_response("缺少 platform 或 index 参数")
+        try:
+            index = int(index)
+        except (TypeError, ValueError):
+            return error_response("index 必须是整数")
+        deleted = self._accounts.delete_account(platform, index)
+        if deleted is None:
+            return error_response("账号不存在或删除失败")
+        name = deleted.get("name") or deleted.get("account") or deleted.get("phone") or "未知"
+        return json_response({"status": "ok", "deleted": name})
 
     async def get_templates(self):
         """获取默认模板（从 templates/ 文件夹读取）"""
@@ -214,11 +235,12 @@ class ResourceQueryPlugin(Star):
                 return
             del_idx = int(args[1]) - 1
             if 0 <= del_idx < len(mimo_indices):
-                all_accounts = self._accounts.get_all_accounts()
-                real_idx, acc = mimo_indices[del_idx]
-                all_accounts.pop(real_idx)
-                self._accounts.save_all_accounts(all_accounts)
-                yield event.plain_result(f"✅ 已删除: {acc.get('name') or acc.get('account')}")
+                deleted = self._accounts.delete_account("mimo", del_idx)
+                if deleted:
+                    name = deleted.get("name") or deleted.get("account") or "未知"
+                    yield event.plain_result(f"✅ 已删除: {name}")
+                else:
+                    yield event.plain_result("❌ 删除失败")
             else:
                 yield event.plain_result(f"❌ 序号 {args[1]} 不存在")
             return
@@ -432,11 +454,12 @@ class ResourceQueryPlugin(Star):
                 return
             del_idx = int(args[1]) - 1
             if 0 <= del_idx < len(wasu_indices):
-                all_accounts = self._accounts.get_all_accounts()
-                real_idx, acc = wasu_indices[del_idx]
-                all_accounts.pop(real_idx)
-                self._accounts.save_all_accounts(all_accounts)
-                yield event.plain_result(f"✅ 已删除: {acc.get('name') or acc.get('phone')}")
+                deleted = self._accounts.delete_account("wasu", del_idx)
+                if deleted:
+                    name = deleted.get("name") or deleted.get("phone") or "未知"
+                    yield event.plain_result(f"✅ 已删除: {name}")
+                else:
+                    yield event.plain_result("❌ 删除失败")
             else:
                 yield event.plain_result(f"❌ 序号 {args[1]} 不存在")
             return

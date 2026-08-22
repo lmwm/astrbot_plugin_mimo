@@ -501,15 +501,31 @@
       const acc = accounts[index];
       const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
       if (!confirm(`确定删除账号「${name}」？`)) return;
-      accounts.splice(index, 1);
-      await saveAccounts();
-      showToast('账号已删除');
+      try {
+        // 计算该账号在同平台列表中的序号
+        const platform = acc.platform;
+        let platformIdx = 0;
+        for (let i = 0; i < index; i++) {
+          if (accounts[i].platform === platform) platformIdx++;
+        }
+        const result = await bridge.apiPost('config/delete', { platform, index: platformIdx });
+        if (result && result.status === 'ok') {
+          accounts.splice(index, 1);
+          renderAccounts();
+          showToast(`已删除「${result.deleted || name}」`);
+        } else {
+          showToast(result?.message || '删除失败', 'error');
+        }
+      } catch (e) {
+        showToast('删除失败: ' + (e.message || '未知错误'), 'error');
+      }
     }
 
     async function saveAccounts() {
       try {
         await bridge.apiPost('config', { accounts });
-        renderAccounts();
+        // 从服务器重新加载以确保同步
+        await loadAccounts();
       } catch (e) {
         showToast('保存失败', 'error');
       }
