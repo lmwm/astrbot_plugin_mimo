@@ -85,13 +85,13 @@ class AccountManager:
         for acc in accounts:
             filename = self._get_account_filename(acc)
             filepath = data_path / filename
-            # 移除内部字段
-            save_acc = {k: v for k, v in acc.items() if not k.startswith("_")}
+            # 移除内部字段和 template（template 单独保存到 TXT 文件）
+            save_acc = {k: v for k, v in acc.items() if not k.startswith("_") and k != "template"}
             filepath.write_text(
                 json.dumps(save_acc, ensure_ascii=False, indent=2),
                 encoding="utf-8"
             )
-            # 保存模板文件
+            # 保存模板文件（仅保存到 TXT 文件，不保存到 JSON）
             template = acc.get("template", "")
             if template:
                 template_filename = filename.replace(".json", ".txt")

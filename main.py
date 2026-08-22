@@ -157,7 +157,6 @@ class ResourceQueryPlugin(Star):
             self._accounts.save_all_accounts(all_accounts)
             for idx, acc in mimo_indices:
                 result = await self._mimo.query_one(acc)
-                self._accounts.save_all_accounts(all_accounts)
                 label = acc.get("name") or acc.get("account") or f"账号{idx + 1}"
                 if "error" in result:
                     yield event.plain_result(f"📋 {label}\n❌ {result['error']}")
@@ -213,18 +212,16 @@ class ResourceQueryPlugin(Star):
                 yield event.plain_result("🔍 正在查询...")
                 all_accounts = self._accounts.get_all_accounts()
                 all_accounts[real_idx] = await self._mimo.ensure_account(acc)
-                acc = all_accounts[real_idx]
                 self._accounts.save_all_accounts(all_accounts)
-                result = await self._mimo.query_one(acc)
-                self._accounts.save_all_accounts(all_accounts)
-                label = acc.get("name") or acc.get("account") or f"账号{query_idx + 1}"
-                template = acc.get("template") or None
+                result = await self._mimo.query_one(all_accounts[real_idx])
+                label = all_accounts[real_idx].get("name") or all_accounts[real_idx].get("account") or f"账号{query_idx + 1}"
+                template = all_accounts[real_idx].get("template") or None
                 if "error" in result:
                     yield event.plain_result(f"📋 {label}\n❌ {result['error']}")
                 else:
-                    prev = self._mimo.limits.get_prev(acc)
+                    prev = self._mimo.limits.get_prev(all_accounts[real_idx])
                     usage = result.get("usage", {}).get("data", {})
-                    self._mimo.limits.update(acc, usage.get("accountRateLimit", {}))
+                    self._mimo.limits.update(all_accounts[real_idx], usage.get("accountRateLimit", {}))
                     mr = MimoResult(success=True, account_name=label, data=result, prev_limit=prev, template=template)
                     yield event.plain_result(mr.to_text())
             else:
