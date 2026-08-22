@@ -412,12 +412,10 @@
     }
 
     function loadTemplateForPlatform(platform) {
-      // 切换平台时，加载该平台的默认模板（如果是新建或没有自定义模板）
+      // 切换平台时，总是加载该平台的默认模板
       const templateField = document.getElementById('field-template');
-      if (editingIndex < 0 || !templateField.value.trim()) {
-        templateField.value = defaultTemplates[platform] || '';
-        updateTemplatePreview();
-      }
+      templateField.value = defaultTemplates[platform] || '';
+      updateTemplatePreview();
     }
 
     function updateVariableTags() {

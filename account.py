@@ -91,12 +91,11 @@ class AccountManager:
                 json.dumps(save_acc, ensure_ascii=False, indent=2),
                 encoding="utf-8"
             )
-            # 保存模板文件（仅保存到 TXT 文件，不保存到 JSON）
+            # 始终保存模板文件（即使是空模板）
             template = acc.get("template", "")
-            if template:
-                template_filename = filename.replace(".json", ".txt")
-                template_filepath = data_path / template_filename
-                template_filepath.write_text(template, encoding="utf-8")
+            template_filename = filename.replace(".json", ".txt")
+            template_filepath = data_path / template_filename
+            template_filepath.write_text(template, encoding="utf-8")
 
     def _migrate_old_accounts(self, data_path: Path, accounts: list):
         """兼容旧版本：从 accounts.json 迁移"""
