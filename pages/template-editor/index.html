@@ -344,6 +344,18 @@
       `).join('');
     }
 
+    function generateDefaultName(platform) {
+      // 统计该平台已有的"账号XXX"名称，找到最大编号
+      let maxNum = 0;
+      accounts.forEach(acc => {
+        if (acc.platform === platform && acc.name && acc.name.startsWith('账号')) {
+          const num = parseInt(acc.name.substring(2), 10);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        }
+      });
+      return '账号' + String(maxNum + 1).padStart(3, '0');
+    }
+
     function openAddModal() {
       editingIndex = -1;
       currentPlatform = 'mimo';
@@ -461,9 +473,15 @@
         template = defaultTemplates[currentPlatform] || '';
       }
 
+      // 获取名称，如果为空则自动生成
+      let name = document.getElementById('field-name').value.trim();
+      if (!name) {
+        name = generateDefaultName(currentPlatform);
+      }
+
       const acc = {
         platform: currentPlatform,
-        name: document.getElementById('field-name').value,
+        name: name,
         ua: document.getElementById('field-ua').value || '',
         template: template  // 始终保存模板
       };

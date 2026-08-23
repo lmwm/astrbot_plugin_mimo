@@ -9,7 +9,6 @@
   - 跨平台的账号筛选
 """
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -34,59 +33,23 @@ class AccountManager:
     # ── 文件名生成 ──
 
     def _get_account_filename(self, acc: dict) -> str:
-        """获取账号配置文件名（格式：平台_标识符.json）
-
-        文件名生成规则（按优先级）：
-        1. 使用 name 字段
-        2. 使用平台主标识（MiMo: account, 华数: phone）
-        3. 使用内容哈希（兜底）
+        """获取账号配置文件名（格式：平台_名称.json）
 
         Args:
             acc: 账号配置字典。
 
         Returns:
-            稳定的配置文件名。
+            配置文件名。
         """
         platform = acc.get("platform", "unknown")
         name = acc.get("name", "").strip()
         if not name:
-            name = self._get_stable_identifier(acc)
+            name = "unnamed"
         # 清理文件名中的非法字符
         name = "".join(c for c in name if c.isalnum() or c in "-_\u4e00-\u9fff")
         if not name:
-            name = self._hash_account(acc)
+            name = "unnamed"
         return f"{platform}_{name}.json"
-
-    def _get_stable_identifier(self, acc: dict) -> str:
-        """获取账号的稳定标识符（不依赖文件系统状态）
-
-        Args:
-            acc: 账号配置字典。
-
-        Returns:
-            平台主标识或空字符串。
-        """
-        platform = acc.get("platform", "")
-        if platform == "mimo":
-            return acc.get("account", "").strip()
-        if platform == "wasu":
-            return acc.get("phone", "").strip()
-        return ""
-
-    def _hash_account(self, acc: dict) -> str:
-        """基于账号内容生成稳定的短哈希
-
-        Args:
-            acc: 账号配置字典。
-
-        Returns:
-            8 字符的十六进制哈希。
-        """
-        # 使用平台和主标识生成哈希
-        platform = acc.get("platform", "")
-        identifier = acc.get("account") or acc.get("phone") or acc.get("userId", "")
-        content = f"{platform}:{identifier}"
-        return hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()[:8]
 
     # ── 账号读写 ──
 
@@ -126,6 +89,9 @@ class AccountManager:
         """
         data_path = self._get_data_path()
 
+        # 第零步：为没有名称的账号自动生成默认名称
+        self._fill_default_names(accounts)
+
         # 第一步：收集新账号的文件名（不写入磁盘）
         new_filenames: set[str] = set()
         acc_file_pairs: list[tuple[dict, str]] = []
@@ -163,6 +129,32 @@ class AccountManager:
                 template_file = data_path / old_file.name.replace(".json", ".txt")
                 if template_file.exists():
                     template_file.unlink(missing_ok=True)
+
+    def _fill_default_names(self, accounts: list):
+        """为没有名称的账号自动生成默认名称（如：账号001）
+
+        Args:
+            accounts: 账号配置列表（原地修改）。
+        """
+        # 统计各平台已有的名称
+        platform_counters: dict[str, int] = {}
+        for acc in accounts:
+            platform = acc.get("platform", "unknown")
+            name = acc.get("name", "").strip()
+            if name and name.startswith("账号"):
+                try:
+                    num = int(name[2:])
+                    platform_counters[platform] = max(platform_counters.get(platform, 0), num)
+                except ValueError:
+                    pass
+
+        # 为没有名称的账号生成默认名称
+        for acc in accounts:
+            if not acc.get("name", "").strip():
+                platform = acc.get("platform", "unknown")
+                counter = platform_counters.get(platform, 0) + 1
+                platform_counters[platform] = counter
+                acc["name"] = f"账号{counter:03d}"
 
     def delete_account(self, platform: str, index: int) -> dict | None:
         """删除指定平台的指定账号
