@@ -534,22 +534,13 @@
     }
 
     function deleteAccount(index) {
+      console.log('deleteAccount called with index:', index);
       const acc = accounts[index];
-      const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
-      pendingDeleteIndex = index;
-      document.getElementById('delete-account-name').textContent = name;
-      document.getElementById('delete-modal').classList.add('active');
-    }
-
-    function closeDeleteModal() {
-      document.getElementById('delete-modal').classList.remove('active');
-      pendingDeleteIndex = -1;
-    }
-
-    async function confirmDelete() {
-      if (pendingDeleteIndex < 0) return;
-      const index = pendingDeleteIndex;
-      const acc = accounts[index];
+      if (!acc) {
+        console.error('Account not found at index:', index);
+        showToast('账号不存在', 'error');
+        return;
+      }
       const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
 
       // 计算该账号在同平台列表中的序号
@@ -559,10 +550,17 @@
         if (accounts[i].platform === platform) platformIdx++;
       }
 
-      closeDeleteModal();
+      console.log('Deleting account:', { platform, index: platformIdx, name });
 
+      // 直接执行删除，不使用确认对话框
+      doDelete(index, platform, platformIdx, name);
+    }
+
+    async function doDelete(index, platform, platformIdx, name) {
       try {
+        console.log('Calling bridge.apiPost...');
         const result = await bridge.apiPost('config/delete', { platform, index: platformIdx });
+        console.log('Delete result:', result);
         if (result && result.status === 'ok') {
           accounts.splice(index, 1);
           renderAccounts();
@@ -571,6 +569,7 @@
           showToast(result?.message || '删除失败', 'error');
         }
       } catch (e) {
+        console.error('Delete error:', e);
         showToast('删除失败: ' + (e.message || '未知错误'), 'error');
       }
     }
