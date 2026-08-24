@@ -146,6 +146,47 @@
     .var-table .var-name { font-family: monospace; color: var(--primary); background: var(--primary-light); padding: 2px 6px; border-radius: 3px; }
     .var-empty { text-align: center; padding: 40px; color: var(--text-muted); }
     .var-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+    /* 响应式设计 */
+    @media (max-width: 1024px) {
+      .container { max-width: 100%; padding: 0 10px; }
+      .template-layout { grid-template-columns: 1fr; }
+      .var-config-layout { grid-template-columns: 1fr; }
+      .var-platform-list { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 16px; }
+    }
+
+    @media (max-width: 768px) {
+      .app { padding: 12px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .header-title { font-size: 18px; }
+      .nav-tabs { flex-wrap: wrap; }
+      .nav-tab { padding: 8px 14px; font-size: 13px; }
+      .card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .account-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal { width: 96%; max-height: 96vh; }
+      .modal-header { padding: 16px 20px 12px; }
+      .modal-body { padding: 16px 20px; }
+      .modal-footer { padding: 12px 20px; }
+      .platform-tabs { flex-wrap: wrap; }
+      .var-table { font-size: 12px; }
+      .var-table th, .var-table td { padding: 8px; }
+    }
+
+    @media (max-width: 480px) {
+      .app { padding: 8px; }
+      .header-title { font-size: 16px; }
+      .header-icon { width: 32px; height: 32px; font-size: 16px; }
+      .btn { padding: 6px 12px; font-size: 12px; }
+      .btn-sm { padding: 4px 8px; font-size: 11px; }
+      .card-body { padding: 12px; }
+      .account-card { padding: 12px; }
+      .account-card-header { gap: 10px; }
+      .account-avatar { width: 36px; height: 36px; font-size: 16px; }
+      .account-name { font-size: 14px; }
+      .form-textarea { min-height: 150px; }
+      .template-preview { min-height: 150px; }
+    }
   </style>
 </head>
 <body>
