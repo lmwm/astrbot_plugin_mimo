@@ -80,6 +80,9 @@ class ResourceQueryPlugin(Star):
         context.register_web_api(
             f"/{_PLUGIN_NAME}/template-vars", self.get_template_vars, ["GET"], "获取模板变量定义"
         )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/template-vars", self.save_template_vars, ["POST"], "保存模板变量定义"
+        )
 
     def _fill_default_fields(self):
         """为缺少 device_id 和 ua 的账号填充默认值"""
@@ -147,11 +150,21 @@ class ResourceQueryPlugin(Star):
         return json_response(templates)
 
     async def get_template_vars(self):
-        """从模板文件中解析变量定义"""
+        """从模板文件中解析变量定义，优先使用用户自定义配置"""
         import re
         from astrbot.api.web import json_response
 
-        # 变量描述映射
+        # 检查是否有用户自定义配置
+        config_path = self._accounts._get_data_path() / "var_config.json"
+        if config_path.exists():
+            try:
+                user_config = json.loads(config_path.read_text(encoding="utf-8"))
+                if user_config:
+                    return json_response(user_config)
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        # 变量描述映射（默认值）
         var_descriptions = {
             "label": "账号名称",
             "balance": "余额",
@@ -213,6 +226,25 @@ class ResourceQueryPlugin(Star):
                     pass
 
         return json_response(result)
+
+    async def save_template_vars(self):
+        """保存模板变量配置"""
+        from astrbot.api.web import error_response, json_response, request
+        payload = await request.json(default={})
+        if not payload:
+            return error_response("缺少配置数据")
+
+        # 保存到配置文件
+        config_path = self._accounts._get_data_path() / "var_config.json"
+        try:
+            config_path.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+        except OSError as e:
+            return error_response(f"保存失败: {e}")
+
+        return json_response({"status": "ok"})
 
     # ================== 主指令 ==================
 

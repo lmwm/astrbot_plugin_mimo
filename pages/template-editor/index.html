@@ -48,6 +48,18 @@
     .btn-danger { background: white; color: var(--danger); border: 1px solid #fecaca; }
     .btn-danger:hover { background: #fef2f2; }
     .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* 顶部导航标签 */
+    .nav-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); border-radius: var(--radius); padding: 4px; box-shadow: var(--shadow); }
+    .nav-tab { padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; background: transparent; color: var(--text-secondary); }
+    .nav-tab.active { background: var(--primary); color: white; }
+    .nav-tab:hover:not(.active) { background: var(--bg); }
+
+    /* 页面容器 */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* 账号卡片 */
     .account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
     .account-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; transition: all 0.15s; background: var(--surface); }
     .account-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
@@ -71,37 +83,65 @@
     .empty-icon { width: 64px; height: 64px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; }
     .empty-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
     .empty-text { font-size: 13px; color: var(--text-muted); }
+
+    /* 模态框 */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s; }
     .modal-overlay.active { opacity: 1; visibility: visible; }
-    .modal { background: var(--surface); border-radius: 16px; width: 92%; max-width: 680px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.2s; }
+    .modal { background: var(--surface); border-radius: 16px; width: 92%; max-width: 800px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.2s; }
     .modal-overlay.active .modal { transform: scale(1); }
     .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
     .modal-title { font-size: 17px; font-weight: 600; }
     .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* 表单 */
     .form-group { margin-bottom: 16px; }
     .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
     .form-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; transition: border-color 0.15s; }
     .form-input:focus { border-color: var(--primary); }
     .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background: white; cursor: pointer; }
-    .form-textarea { width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'SF Mono', Monaco, monospace; outline: none; resize: vertical; line-height: 1.6; }
-    .form-textarea:focus { border-color: var(--primary); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .password-wrapper { position: relative; }
     .password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-muted); }
+
+    /* 模板编辑器 - 等高布局 */
     .template-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .template-editor, .template-preview-box { display: flex; flex-direction: column; }
     .template-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
-    .template-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; white-space: pre-wrap; min-height: 200px; line-height: 1.6; }
+    .form-textarea { width: 100%; flex: 1; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'SF Mono', Monaco, monospace; outline: none; resize: vertical; line-height: 1.6; }
+    .form-textarea:focus { border-color: var(--primary); }
+    .template-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; white-space: pre-wrap; flex: 1; min-height: 200px; line-height: 1.6; overflow-y: auto; }
+
+    /* 变量标签 */
     .variable-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .variable-tag { display: inline-block; padding: 3px 8px; background: var(--primary-light); color: var(--primary); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
     .variable-tag:hover { background: var(--primary); color: white; }
+
+    /* Toast */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); padding: 12px 24px; background: var(--text); color: white; border-radius: var(--radius-sm); font-size: 14px; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 2000; }
     .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
     .toast.error { background: var(--danger); }
+
+    /* 平台标签 */
     .platform-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
     .platform-tab { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: white; transition: all 0.15s; }
     .platform-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
     .platform-tab:hover:not(.active) { background: var(--bg); }
+
+    /* 变量配置页面 */
+    .var-config-layout { display: grid; grid-template-columns: 200px 1fr; gap: 20px; min-height: 400px; }
+    .var-platform-list { border-right: 1px solid var(--border); padding-right: 20px; }
+    .var-platform-item { padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; margin-bottom: 4px; }
+    .var-platform-item:hover { background: var(--bg); }
+    .var-platform-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+    .var-list { flex: 1; }
+    .var-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--surface); }
+    .var-item-name { font-family: monospace; font-size: 13px; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 4px; min-width: 120px; }
+    .var-item-desc { flex: 1; }
+    .var-item-desc input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; outline: none; }
+    .var-item-desc input:focus { border-color: var(--primary); }
+    .var-item-actions { display: flex; gap: 4px; }
+    .var-empty { text-align: center; padding: 40px; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -112,22 +152,49 @@
           <div class="header-icon">📊</div>
           资源查询插件管理
         </div>
-        <button class="btn btn-primary" onclick="openAddModal()">＋ 添加账号</button>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">账号列表</div>
-          <div style="font-size:12px;color:var(--text-muted)">共 <span id="account-count">0</span> 个账号</div>
+      <!-- 顶部导航 -->
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchPage('accounts')">📋 账号管理</button>
+        <button class="nav-tab" onclick="switchPage('variables')">⚙️ 变量配置</button>
+      </div>
+
+      <!-- 账号管理页面 -->
+      <div class="page active" id="page-accounts">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">账号列表</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="font-size:12px;color:var(--text-muted)">共 <span id="account-count">0</span> 个账号</span>
+              <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 添加账号</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="account-grid" id="account-list"></div>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="account-grid" id="account-list"></div>
+      </div>
+
+      <!-- 变量配置页面 -->
+      <div class="page" id="page-variables">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">模板变量配置</div>
+            <button class="btn btn-primary btn-sm" onclick="saveVarConfig()">💾 保存配置</button>
+          </div>
+          <div class="card-body">
+            <div class="var-config-layout">
+              <div class="var-platform-list" id="var-platform-list"></div>
+              <div class="var-list" id="var-list"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 模态框 -->
+  <!-- 账号编辑模态框 -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="modal-header">
@@ -207,7 +274,7 @@
           <div class="template-layout">
             <div class="template-editor">
               <div class="template-label">模板编辑</div>
-              <textarea class="form-textarea" id="field-template"></textarea>
+              <textarea class="form-textarea" id="field-template" oninput="syncTemplateHeight()"></textarea>
               <div class="variable-tags" id="variable-tags"></div>
             </div>
             <div class="template-preview-box">
@@ -227,8 +294,6 @@
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
-
   <!-- 删除确认模态框 -->
   <div class="modal-overlay" id="delete-modal">
     <div class="modal" style="max-width: 400px;">
@@ -246,6 +311,8 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
     const bridge = window.AstrBotPluginPage;
     let accounts = [];
@@ -253,21 +320,28 @@
     let defaultTemplates = {};
     let currentPlatform = 'mimo';
     let pendingDeleteIndex = -1;
-    let templateVars = {};  // 从 API 获取的变量定义
+    let templateVars = {};
+    let varConfigPlatform = 'mimo';
+
+    // 页面切换
+    function switchPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      event.target.classList.add('active');
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await bridge.ready();
       await loadDefaults();
       await loadAccounts();
+      renderVarPlatformList();
     });
 
     async function loadDefaults() {
       try {
-        // 加载默认模板
         const templates = await bridge.apiGet('templates');
         defaultTemplates = templates || {};
-
-        // 加载变量定义和示例数据
         const varsData = await bridge.apiGet('template-vars');
         templateVars = varsData || {};
       } catch (e) {
@@ -284,6 +358,8 @@
         document.getElementById('account-list').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">加载失败</div></div>';
       }
     }
+
+    // ==================== 账号管理 ====================
 
     function renderAccounts() {
       const list = document.getElementById('account-list');
@@ -322,7 +398,6 @@
     }
 
     function generateDefaultName(platform) {
-      // 统计所有平台已有的"账号XXX"名称，找到最大编号（共享序号）
       let maxNum = 0;
       accounts.forEach(acc => {
         if (acc.name && acc.name.startsWith('账号')) {
@@ -331,7 +406,7 @@
         }
       });
       let nextNum = maxNum + 1;
-      if (nextNum > 999) nextNum = 1; // 超过 999 后从 001 开始循环
+      if (nextNum > 999) nextNum = 1;
       return '账号' + String(nextNum).padStart(3, '0');
     }
 
@@ -359,7 +434,6 @@
       document.getElementById('field-user-key').value = acc.user_key || '';
       document.getElementById('field-token').value = acc.token || '';
       document.getElementById('field-sign').value = acc.sign || '';
-      // 加载账号的模板（如果有），否则使用默认模板
       document.getElementById('field-template').value = acc.template || defaultTemplates[currentPlatform] || '';
       updatePlatformUI();
       updateVariableTags();
@@ -391,11 +465,9 @@
     }
 
     function updatePlatformUI() {
-      // 更新标签样式
       document.querySelectorAll('.platform-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.platform === currentPlatform);
       });
-      // 显示/隐藏对应字段
       document.getElementById('section-mimo').style.display = currentPlatform === 'mimo' ? 'block' : 'none';
       document.getElementById('section-wasu').style.display = currentPlatform === 'wasu' ? 'block' : 'none';
       updateVariableTags();
@@ -403,7 +475,6 @@
     }
 
     function loadTemplateForPlatform(platform) {
-      // 切换平台时，总是加载该平台的默认模板
       const templateField = document.getElementById('field-template');
       templateField.value = defaultTemplates[platform] || '';
       updateTemplatePreview();
@@ -413,7 +484,7 @@
       const platformVars = templateVars[currentPlatform] || {};
       const vars = platformVars.variables || [];
       document.getElementById('variable-tags').innerHTML = vars.map(v =>
-        `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="${v.desc}">{${v.name}}</span>`
+        `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="{${v.name}}">${v.desc}</span>`
       ).join('');
     }
 
@@ -436,6 +507,13 @@
       document.getElementById('template-preview').textContent = result || '（请在左侧输入模板）';
     }
 
+    function syncTemplateHeight() {
+      const textarea = document.getElementById('field-template');
+      const preview = document.getElementById('template-preview');
+      preview.style.height = textarea.offsetHeight + 'px';
+      updateTemplatePreview();
+    }
+
     function resetTemplate() {
       document.getElementById('field-template').value = defaultTemplates[currentPlatform] || '';
       updateTemplatePreview();
@@ -448,13 +526,11 @@
     }
 
     async function saveAccount() {
-      // 始终保存模板（即使是默认模板）
       let template = document.getElementById('field-template').value.trim();
       if (!template) {
         template = defaultTemplates[currentPlatform] || '';
       }
 
-      // 获取名称，如果为空则自动生成
       let name = document.getElementById('field-name').value.trim();
       if (!name) {
         name = generateDefaultName(currentPlatform);
@@ -464,7 +540,7 @@
         platform: currentPlatform,
         name: name,
         ua: document.getElementById('field-ua').value || '',
-        template: template  // 始终保存模板
+        template: template
       };
 
       if (currentPlatform === 'mimo') {
@@ -496,6 +572,8 @@
       showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加');
     }
 
+    // ==================== 删除功能 ====================
+
     function deleteAccount(index) {
       const acc = accounts[index];
       if (!acc) return;
@@ -517,7 +595,6 @@
       const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
       closeDeleteModal();
 
-      // 计算该账号在同平台列表中的序号
       const platform = acc.platform;
       let platformIdx = 0;
       for (let i = 0; i < index; i++) {
@@ -538,10 +615,11 @@
       }
     }
 
+    // ==================== 保存 ====================
+
     async function saveAccounts() {
       try {
         await bridge.apiPost('config', { accounts });
-        // 从服务器重新加载以确保同步
         await loadAccounts();
       } catch (e) {
         showToast('保存失败', 'error');
@@ -555,8 +633,68 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // 模板输入时实时更新预览
-    document.getElementById('field-template')?.addEventListener('input', updateTemplatePreview);
+    // ==================== 变量配置 ====================
+
+    function renderVarPlatformList() {
+      const platforms = Object.keys(templateVars);
+      const list = document.getElementById('var-platform-list');
+      list.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">选择平台</div>' +
+        platforms.map(p => `
+          <div class="var-platform-item ${p === varConfigPlatform ? 'active' : ''}" onclick="switchVarPlatform('${p}')">
+            ${p === 'mimo' ? '🤖 MiMo' : '📺 华数广电'}
+          </div>
+        `).join('');
+      renderVarList();
+    }
+
+    function switchVarPlatform(platform) {
+      varConfigPlatform = platform;
+      renderVarPlatformList();
+    }
+
+    function renderVarList() {
+      const platformData = templateVars[varConfigPlatform] || {};
+      const vars = platformData.variables || [];
+      const list = document.getElementById('var-list');
+
+      if (vars.length === 0) {
+        list.innerHTML = '<div class="var-empty">该平台暂无变量定义</div>';
+        return;
+      }
+
+      list.innerHTML = `
+        <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">
+          ${varConfigPlatform === 'mimo' ? '🤖 MiMo' : '📺 华数广电'} 变量列表
+        </div>
+        ${vars.map((v, i) => `
+          <div class="var-item">
+            <div class="var-item-name">{${v.name}}</div>
+            <div class="var-item-desc">
+              <input type="text" value="${v.desc}" placeholder="输入中文描述" 
+                onchange="updateVarDesc('${varConfigPlatform}', ${i}, this.value)">
+            </div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function updateVarDesc(platform, index, value) {
+      if (templateVars[platform] && templateVars[platform].variables) {
+        templateVars[platform].variables[index].desc = value;
+      }
+    }
+
+    async function saveVarConfig() {
+      try {
+        await bridge.apiPost('template-vars', templateVars);
+        showToast('变量配置已保存');
+      } catch (e) {
+        showToast('保存失败: ' + (e.message || '未知错误'), 'error');
+      }
+    }
+
+    // 初始化模板高度同步
+    document.getElementById('field-template')?.addEventListener('input', syncTemplateHeight);
   </script>
 </body>
 </html>
