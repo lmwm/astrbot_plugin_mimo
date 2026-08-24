@@ -229,12 +229,30 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- 删除确认模态框 -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <div class="modal-title">确认删除</div>
+        <button class="btn btn-ghost" onclick="closeDeleteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>确定要删除账号「<span id="delete-account-name"></span>」吗？</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">删除</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const bridge = window.AstrBotPluginPage;
     let accounts = [];
     let editingIndex = -1;
     let defaultTemplates = {};
     let currentPlatform = 'mimo';
+    let pendingDeleteIndex = -1;
 
     // 变量定义
     const VARIABLES = {
@@ -515,17 +533,35 @@
       showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加');
     }
 
-    async function deleteAccount(index) {
+    function deleteAccount(index) {
       const acc = accounts[index];
       const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
-      if (!confirm(`确定删除账号「${name}」？`)) return;
+      pendingDeleteIndex = index;
+      document.getElementById('delete-account-name').textContent = name;
+      document.getElementById('delete-modal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('active');
+      pendingDeleteIndex = -1;
+    }
+
+    async function confirmDelete() {
+      if (pendingDeleteIndex < 0) return;
+      const index = pendingDeleteIndex;
+      const acc = accounts[index];
+      const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
+
+      // 计算该账号在同平台列表中的序号
+      const platform = acc.platform;
+      let platformIdx = 0;
+      for (let i = 0; i < index; i++) {
+        if (accounts[i].platform === platform) platformIdx++;
+      }
+
+      closeDeleteModal();
+
       try {
-        // 计算该账号在同平台列表中的序号
-        const platform = acc.platform;
-        let platformIdx = 0;
-        for (let i = 0; i < index; i++) {
-          if (accounts[i].platform === platform) platformIdx++;
-        }
         const result = await bridge.apiPost('config/delete', { platform, index: platformIdx });
         if (result && result.status === 'ok') {
           accounts.splice(index, 1);
