@@ -270,21 +270,21 @@
 
         <!-- 消息模板 -->
         <div class="form-group">
-          <label class="form-label">消息模板</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <label class="form-label" style="margin-bottom:0">消息模板</label>
+            <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认</button>
+          </div>
           <div class="template-layout">
             <div class="template-editor">
               <div class="template-label">模板编辑</div>
               <textarea class="form-textarea" id="field-template" oninput="syncTemplateHeight()"></textarea>
-              <div class="variable-tags" id="variable-tags"></div>
             </div>
             <div class="template-preview-box">
               <div class="template-label">预览效果</div>
               <div class="template-preview" id="template-preview"></div>
             </div>
           </div>
-          <div style="margin-top:10px">
-            <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认</button>
-          </div>
+          <div class="variable-tags" id="variable-tags" style="margin-top:12px"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -482,7 +482,7 @@
 
     function updateVariableTags() {
       const platformVars = templateVars[currentPlatform] || {};
-      const vars = platformVars.variables || [];
+      const vars = (platformVars.variables || []).filter(v => v.show !== false);
       document.getElementById('variable-tags').innerHTML = vars.map(v =>
         `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="{${v.name}}">${v.desc}</span>`
       ).join('');
@@ -663,11 +663,19 @@
       }
 
       list.innerHTML = `
-        <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">
-          ${varConfigPlatform === 'mimo' ? '🤖 MiMo' : '📺 华数广电'} 变量列表
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">
+            ${varConfigPlatform === 'mimo' ? '🤖 MiMo' : '📺 华数广电'} 变量列表
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)">勾选的变量会显示在快速插入区域</div>
         </div>
         ${vars.map((v, i) => `
           <div class="var-item">
+            <label style="display:flex;align-items:center;cursor:pointer">
+              <input type="checkbox" ${v.show !== false ? 'checked' : ''} 
+                onchange="updateVarShow('${varConfigPlatform}', ${i}, this.checked)"
+                style="margin-right:8px">
+            </label>
             <div class="var-item-name">{${v.name}}</div>
             <div class="var-item-desc">
               <input type="text" value="${v.desc}" placeholder="输入中文描述" 
@@ -681,6 +689,12 @@
     function updateVarDesc(platform, index, value) {
       if (templateVars[platform] && templateVars[platform].variables) {
         templateVars[platform].variables[index].desc = value;
+      }
+    }
+
+    function updateVarShow(platform, index, checked) {
+      if (templateVars[platform] && templateVars[platform].variables) {
+        templateVars[platform].variables[index].show = checked;
       }
     }
 
