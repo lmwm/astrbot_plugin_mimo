@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from pathlib import Path
 from urllib.request import Request
 
 from .base import BasePlatform, QueryResult
@@ -24,7 +25,17 @@ def _fmt_yuan(val) -> str:
     return f"¥{int(val) / 100:.2f}"
 
 
-_DEFAULT_WASU_TEMPLATE = """📺 {label}
+def _load_default_template(plugin_dir: Path | None) -> str:
+    """从模板文件夹加载默认模板，不存在则使用内置默认"""
+    if plugin_dir:
+        tpl_path = plugin_dir / "templates" / "wasu_default.txt"
+        if tpl_path.exists():
+            try:
+                return tpl_path.read_text(encoding="utf-8")
+            except OSError:
+                pass
+    # 内置默认模板（兜底）
+    return """📺 {label}
 ────────────────
 💰 账户余额: {balance}
    当月话费: {month_fee}
@@ -118,6 +129,10 @@ class WasuResult(QueryResult):
 class WasuPlatform(BasePlatform):
     """华数广电平台"""
 
+    def __init__(self, plugin_dir: Path | None = None):
+        self._plugin_dir = plugin_dir
+        self._default_template = _load_default_template(plugin_dir)
+
     @property
     def platform_name(self) -> str:
         return "华数广电"
@@ -128,6 +143,7 @@ class WasuPlatform(BasePlatform):
 
     async def query(self, account: dict, template: str | None = None) -> QueryResult:
         """查询华数广电账号"""
+        use_template = template or self._default_template
         user_key = account.get("user_key", "")
         token = account.get("token", "")
         phone = account.get("phone", "")
@@ -141,7 +157,7 @@ class WasuPlatform(BasePlatform):
                 account_name=self.get_account_label(account),
                 data={},
                 error="缺少必要参数（user_key, token, phone）",
-                template=template
+                template=use_template
             )
 
         try:
@@ -154,7 +170,7 @@ class WasuPlatform(BasePlatform):
                 platform=self.platform_name,
                 account_name=self.get_account_label(account),
                 data=data,
-                template=template
+                template=use_template
             )
         except Exception as e:
             return WasuResult(

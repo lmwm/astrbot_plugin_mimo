@@ -59,7 +59,7 @@ class ResourceQueryPlugin(Star):
         # 初始化管理器和平台模块
         self._accounts = AccountManager(_PLUGIN_NAME, self._plugin_dir)
         self._mimo = MimoPlatform(self._plugin_dir)
-        self._wasu = WasuPlatform()
+        self._wasu = WasuPlatform(self._plugin_dir)
 
         # 为现有账号填充默认 device_id 和 ua
         self._fill_default_fields()

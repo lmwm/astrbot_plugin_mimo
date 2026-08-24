@@ -1,3 +1,13 @@
+## v3.6.0 (2025-01-XX)
+
+### ♻️ 重构
+- 默认模板从模板文件夹动态读取，不再硬编码在代码中
+- `mimo.py` 和 `wasu.py` 中的 `_DEFAULT_TEMPLATE` 改为从 `templates/` 文件夹加载
+- `WasuPlatform` 新增 `plugin_dir` 参数，支持加载默认模板
+- 移除废弃的 `@register` 装饰器和硬编码版本号
+
+---
+
 ## v3.5.4 (2025-01-XX)
 
 ### ✨ 优化

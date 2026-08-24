@@ -49,16 +49,6 @@ _ACCOUNT_BASE = "https://account.xiaomi.com"
 _BALANCE_URL = "https://platform.xiaomimimo.com/api/v1/balance"
 _USAGE_URL = "https://platform.xiaomimimo.com/api/v1/usage"
 
-_DEFAULT_TEMPLATE = """📋 {label}
-────────────────
-  余额        {balance}元
-  赠送        {gift_balance}元
-  输入        {input_token}
-  输出        {output_token}
-  缓存        {cache_token}
-  本月费用    {monthly_cost}元
-  累计费用    {total_cost}元"""
-
 
 # ══════════════════════════════════════════
 #  工具函数
@@ -75,16 +65,25 @@ def fmt_num(n) -> str:
     return f"{n:,}"
 
 
-def _load_template(plugin_dir: Path | None) -> str:
-    """加载模板文件，不存在则使用默认模板"""
+def _load_default_template(plugin_dir: Path | None) -> str:
+    """从模板文件夹加载默认模板，不存在则使用内置默认"""
     if plugin_dir:
-        tpl_path = plugin_dir / "template.txt"
+        tpl_path = plugin_dir / "templates" / "mimo_default.txt"
         if tpl_path.exists():
             try:
                 return tpl_path.read_text(encoding="utf-8")
             except OSError:
                 pass
-    return _DEFAULT_TEMPLATE
+    # 内置默认模板（兜底）
+    return """📋 {label}
+────────────────
+  余额        {balance}元
+  赠送        {gift_balance}元
+  输入        {input_token}
+  输出        {output_token}
+  缓存        {cache_token}
+  本月费用    {monthly_cost}元
+  累计费用    {total_cost}元"""
 
 
 # ══════════════════════════════════════════
@@ -383,7 +382,18 @@ class MimoResult(QueryResult):
                 f"\n  并发        {concurrency or '-'}"
             )
 
-        tpl = self.template if self.template else _DEFAULT_TEMPLATE
+        tpl = self.template or ""
+        if not tpl:
+            # 内置默认模板（兜底）
+            tpl = """📋 {label}
+────────────────
+  余额        {balance}元
+  赠送        {gift_balance}元
+  输入        {input_token}
+  输出        {output_token}
+  缓存        {cache_token}
+  本月费用    {monthly_cost}元
+  累计费用    {total_cost}元"""
         return tpl.format(
             label=self.account_name or "MiMo用量",
             balance=bal.get("balance", "?"),
@@ -547,6 +557,7 @@ class MimoPlatform(BasePlatform):
     def __init__(self, plugin_dir: Path):
         self._plugin_dir = plugin_dir
         self.limits = LimitTracker(plugin_dir)
+        self._default_template = _load_default_template(plugin_dir)
 
     @property
     def platform_name(self) -> str:
@@ -600,6 +611,7 @@ class MimoPlatform(BasePlatform):
     async def query(self, account: dict, template: str | None = None) -> MimoResult:
         """查询单个账号"""
         label = self.get_account_label(account)
+        use_template = template or self._default_template
 
         result_data = await self.query_one(account)
         if "error" in result_data:
@@ -608,7 +620,7 @@ class MimoPlatform(BasePlatform):
                 account_name=label,
                 data=result_data,
                 error=result_data["error"],
-                template=template,
+                template=use_template,
             )
 
         prev = self.limits.get_prev(account)
@@ -620,5 +632,5 @@ class MimoPlatform(BasePlatform):
             account_name=label,
             data=result_data,
             prev_limit=prev,
-            template=template,
+            template=use_template,
         )
