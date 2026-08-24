@@ -30,7 +30,7 @@
       background: var(--bg); color: var(--text); line-height: 1.5;
     }
     .app { padding: 20px; }
-    .container { max-width: 1100px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; }
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .header-title { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
     .header-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
@@ -48,8 +48,9 @@
     .btn-danger { background: white; color: var(--danger); border: 1px solid #fecaca; }
     .btn-danger:hover { background: #fef2f2; }
     .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-xs { padding: 3px 8px; font-size: 11px; }
 
-    /* 顶部导航标签 */
+    /* 顶部导航 */
     .nav-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); border-radius: var(--radius); padding: 4px; box-shadow: var(--shadow); }
     .nav-tab { padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; background: transparent; color: var(--text-secondary); }
     .nav-tab.active { background: var(--primary); color: white; }
@@ -87,7 +88,7 @@
     /* 模态框 */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s; }
     .modal-overlay.active { opacity: 1; visibility: visible; }
-    .modal { background: var(--surface); border-radius: 16px; width: 92%; max-width: 800px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.2s; }
+    .modal { background: var(--surface); border-radius: 16px; width: 92%; max-width: 900px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.2s; }
     .modal-overlay.active .modal { transform: scale(1); }
     .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
     .modal-title { font-size: 17px; font-weight: 600; }
@@ -104,17 +105,18 @@
     .password-wrapper { position: relative; }
     .password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-muted); }
 
-    /* 模板编辑器 - 等高布局 */
+    /* 模板编辑器 */
+    .template-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .template-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .template-editor, .template-preview-box { display: flex; flex-direction: column; }
     .template-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
-    .form-textarea { width: 100%; flex: 1; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'SF Mono', Monaco, monospace; outline: none; resize: vertical; line-height: 1.6; }
+    .form-textarea { width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'SF Mono', Monaco, monospace; outline: none; resize: vertical; line-height: 1.6; }
     .form-textarea:focus { border-color: var(--primary); }
-    .template-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; white-space: pre-wrap; flex: 1; min-height: 200px; line-height: 1.6; overflow-y: auto; }
+    .template-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; white-space: pre-wrap; min-height: 200px; line-height: 1.6; overflow-y: auto; }
 
     /* 变量标签 */
-    .variable-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .variable-tag { display: inline-block; padding: 3px 8px; background: var(--primary-light); color: var(--primary); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+    .variable-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .variable-tag { display: inline-block; padding: 4px 10px; background: var(--primary-light); color: var(--primary); border-radius: 4px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
     .variable-tag:hover { background: var(--primary); color: white; }
 
     /* Toast */
@@ -129,19 +131,21 @@
     .platform-tab:hover:not(.active) { background: var(--bg); }
 
     /* 变量配置页面 */
-    .var-config-layout { display: grid; grid-template-columns: 200px 1fr; gap: 20px; min-height: 400px; }
+    .var-config-layout { display: grid; grid-template-columns: 180px 1fr; gap: 20px; min-height: 400px; }
     .var-platform-list { border-right: 1px solid var(--border); padding-right: 20px; }
     .var-platform-item { padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; margin-bottom: 4px; }
     .var-platform-item:hover { background: var(--bg); }
     .var-platform-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
     .var-list { flex: 1; }
-    .var-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--surface); }
-    .var-item-name { font-family: monospace; font-size: 13px; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 4px; min-width: 120px; }
-    .var-item-desc { flex: 1; }
-    .var-item-desc input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; outline: none; }
-    .var-item-desc input:focus { border-color: var(--primary); }
-    .var-item-actions { display: flex; gap: 4px; }
+    .var-table { width: 100%; border-collapse: collapse; }
+    .var-table th, .var-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .var-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+    .var-table input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; outline: none; }
+    .var-table input:focus { border-color: var(--primary); }
+    .var-table input[type="checkbox"] { width: auto; }
+    .var-table .var-name { font-family: monospace; color: var(--primary); background: var(--primary-light); padding: 2px 6px; border-radius: 3px; }
     .var-empty { text-align: center; padding: 40px; color: var(--text-muted); }
+    .var-actions { display: flex; gap: 8px; margin-top: 16px; }
   </style>
 </head>
 <body>
@@ -270,21 +274,21 @@
 
         <!-- 消息模板 -->
         <div class="form-group">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="template-header">
             <label class="form-label" style="margin-bottom:0">消息模板</label>
             <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认</button>
           </div>
           <div class="template-layout">
             <div class="template-editor">
               <div class="template-label">模板编辑</div>
-              <textarea class="form-textarea" id="field-template" oninput="syncTemplateHeight()"></textarea>
+              <textarea class="form-textarea" id="field-template" oninput="syncPreviewHeight()"></textarea>
             </div>
             <div class="template-preview-box">
               <div class="template-label">预览效果</div>
               <div class="template-preview" id="template-preview"></div>
             </div>
           </div>
-          <div class="variable-tags" id="variable-tags" style="margin-top:12px"></div>
+          <div class="variable-tags" id="variable-tags"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -311,6 +315,34 @@
     </div>
   </div>
 
+  <!-- 添加变量模态框 -->
+  <div class="modal-overlay" id="add-var-modal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <div class="modal-title">添加变量</div>
+        <button class="btn btn-ghost" onclick="closeAddVarModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">变量名称（英文，如：balance）</label>
+          <input class="form-input" id="new-var-name" placeholder="变量名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">中文描述</label>
+          <input class="form-input" id="new-var-desc" placeholder="如：余额">
+        </div>
+        <div class="form-group">
+          <label class="form-label">默认值（用于预览）</label>
+          <input class="form-input" id="new-var-default" placeholder="如：100.00">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddVarModal()">取消</button>
+        <button class="btn btn-primary" onclick="addVariable()">添加</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -320,8 +352,10 @@
     let defaultTemplates = {};
     let currentPlatform = 'mimo';
     let pendingDeleteIndex = -1;
-    let templateVars = {};
     let varConfigPlatform = 'mimo';
+
+    // 变量配置结构：{ mimo: { variables: [{name, desc, default, show}], sample_data: {} }, wasu: {...} }
+    let templateVars = {};
 
     // 页面切换
     function switchPage(page) {
@@ -483,9 +517,12 @@
     function updateVariableTags() {
       const platformVars = templateVars[currentPlatform] || {};
       const vars = (platformVars.variables || []).filter(v => v.show !== false);
-      document.getElementById('variable-tags').innerHTML = vars.map(v =>
-        `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="{${v.name}}">${v.desc}</span>`
-      ).join('');
+      document.getElementById('variable-tags').innerHTML = vars.length > 0 
+        ? '<span style="font-size:11px;color:var(--text-muted);margin-right:4px">快速插入：</span>' +
+          vars.map(v =>
+            `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="{${v.name}}">${v.desc}</span>`
+          ).join('')
+        : '';
     }
 
     function insertVariable(name) {
@@ -499,7 +536,11 @@
     function updateTemplatePreview() {
       const template = document.getElementById('field-template').value || defaultTemplates[currentPlatform] || '';
       const platformVars = templateVars[currentPlatform] || {};
-      const sample = platformVars.sample_data || {};
+      // 使用变量的默认值构建预览数据
+      const sample = {};
+      (platformVars.variables || []).forEach(v => {
+        sample[v.name] = v.default || '';
+      });
       let result = template;
       for (const [k, v] of Object.entries(sample)) {
         result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
@@ -507,11 +548,31 @@
       document.getElementById('template-preview').textContent = result || '（请在左侧输入模板）';
     }
 
-    function syncTemplateHeight() {
+    // 同步预览高度到编辑框高度
+    function syncPreviewHeight() {
       const textarea = document.getElementById('field-template');
       const preview = document.getElementById('template-preview');
       preview.style.height = textarea.offsetHeight + 'px';
       updateTemplatePreview();
+    }
+
+    // 监听 textarea 大小变化
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const preview = document.getElementById('template-preview');
+        if (preview) {
+          preview.style.height = entry.contentRect.height + 'px';
+        }
+      }
+    });
+
+    // 在模态框打开时开始观察
+    function startObserveTextarea() {
+      const textarea = document.getElementById('field-template');
+      if (textarea) {
+        resizeObserver.observe(textarea);
+        syncPreviewHeight();
+      }
     }
 
     function resetTemplate() {
@@ -636,7 +697,7 @@
     // ==================== 变量配置 ====================
 
     function renderVarPlatformList() {
-      const platforms = Object.keys(templateVars);
+      const platforms = ['mimo', 'wasu'];
       const list = document.getElementById('var-platform-list');
       list.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">选择平台</div>' +
         platforms.map(p => `
@@ -653,49 +714,114 @@
     }
 
     function renderVarList() {
-      const platformData = templateVars[varConfigPlatform] || {};
+      const platformData = templateVars[varConfigPlatform] || { variables: [], sample_data: {} };
       const vars = platformData.variables || [];
       const list = document.getElementById('var-list');
 
-      if (vars.length === 0) {
-        list.innerHTML = '<div class="var-empty">该平台暂无变量定义</div>';
-        return;
-      }
-
       list.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">
             ${varConfigPlatform === 'mimo' ? '🤖 MiMo' : '📺 华数广电'} 变量列表
           </div>
-          <div style="font-size:11px;color:var(--text-muted)">勾选的变量会显示在快速插入区域</div>
+          <button class="btn btn-primary btn-xs" onclick="openAddVarModal()">＋ 添加变量</button>
         </div>
-        ${vars.map((v, i) => `
-          <div class="var-item">
-            <label style="display:flex;align-items:center;cursor:pointer">
-              <input type="checkbox" ${v.show !== false ? 'checked' : ''} 
-                onchange="updateVarShow('${varConfigPlatform}', ${i}, this.checked)"
-                style="margin-right:8px">
-            </label>
-            <div class="var-item-name">{${v.name}}</div>
-            <div class="var-item-desc">
-              <input type="text" value="${v.desc}" placeholder="输入中文描述" 
-                onchange="updateVarDesc('${varConfigPlatform}', ${i}, this.value)">
-            </div>
-          </div>
-        `).join('')}
+        ${vars.length > 0 ? `
+          <table class="var-table">
+            <thead>
+              <tr>
+                <th style="width:40px">显示</th>
+                <th style="width:120px">变量名</th>
+                <th>中文描述</th>
+                <th style="width:150px">默认值</th>
+                <th style="width:60px">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${vars.map((v, i) => `
+                <tr>
+                  <td><input type="checkbox" ${v.show !== false ? 'checked' : ''} onchange="updateVarField(${i}, 'show', this.checked)"></td>
+                  <td><span class="var-name">{${v.name}}</span></td>
+                  <td><input type="text" value="${v.desc || ''}" placeholder="中文描述" onchange="updateVarField(${i}, 'desc', this.value)"></td>
+                  <td><input type="text" value="${v.default || ''}" placeholder="默认值" onchange="updateVarField(${i}, 'default', this.value)"></td>
+                  <td><button class="btn btn-danger btn-xs" onclick="removeVariable(${i})">删除</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : `
+          <div class="var-empty">暂无变量，点击上方按钮添加</div>
+        `}
       `;
     }
 
-    function updateVarDesc(platform, index, value) {
-      if (templateVars[platform] && templateVars[platform].variables) {
-        templateVars[platform].variables[index].desc = value;
+    function updateVarField(index, field, value) {
+      if (!templateVars[varConfigPlatform]) {
+        templateVars[varConfigPlatform] = { variables: [], sample_data: {} };
+      }
+      if (!templateVars[varConfigPlatform].variables) {
+        templateVars[varConfigPlatform].variables = [];
+      }
+      if (templateVars[varConfigPlatform].variables[index]) {
+        templateVars[varConfigPlatform].variables[index][field] = value;
       }
     }
 
-    function updateVarShow(platform, index, checked) {
-      if (templateVars[platform] && templateVars[platform].variables) {
-        templateVars[platform].variables[index].show = checked;
+    function openAddVarModal() {
+      document.getElementById('new-var-name').value = '';
+      document.getElementById('new-var-desc').value = '';
+      document.getElementById('new-var-default').value = '';
+      document.getElementById('add-var-modal').classList.add('active');
+    }
+
+    function closeAddVarModal() {
+      document.getElementById('add-var-modal').classList.remove('active');
+    }
+
+    function addVariable() {
+      const name = document.getElementById('new-var-name').value.trim();
+      const desc = document.getElementById('new-var-desc').value.trim();
+      const defaultValue = document.getElementById('new-var-default').value.trim();
+
+      if (!name) {
+        showToast('请输入变量名称', 'error');
+        return;
       }
+
+      if (!/^[a-zA-Z_]\w*$/.test(name)) {
+        showToast('变量名称只能包含英文、数字和下划线', 'error');
+        return;
+      }
+
+      if (!templateVars[varConfigPlatform]) {
+        templateVars[varConfigPlatform] = { variables: [], sample_data: {} };
+      }
+      if (!templateVars[varConfigPlatform].variables) {
+        templateVars[varConfigPlatform].variables = [];
+      }
+
+      // 检查是否已存在
+      if (templateVars[varConfigPlatform].variables.some(v => v.name === name)) {
+        showToast('变量名已存在', 'error');
+        return;
+      }
+
+      templateVars[varConfigPlatform].variables.push({
+        name: name,
+        desc: desc || name,
+        default: defaultValue || '',
+        show: true
+      });
+
+      closeAddVarModal();
+      renderVarList();
+      showToast('变量已添加');
+    }
+
+    function removeVariable(index) {
+      if (!templateVars[varConfigPlatform] || !templateVars[varConfigPlatform].variables) return;
+      templateVars[varConfigPlatform].variables.splice(index, 1);
+      renderVarList();
+      showToast('变量已删除');
     }
 
     async function saveVarConfig() {
@@ -707,8 +833,15 @@
       }
     }
 
-    // 初始化模板高度同步
-    document.getElementById('field-template')?.addEventListener('input', syncTemplateHeight);
+    // 初始化
+    document.getElementById('field-template')?.addEventListener('input', updateTemplatePreview);
+    
+    // 打开模态框时开始观察 textarea 大小变化
+    const originalOpenModal = openModal;
+    openModal = function() {
+      originalOpenModal();
+      setTimeout(startObserveTextarea, 100);
+    };
   </script>
 </body>
 </html>

@@ -188,8 +188,8 @@ class ResourceQueryPlugin(Star):
             "voice_detail": "语音详细信息（多行）",
         }
 
-        # 预览用的示例数据
-        sample_data = {
+        # 变量默认值
+        var_defaults = {
             "mimo": {
                 "label": "MiMo账号", "balance": "177.40", "gift_balance": "177.40",
                 "input_token": "10.3亿", "output_token": "324.0万", "cache_token": "9.8亿",
@@ -214,13 +214,18 @@ class ResourceQueryPlugin(Star):
                     content = txt_file.read_text(encoding="utf-8")
                     # 从模板中提取变量名
                     vars_found = re.findall(r"\{(\w+)\}", content)
+                    platform_defaults = var_defaults.get(platform, {})
                     vars_list = [
-                        {"name": v, "desc": var_descriptions.get(v, v)}
+                        {
+                            "name": v,
+                            "desc": var_descriptions.get(v, v),
+                            "default": platform_defaults.get(v, ""),
+                            "show": True
+                        }
                         for v in dict.fromkeys(vars_found)  # 去重并保持顺序
                     ]
                     result[platform] = {
-                        "variables": vars_list,
-                        "sample_data": sample_data.get(platform, {})
+                        "variables": vars_list
                     }
                 except OSError:
                     pass
