@@ -24,7 +24,7 @@ from pathlib import Path
 
 from astrbot.api import AstrBotConfig
 from astrbot.api.event import AstrMessageEvent, filter
-from astrbot.api.star import Context, Star, register
+from astrbot.api.star import Context, Star
 from astrbot.core.utils.session_waiter import SessionController, session_waiter
 
 from .account import AccountManager
@@ -41,7 +41,6 @@ from .updater import check_update, do_update, reload_plugin
 from .wasu import WasuPlatform
 
 _PLUGIN_NAME = "astrbot_plugin_resource_query"
-_PLUGIN_VERSION = "3.5.4"
 
 # 默认设备标识和 User-Agent
 _DEFAULT_DEVICE_ID = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")
@@ -51,7 +50,6 @@ _DEFAULT_UA = os.getenv(
 )
 
 
-@register(_PLUGIN_NAME, "资源查询", "多平台资源查询插件（MiMo/华数广电）", _PLUGIN_VERSION)
 class ResourceQueryPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig | None = None):
         super().__init__(context)
