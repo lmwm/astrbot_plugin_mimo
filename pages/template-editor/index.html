@@ -552,7 +552,10 @@
     function syncPreviewHeight() {
       const textarea = document.getElementById('field-template');
       const preview = document.getElementById('template-preview');
-      preview.style.height = textarea.offsetHeight + 'px';
+      if (textarea && preview) {
+        // 使用 offsetHeight 获取完整高度（包含 padding 和 border）
+        preview.style.height = textarea.offsetHeight + 'px';
+      }
       updateTemplatePreview();
     }
 
@@ -561,7 +564,8 @@
       for (const entry of entries) {
         const preview = document.getElementById('template-preview');
         if (preview) {
-          preview.style.height = entry.contentRect.height + 'px';
+          // 使用 offsetHeight 而不是 contentRect.height，以包含 padding 和 border
+          preview.style.height = entry.target.offsetHeight + 'px';
         }
       }
     });
