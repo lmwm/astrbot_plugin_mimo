@@ -141,6 +141,8 @@ class AccountManager:
     def _fill_default_names(self, accounts: list) -> bool:
         """为没有名称的账号自动生成默认名称（如：账号001）
 
+        所有平台共享同一个序号计数器，最大为 999。
+
         Args:
             accounts: 账号配置列表（原地修改）。
 
@@ -149,24 +151,24 @@ class AccountManager:
         """
         changed = False
 
-        # 统计各平台已有的名称
-        platform_counters: dict[str, int] = {}
+        # 统计所有平台已有的名称（共享序号）
+        max_counter = 0
         for acc in accounts:
-            platform = acc.get("platform", "unknown")
             name = acc.get("name", "").strip()
             if name and name.startswith("账号"):
                 try:
                     num = int(name[2:])
-                    platform_counters[platform] = max(platform_counters.get(platform, 0), num)
+                    max_counter = max(max_counter, num)
                 except ValueError:
                     pass
 
-        # 为没有名称的账号生成默认名称
+        # 为没有名称的账号生成默认名称（共享序号，最大 999）
+        counter = max_counter
         for acc in accounts:
             if not acc.get("name", "").strip():
-                platform = acc.get("platform", "unknown")
-                counter = platform_counters.get(platform, 0) + 1
-                platform_counters[platform] = counter
+                counter += 1
+                if counter > 999:
+                    counter = 1  # 超过 999 后从 001 开始循环
                 acc["name"] = f"账号{counter:03d}"
                 changed = True
 

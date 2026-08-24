@@ -363,15 +363,17 @@
     }
 
     function generateDefaultName(platform) {
-      // 统计该平台已有的"账号XXX"名称，找到最大编号
+      // 统计所有平台已有的"账号XXX"名称，找到最大编号（共享序号）
       let maxNum = 0;
       accounts.forEach(acc => {
-        if (acc.platform === platform && acc.name && acc.name.startsWith('账号')) {
+        if (acc.name && acc.name.startsWith('账号')) {
           const num = parseInt(acc.name.substring(2), 10);
           if (!isNaN(num) && num > maxNum) maxNum = num;
         }
       });
-      return '账号' + String(maxNum + 1).padStart(3, '0');
+      let nextNum = maxNum + 1;
+      if (nextNum > 999) nextNum = 1; // 超过 999 后从 001 开始循环
+      return '账号' + String(nextNum).padStart(3, '0');
     }
 
     function openAddModal() {
@@ -534,14 +536,25 @@
     }
 
     function deleteAccount(index) {
-      console.log('deleteAccount called with index:', index);
       const acc = accounts[index];
-      if (!acc) {
-        console.error('Account not found at index:', index);
-        showToast('账号不存在', 'error');
-        return;
-      }
+      if (!acc) return;
       const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
+      pendingDeleteIndex = index;
+      document.getElementById('delete-account-name').textContent = name;
+      document.getElementById('delete-modal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('active');
+      pendingDeleteIndex = -1;
+    }
+
+    async function confirmDelete() {
+      if (pendingDeleteIndex < 0) return;
+      const index = pendingDeleteIndex;
+      const acc = accounts[index];
+      const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
+      closeDeleteModal();
 
       // 计算该账号在同平台列表中的序号
       const platform = acc.platform;
@@ -550,17 +563,8 @@
         if (accounts[i].platform === platform) platformIdx++;
       }
 
-      console.log('Deleting account:', { platform, index: platformIdx, name });
-
-      // 直接执行删除，不使用确认对话框
-      doDelete(index, platform, platformIdx, name);
-    }
-
-    async function doDelete(index, platform, platformIdx, name) {
       try {
-        console.log('Calling bridge.apiPost...');
         const result = await bridge.apiPost('config/delete', { platform, index: platformIdx });
-        console.log('Delete result:', result);
         if (result && result.status === 'ok') {
           accounts.splice(index, 1);
           renderAccounts();
@@ -569,7 +573,6 @@
           showToast(result?.message || '删除失败', 'error');
         }
       } catch (e) {
-        console.error('Delete error:', e);
         showToast('删除失败: ' + (e.message || '未知错误'), 'error');
       }
     }
