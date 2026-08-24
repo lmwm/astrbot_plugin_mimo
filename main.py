@@ -41,7 +41,7 @@ from .updater import check_update, do_update, reload_plugin
 from .wasu import WasuPlatform
 
 _PLUGIN_NAME = "astrbot_plugin_resource_query"
-_PLUGIN_VERSION = "3.5.1"
+_PLUGIN_VERSION = "3.5.2"
 
 # 默认设备标识和 User-Agent
 _DEFAULT_DEVICE_ID = os.getenv("MIMO_DEVICE_ID", "wb_MIQUERY000001")

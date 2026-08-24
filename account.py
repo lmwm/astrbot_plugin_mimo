@@ -54,7 +54,11 @@ class AccountManager:
     # ── 账号读写 ──
 
     def get_all_accounts(self) -> list:
-        """获取所有账号（包括模板）"""
+        """获取所有账号（包括模板）
+
+        Returns:
+            账号配置列表。
+        """
         accounts = []
         data_path = self._get_data_path()
 
@@ -78,6 +82,10 @@ class AccountManager:
 
         # 兼容旧版本：从 accounts.json 读取并迁移
         self._migrate_old_accounts(data_path, accounts)
+
+        # 为没有名称的账号自动填充默认名称并保存
+        if self._fill_default_names(accounts):
+            self.save_all_accounts(accounts)
 
         return accounts
 
@@ -130,12 +138,17 @@ class AccountManager:
                 if template_file.exists():
                     template_file.unlink(missing_ok=True)
 
-    def _fill_default_names(self, accounts: list):
+    def _fill_default_names(self, accounts: list) -> bool:
         """为没有名称的账号自动生成默认名称（如：账号001）
 
         Args:
             accounts: 账号配置列表（原地修改）。
+
+        Returns:
+            是否有账号被修改。
         """
+        changed = False
+
         # 统计各平台已有的名称
         platform_counters: dict[str, int] = {}
         for acc in accounts:
@@ -155,6 +168,9 @@ class AccountManager:
                 counter = platform_counters.get(platform, 0) + 1
                 platform_counters[platform] = counter
                 acc["name"] = f"账号{counter:03d}"
+                changed = True
+
+        return changed
 
     def delete_account(self, platform: str, index: int) -> dict | None:
         """删除指定平台的指定账号
