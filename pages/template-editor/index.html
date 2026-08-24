@@ -92,7 +92,7 @@
     .modal-overlay.active .modal { transform: scale(1); }
     .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
     .modal-title { font-size: 17px; font-weight: 600; }
-    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .modal-body { padding: 20px 24px; overflow-y: auto; overflow-x: hidden; flex: 1; }
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
 
     /* 表单 */
@@ -107,12 +107,12 @@
 
     /* 模板编辑器 */
     .template-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .template-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .template-editor, .template-preview-box { display: flex; flex-direction: column; }
+    .template-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; overflow: hidden; }
+    .template-editor, .template-preview-box { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
     .template-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
-    .form-textarea { width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'SF Mono', Monaco, monospace; outline: none; resize: vertical; line-height: 1.6; }
+    .form-textarea { width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'SF Mono', Monaco, monospace; outline: none; resize: vertical; line-height: 1.6; white-space: pre; overflow-x: auto; box-sizing: border-box; }
     .form-textarea:focus { border-color: var(--primary); }
-    .template-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; white-space: pre-wrap; min-height: 200px; line-height: 1.6; overflow-y: auto; }
+    .template-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; white-space: pre; min-height: 200px; line-height: 1.6; overflow: auto; box-sizing: border-box; }
 
     /* 变量标签 */
     .variable-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
