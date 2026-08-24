@@ -148,44 +148,75 @@
     .var-actions { display: flex; gap: 8px; margin-top: 16px; }
 
     /* 响应式设计 */
+    @media (max-width: 1200px) {
+      .container { max-width: 100%; padding: 0 16px; }
+    }
+
     @media (max-width: 1024px) {
-      .container { max-width: 100%; padding: 0 10px; }
       .template-layout { grid-template-columns: 1fr; }
       .var-config-layout { grid-template-columns: 1fr; }
-      .var-platform-list { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 16px; }
+      .var-platform-list { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 16px; margin-bottom: 16px; }
+      .var-table { display: block; overflow-x: auto; }
     }
 
     @media (max-width: 768px) {
       .app { padding: 12px; }
+      .container { padding: 0 8px; }
       .header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .header-title { font-size: 18px; }
-      .nav-tabs { flex-wrap: wrap; }
-      .nav-tab { padding: 8px 14px; font-size: 13px; }
-      .card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .account-grid { grid-template-columns: 1fr; }
+      .nav-tabs { flex-wrap: wrap; gap: 4px; }
+      .nav-tab { padding: 8px 14px; font-size: 13px; flex: 1; text-align: center; }
+      .card { border-radius: var(--radius-sm); }
+      .card-header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 16px; }
+      .card-body { padding: 12px 16px; }
+      .account-grid { grid-template-columns: 1fr; gap: 10px; }
       .form-row { grid-template-columns: 1fr; }
-      .modal { width: 96%; max-height: 96vh; }
+      .modal { width: 96%; max-height: 96vh; border-radius: 12px; }
       .modal-header { padding: 16px 20px 12px; }
       .modal-body { padding: 16px 20px; }
-      .modal-footer { padding: 12px 20px; }
+      .modal-footer { padding: 12px 20px; flex-wrap: wrap; }
+      .modal-footer .btn { flex: 1; min-width: 80px; }
       .platform-tabs { flex-wrap: wrap; }
+      .platform-tab { flex: 1; text-align: center; }
       .var-table { font-size: 12px; }
-      .var-table th, .var-table td { padding: 8px; }
+      .var-table th, .var-table td { padding: 8px 6px; }
+      .var-table input { padding: 4px 6px; font-size: 12px; }
+      .variable-tags { gap: 4px; }
+      .variable-tag { padding: 3px 8px; font-size: 11px; }
     }
 
     @media (max-width: 480px) {
       .app { padding: 8px; }
-      .header-title { font-size: 16px; }
-      .header-icon { width: 32px; height: 32px; font-size: 16px; }
+      .container { padding: 0 4px; }
+      .header { margin-bottom: 12px; }
+      .header-title { font-size: 16px; gap: 8px; }
+      .header-icon { width: 32px; height: 32px; font-size: 16px; border-radius: 8px; }
       .btn { padding: 6px 12px; font-size: 12px; }
       .btn-sm { padding: 4px 8px; font-size: 11px; }
-      .card-body { padding: 12px; }
-      .account-card { padding: 12px; }
-      .account-card-header { gap: 10px; }
-      .account-avatar { width: 36px; height: 36px; font-size: 16px; }
+      .btn-xs { padding: 3px 6px; font-size: 10px; }
+      .nav-tabs { padding: 3px; }
+      .nav-tab { padding: 8px 10px; font-size: 12px; }
+      .card { border-radius: 8px; }
+      .card-header { padding: 10px 12px; }
+      .card-title { font-size: 14px; }
+      .card-body { padding: 10px 12px; }
+      .account-card { padding: 12px; border-radius: 8px; }
+      .account-card-header { gap: 10px; margin-bottom: 10px; }
+      .account-avatar { width: 36px; height: 36px; font-size: 16px; border-radius: 8px; }
       .account-name { font-size: 14px; }
-      .form-textarea { min-height: 150px; }
-      .template-preview { min-height: 150px; }
+      .account-platform { font-size: 10px; padding: 1px 6px; }
+      .account-stats { gap: 8px; padding-top: 10px; }
+      .stat-label { font-size: 10px; }
+      .stat-value { font-size: 11px; }
+      .account-actions { gap: 6px; }
+      .form-textarea { min-height: 150px; font-size: 12px; }
+      .template-preview { min-height: 150px; font-size: 12px; }
+      .template-label { font-size: 11px; }
+      .var-platform-list { padding-bottom: 12px; }
+      .var-platform-item { padding: 8px 12px; font-size: 13px; }
+      .var-table th { font-size: 11px; }
+      .var-table td { font-size: 11px; }
+      .var-name { font-size: 11px; padding: 1px 4px; }
     }
   </style>
 </head>
