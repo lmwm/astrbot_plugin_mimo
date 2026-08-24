@@ -77,6 +77,9 @@ class ResourceQueryPlugin(Star):
         context.register_web_api(
             f"/{_PLUGIN_NAME}/templates", self.get_templates, ["GET"], "获取默认模板"
         )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/template-vars", self.get_template_vars, ["GET"], "获取模板变量定义"
+        )
 
     def _fill_default_fields(self):
         """为缺少 device_id 和 ua 的账号填充默认值"""
@@ -142,6 +145,74 @@ class ResourceQueryPlugin(Star):
                 except OSError:
                     pass
         return json_response(templates)
+
+    async def get_template_vars(self):
+        """从模板文件中解析变量定义"""
+        import re
+        from astrbot.api.web import json_response
+
+        # 变量描述映射
+        var_descriptions = {
+            "label": "账号名称",
+            "balance": "余额",
+            "gift_balance": "赠送余额",
+            "input_token": "输入Token（自动格式化）",
+            "output_token": "输出Token（自动格式化）",
+            "cache_token": "缓存Token（自动格式化）",
+            "monthly_cost": "本月费用",
+            "total_cost": "累计费用",
+            "tpm": "TPM 限额",
+            "rpm": "RPM 限额",
+            "concurrency": "并发限额",
+            "month_fee": "当月话费",
+            "arrears": "欠费",
+            "total_used": "本月累计使用",
+            "total": "总流量",
+            "used": "已用流量",
+            "remain": "剩余流量",
+            "query_time": "查询时间",
+            "traffic_detail": "流量详细信息（多行）",
+            "voice_detail": "语音详细信息（多行）",
+        }
+
+        # 预览用的示例数据
+        sample_data = {
+            "mimo": {
+                "label": "MiMo账号", "balance": "177.40", "gift_balance": "177.40",
+                "input_token": "10.3亿", "output_token": "324.0万", "cache_token": "9.8亿",
+                "monthly_cost": "120.93", "total_cost": "132.60",
+                "tpm": "10.0万", "rpm": "1,200", "concurrency": "50"
+            },
+            "wasu": {
+                "label": "138****8888", "balance": "¥56.80", "month_fee": "¥38.50",
+                "arrears": "¥0.00", "total_used": "15.62 GB", "total": "30.00 GB",
+                "used": "15.62 GB", "remain": "14.38 GB", "query_time": "2026-08-21 23:00",
+                "traffic_detail": "\n     · 通用流量 结转: 20.00 GB (已用 12.50 GB / 剩 7.50 GB)",
+                "voice_detail": "\n📞 语音: 通话套餐: 300分钟 | 剩余 215分钟"
+            }
+        }
+
+        result = {}
+        templates_dir = self._plugin_dir / "templates"
+        if templates_dir.exists():
+            for txt_file in templates_dir.glob("*.txt"):
+                platform = txt_file.stem.replace("_default", "")
+                try:
+                    content = txt_file.read_text(encoding="utf-8")
+                    # 从模板中提取变量名
+                    vars_found = re.findall(r"\{(\w+)\}", content)
+                    vars_list = [
+                        {"name": v, "desc": var_descriptions.get(v, v)}
+                        for v in dict.fromkeys(vars_found)  # 去重并保持顺序
+                    ]
+                    result[platform] = {
+                        "variables": vars_list,
+                        "sample_data": sample_data.get(platform, {})
+                    }
+                except OSError:
+                    pass
+
+        return json_response(result)
 
     # ================== 主指令 ==================
 

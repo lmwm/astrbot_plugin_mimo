@@ -253,53 +253,7 @@
     let defaultTemplates = {};
     let currentPlatform = 'mimo';
     let pendingDeleteIndex = -1;
-
-    // 变量定义
-    const VARIABLES = {
-      mimo: [
-        { name: 'label', desc: '账号名称' },
-        { name: 'balance', desc: '余额' },
-        { name: 'gift_balance', desc: '赠送余额' },
-        { name: 'input_token', desc: '输入Token（自动格式化）' },
-        { name: 'output_token', desc: '输出Token（自动格式化）' },
-        { name: 'cache_token', desc: '缓存Token（自动格式化）' },
-        { name: 'monthly_cost', desc: '本月费用' },
-        { name: 'total_cost', desc: '累计费用' },
-        { name: 'tpm', desc: 'TPM 限额' },
-        { name: 'rpm', desc: 'RPM 限额' },
-        { name: 'concurrency', desc: '并发限额' }
-      ],
-      wasu: [
-        { name: 'label', desc: '账号名称' },
-        { name: 'balance', desc: '账户余额' },
-        { name: 'month_fee', desc: '当月话费' },
-        { name: 'arrears', desc: '欠费' },
-        { name: 'total_used', desc: '本月累计使用' },
-        { name: 'total', desc: '总流量' },
-        { name: 'used', desc: '已用流量' },
-        { name: 'remain', desc: '剩余流量' },
-        { name: 'query_time', desc: '查询时间' },
-        { name: 'traffic_detail', desc: '流量详细信息（多行）' },
-        { name: 'voice_detail', desc: '语音详细信息（多行）' }
-      ]
-    };
-
-    // 预览用的示例数据
-    const SAMPLE_DATA = {
-      mimo: {
-        label: 'MiMo账号', balance: '177.40', gift_balance: '177.40',
-        input_token: '10.3亿', output_token: '324.0万', cache_token: '9.8亿',
-        monthly_cost: '120.93', total_cost: '132.60',
-        tpm: '10.0万', rpm: '1,200', concurrency: '50'
-      },
-      wasu: {
-        label: '138****8888', balance: '¥56.80', month_fee: '¥38.50',
-        arrears: '¥0.00', total_used: '15.62 GB', total: '30.00 GB',
-        used: '15.62 GB', remain: '14.38 GB', query_time: '2026-08-21 23:00',
-        traffic_detail: '\n     · 通用流量 结转: 20.00 GB (已用 12.50 GB / 剩 7.50 GB)\n     · 夜间流量: 10.00 GB (已用 3.12 GB / 剩 6.88 GB)',
-        voice_detail: '\n📞 语音: 通话套餐: 300分钟 | 剩余 215分钟'
-      }
-    };
+    let templateVars = {};  // 从 API 获取的变量定义
 
     document.addEventListener('DOMContentLoaded', async () => {
       await bridge.ready();
@@ -309,10 +263,15 @@
 
     async function loadDefaults() {
       try {
-        const result = await bridge.apiGet('templates');
-        defaultTemplates = result || {};
+        // 加载默认模板
+        const templates = await bridge.apiGet('templates');
+        defaultTemplates = templates || {};
+
+        // 加载变量定义和示例数据
+        const varsData = await bridge.apiGet('template-vars');
+        templateVars = varsData || {};
       } catch (e) {
-        console.error('加载默认模板失败:', e);
+        console.error('加载默认配置失败:', e);
       }
     }
 
@@ -451,7 +410,8 @@
     }
 
     function updateVariableTags() {
-      const vars = VARIABLES[currentPlatform] || [];
+      const platformVars = templateVars[currentPlatform] || {};
+      const vars = platformVars.variables || [];
       document.getElementById('variable-tags').innerHTML = vars.map(v =>
         `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="${v.desc}">{${v.name}}</span>`
       ).join('');
@@ -467,7 +427,8 @@
 
     function updateTemplatePreview() {
       const template = document.getElementById('field-template').value || defaultTemplates[currentPlatform] || '';
-      const sample = SAMPLE_DATA[currentPlatform];
+      const platformVars = templateVars[currentPlatform] || {};
+      const sample = platformVars.sample_data || {};
       let result = template;
       for (const [k, v] of Object.entries(sample)) {
         result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
