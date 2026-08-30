@@ -87,6 +87,12 @@ class ResourceQueryPlugin(Star):
         context.register_web_api(
             f"/{_PLUGIN_NAME}/template-vars", self.save_template_vars, ["POST"], "保存模板变量定义"
         )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/jm-config", self.get_jm_config, ["GET"], "获取 JM 下载配置"
+        )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/jm-config", self.save_jm_config, ["POST"], "保存 JM 下载配置"
+        )
 
     def _fill_default_fields(self):
         """为缺少 device_id 和 ua 的账号填充默认值"""
@@ -253,6 +259,39 @@ class ResourceQueryPlugin(Star):
         except OSError as e:
             return error_response(f"保存失败: {e}")
 
+        return json_response({"status": "ok"})
+
+    async def get_jm_config(self):
+        """获取 JM 下载配置"""
+        from astrbot.api.web import json_response
+        cfg = self.config if self.config else {}
+        return json_response({
+            "jm_enabled": cfg.get("jm_enabled", True),
+            "jm_send_file": cfg.get("jm_send_file", True),
+            "jm_cookies": cfg.get("jm_cookies", ""),
+            "jm_proxy": cfg.get("jm_proxy", ""),
+            "jm_timeout": cfg.get("jm_timeout", 20),
+            "jm_retry_times": cfg.get("jm_retry_times", 3),
+            "jm_image_threads": cfg.get("jm_image_threads", 16),
+            "jm_photo_threads": cfg.get("jm_photo_threads", 4),
+            "jm_max_concurrent": cfg.get("jm_max_concurrent", 1),
+        })
+
+    async def save_jm_config(self):
+        """保存 JM 下载配置"""
+        from astrbot.api.web import error_response, json_response, request
+        payload = await request.json(default={})
+        if not payload:
+            return error_response("缺少配置数据")
+        cfg = self.config if self.config else {}
+        for key in (
+            "jm_enabled", "jm_send_file", "jm_cookies", "jm_proxy",
+            "jm_timeout", "jm_retry_times", "jm_image_threads",
+            "jm_photo_threads", "jm_max_concurrent",
+        ):
+            if key in payload:
+                cfg[key] = payload[key]
+        self.config.save_config()
         return json_response({"status": "ok"})
 
     # ================== 主指令 ==================
