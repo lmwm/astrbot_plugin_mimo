@@ -658,8 +658,8 @@ class ResourceQueryPlugin(Star):
 
     # ================== JM 下载 ==================
 
-    @filter.command("jm", desc="下载 JMComic 漫画 PDF：/jm <数字ID>")
-    async def jm_command(self, event: AstrMessageEvent, jm_id: str = ""):
+    @filter.command("jm", desc="下载 JMComic 漫画 PDF：/jm <数字ID> [redownload]")
+    async def jm_command(self, event: AstrMessageEvent, jm_id: str = "", option: str = ""):
         """/jm — 下载 JMComic 漫画（仅私聊）"""
         # 检查是否启用
         cfg = self.config if self.config else {}
@@ -672,31 +672,50 @@ class ResourceQueryPlugin(Star):
             yield event.plain_result("JM 下载仅支持私聊使用，请私聊发送命令")
             return
 
-        # 解析 ID
+        # 解析 ID 和选项
+        force_redownload = option.lower() == "redownload"
         album_id = normalize_album_id(jm_id)
         if album_id is None:
-            yield event.plain_result("用法：/jm <数字ID>\n例如：/jm 123456 或 /jm JM123456")
+            yield event.plain_result(
+                "用法：/jm <数字ID> [redownload]\n"
+                "例如：/jm 123456\n"
+                "添加 redownload 可强制重新下载"
+            )
             return
 
         # 是否发送文件
         send_file = cfg.get("jm_send_file", True)
+
+        # 检查本地缓存
+        local_cache = self._jm.check_local(album_id)
 
         # 先获取漫画信息
         yield event.plain_result(f"正在获取 JM{album_id} 信息...")
         album_info = await self._jm.get_album_info(album_id)
 
         # 发送漫画信息
-        info_lines = [
-            f"JM{album_id} 漫画信息",
-            f"名称：{album_info.get('name', '未知')}",
-            f"作者：{album_info.get('author', '未知')}",
-            f"章节：{album_info.get('chapter_count', 0)} 章",
-            f"图片：{album_info.get('image_count', 0)} 张",
-        ]
+        info_lines = [f"JM{album_id} 漫画信息"]
+        if album_info.get('name') and album_info['name'] != '未知':
+            info_lines.append(f"名称：{album_info['name']}")
+        if album_info.get('author') and album_info['author'] != '未知':
+            info_lines.append(f"作者：{album_info['author']}")
+        if album_info.get('chapter_count'):
+            info_lines.append(f"章节：{album_info['chapter_count']} 章")
+        if album_info.get('image_count'):
+            info_lines.append(f"图片：{album_info['image_count']} 张")
         if album_info.get('tags'):
             info_lines.append(f"标签：{', '.join(album_info['tags'][:5])}")
-        info_lines.append("")
-        info_lines.append("开始下载，请稍候...")
+
+        # 显示本地缓存状态
+        if local_cache:
+            if local_cache['has_pdf']:
+                info_lines.append(f"\n本地已有缓存，PDF {local_cache['pdf_size_mb']:.2f} MB")
+                info_lines.append("如需重新下载，请使用 /jm <ID> redownload")
+            elif local_cache['image_count'] > 0:
+                info_lines.append(f"\n本地已有 {local_cache['image_count']} 张图片缓存")
+        else:
+            info_lines.append("\n开始下载，请稍候...")
+
         yield event.plain_result("\n".join(info_lines))
 
         # 进度消息追踪
@@ -743,10 +762,15 @@ class ResourceQueryPlugin(Star):
             album_id,
             send_file=send_file,
             progress_callback=progress_callback,
+            force_redownload=force_redownload,
         )
 
         if result["success"]:
-            yield event.plain_result(result["message"])
+            # 如果是缓存结果，显示不同的消息
+            if result.get("from_cache"):
+                yield event.plain_result(f"使用本地缓存 - {result['message']}")
+            else:
+                yield event.plain_result(result["message"])
 
             # 发送文件
             if send_file and "pdf_path" in result:

@@ -5,11 +5,13 @@
   - 合成 PDF 文件
   - 通过私聊发送文件
   - 下载进度回调
+  - 本地缓存支持
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import re
 import shutil
@@ -134,6 +136,16 @@ def _validate_pdf(pdf_path: Path) -> None:
             raise ValueError("生成文件不是有效的 PDF")
 
 
+def _count_images(directory: Path) -> int:
+    """统计目录中的图片数量"""
+    count = 0
+    if directory.exists():
+        for f in directory.rglob("*"):
+            if f.suffix.lower() in ('.jpg', '.webp', '.png', '.jpeg'):
+                count += 1
+    return count
+
+
 class JMDownloader:
     """JMComic 下载管理器"""
 
@@ -142,8 +154,77 @@ class JMDownloader:
         self._semaphore = asyncio.Semaphore(int(config.get("jm_max_concurrent", 1)))
         JM_ROOT.mkdir(parents=True, exist_ok=True)
 
+    def _get_album_dir(self, album_id: str) -> Path:
+        """获取漫画存储目录"""
+        return JM_ROOT / f"jm{album_id}"
+
+    def _get_info_file(self, album_id: str) -> Path:
+        """获取漫画信息文件路径"""
+        return self._get_album_dir(album_id) / "info.json"
+
+    def _save_info(self, album_id: str, info: dict) -> None:
+        """保存漫画信息到本地"""
+        info_file = self._get_info_file(album_id)
+        info_file.parent.mkdir(parents=True, exist_ok=True)
+        info_file.write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def _load_info(self, album_id: str) -> dict | None:
+        """从本地加载漫画信息"""
+        info_file = self._get_info_file(album_id)
+        if info_file.exists():
+            try:
+                return json.loads(info_file.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        return None
+
+    def check_local(self, album_id: str) -> dict | None:
+        """检查本地是否有已下载的内容
+
+        Args:
+            album_id: 漫画 ID。
+
+        Returns:
+            如果本地有内容，返回包含以下字段的字典：
+            - has_pdf: 是否有 PDF 文件
+            - pdf_path: PDF 文件路径
+            - pdf_name: PDF 文件名
+            - image_count: 图片数量
+            - album_info: 漫画信息
+            否则返回 None。
+        """
+        album_dir = self._get_album_dir(album_id)
+        if not album_dir.exists():
+            return None
+
+        pdf_dir = album_dir / "pdf"
+        image_dir = album_dir / "images"
+
+        # 检查 PDF
+        pdf_files = list(pdf_dir.glob("*.pdf")) if pdf_dir.exists() else []
+        has_pdf = len(pdf_files) > 0
+        pdf_path = pdf_files[0] if pdf_files else None
+
+        # 统计图片
+        image_count = _count_images(image_dir)
+
+        # 加载信息
+        album_info = self._load_info(album_id) or {}
+
+        if has_pdf or image_count > 0:
+            return {
+                "has_pdf": has_pdf,
+                "pdf_path": str(pdf_path) if pdf_path else None,
+                "pdf_name": pdf_path.name if pdf_path else None,
+                "pdf_size_mb": pdf_path.stat().st_size / (1024 * 1024) if pdf_path else 0,
+                "image_count": image_count,
+                "album_info": album_info,
+                "album_dir": str(album_dir),
+            }
+        return None
+
     async def get_album_info(self, album_id: str) -> dict:
-        """获取漫画信息
+        """获取漫画信息（优先从本地缓存读取）
 
         Args:
             album_id: 漫画 ID。
@@ -151,12 +232,17 @@ class JMDownloader:
         Returns:
             漫画信息字典。
         """
+        # 先检查本地缓存
+        local_info = self._load_info(album_id)
+        if local_info and local_info.get("name") and local_info["name"] != "未知":
+            return local_info
+
+        # 本地没有，从网络获取
         try:
             option = _build_option(self._config, JM_ROOT / "temp")
-            # 使用 jmcomic 的 client 获取专辑信息
-            client = option.copy().new_jm_client()
+            client = option.new_jm_client()
             album = client.get_album_detail(album_id)
-            return {
+            info = {
                 "id": str(album.id),
                 "name": str(album.name),
                 "author": str(getattr(album, 'author', '未知')),
@@ -164,35 +250,24 @@ class JMDownloader:
                 "image_count": sum(len(photo) for photo in album),
                 "tags": list(getattr(album, 'tags', [])),
             }
-        except Exception as e:
-            # 如果获取失败，尝试使用另一种方式
-            try:
-                import jmcomic as jm
-                client = jm.JmOption.default().new_jm_client()
-                album = client.get_album_detail(album_id)
-                return {
-                    "id": str(album.id),
-                    "name": str(album.name),
-                    "author": str(getattr(album, 'author', '未知')),
-                    "chapter_count": len(album),
-                    "image_count": sum(len(photo) for photo in album),
-                    "tags": list(getattr(album, 'tags', [])),
-                }
-            except Exception:
-                return {
-                    "id": album_id,
-                    "name": "未知",
-                    "chapter_count": 0,
-                    "image_count": 0,
-                    "tags": [],
-                    "error": str(e),
-                }
+            # 保存到本地
+            self._save_info(album_id, info)
+            return info
+        except Exception:
+            return {
+                "id": album_id,
+                "name": "未知",
+                "chapter_count": 0,
+                "image_count": 0,
+                "tags": [],
+            }
 
     async def download(
         self,
         album_id: str,
         send_file: bool = True,
         progress_callback: ProgressCallback | None = None,
+        force_redownload: bool = False,
     ) -> dict:
         """下载漫画并生成 PDF
 
@@ -200,15 +275,17 @@ class JMDownloader:
             album_id: 漫画 ID。
             send_file: 是否返回文件路径用于发送。
             progress_callback: 进度回调函数 (current, total, message)。
+            force_redownload: 是否强制重新下载。
 
         Returns:
             包含以下字段的字典：
             - success: 是否成功
             - message: 提示消息
-            - pdf_path: PDF 文件路径（仅 send_file=True 且成功时）
-            - pdf_name: PDF 文件名（仅 send_file=True 且成功时）
+            - pdf_path: PDF 文件路径
+            - pdf_name: PDF 文件名
             - file_size_mb: 文件大小（MB）
             - album_info: 漫画信息字典
+            - from_cache: 是否来自本地缓存
         """
         # 检查是否启用
         if not self._config.get("jm_enabled", True):
@@ -222,24 +299,46 @@ class JMDownloader:
                 except Exception:
                     pass
 
+        # 检查本地缓存
+        if not force_redownload:
+            local = self.check_local(album_id)
+            if local and local["has_pdf"]:
+                album_info = local["album_info"]
+                if not album_info.get("name") or album_info["name"] == "未知":
+                    album_info = await self.get_album_info(album_id)
+                    self._save_info(album_id, album_info)
+
+                return {
+                    "success": True,
+                    "message": f"使用本地缓存，共 {local['image_count']} 张图片，PDF {local['pdf_size_mb']:.2f} MB",
+                    "album_id": album_id,
+                    "album_name": album_info.get("name", "未知"),
+                    "album_info": album_info,
+                    "file_size_mb": local["pdf_size_mb"],
+                    "pdf_path": local["pdf_path"],
+                    "pdf_name": local["pdf_name"],
+                    "image_dir": local.get("album_dir"),
+                    "from_cache": True,
+                }
+
         async with self._semaphore:
-            # 创建下载目录（保留文件，不清理）
-            job_dir = JM_ROOT / f"jm{album_id}"
-            job_dir.mkdir(parents=True, exist_ok=True)
-            download_dir = job_dir / "images"
-            pdf_dir = job_dir / "pdf"
+            # 创建下载目录
+            album_dir = self._get_album_dir(album_id)
+            album_dir.mkdir(parents=True, exist_ok=True)
+            download_dir = album_dir / "images"
+            pdf_dir = album_dir / "pdf"
             download_dir.mkdir(parents=True, exist_ok=True)
             pdf_dir.mkdir(parents=True, exist_ok=True)
 
             # 获取漫画信息
             album_info = await self.get_album_info(album_id)
+            total_images = album_info.get("image_count", 0)
 
             try:
-                _report(0, 0, "准备下载...")
+                _report(0, total_images, "准备下载...")
                 option = _build_option(self._config, download_dir)
 
                 # 在线程池中执行同步下载
-                total_images = album_info.get("image_count", 0)
                 _report(0, total_images, "开始下载图片...")
 
                 def _download_with_progress():
@@ -247,25 +346,19 @@ class JMDownloader:
                     import threading
                     import time as _time
 
-                    # 启动进度监控线程
                     stop_event = threading.Event()
 
                     def _monitor_progress():
                         """监控下载目录中的文件数量"""
-                        _time.sleep(2)  # 等待下载开始
+                        _time.sleep(2)
                         while not stop_event.is_set():
                             try:
-                                # 统计已下载的图片数量
-                                image_count = 0
-                                for dirpath, dirnames, filenames in os.walk(download_dir):
-                                    for f in filenames:
-                                        if f.endswith(('.jpg', '.webp', '.png')):
-                                            image_count += 1
+                                image_count = _count_images(download_dir)
                                 if image_count > 0:
                                     _report(image_count, total_images, f"已下载 {image_count}/{total_images} 张图片")
                             except Exception:
                                 pass
-                            _time.sleep(3)  # 每3秒检查一次
+                            _time.sleep(3)
 
                     monitor_thread = threading.Thread(target=_monitor_progress, daemon=True)
                     monitor_thread.start()
@@ -277,7 +370,7 @@ class JMDownloader:
                             extra=Feature.export_pdf(
                                 pdf_dir=str(pdf_dir),
                                 filename_rule="Aid",
-                                delete_original_file=False,  # 不删除原图
+                                delete_original_file=False,
                             ),
                         )
                         return result
@@ -301,6 +394,7 @@ class JMDownloader:
                     "name": str(album.name),
                     "image_count": sum(len(photo) for photo in album),
                 })
+                self._save_info(resolved_id, album_info)
 
                 response = {
                     "success": True,
@@ -309,12 +403,11 @@ class JMDownloader:
                     "album_name": str(album.name),
                     "album_info": album_info,
                     "file_size_mb": file_size_mb,
+                    "pdf_path": str(pdf_path),
+                    "pdf_name": pdf_name,
                     "image_dir": str(download_dir),
+                    "from_cache": False,
                 }
-
-                if send_file:
-                    response["pdf_path"] = str(pdf_path)
-                    response["pdf_name"] = pdf_name
 
                 _report(total_images, total_images, "全部完成")
                 return response
@@ -339,10 +432,9 @@ class JMDownloader:
                     "success": False,
                     "message": f"JM{album_id} 下载失败（{type(e).__name__}）",
                 }
-            # 不清理文件，保留下载内容
 
     def cleanup_files(self, album_id: str) -> None:
         """清理指定漫画的下载文件"""
-        job_dir = JM_ROOT / f"jm{album_id}"
-        if job_dir.exists():
-            shutil.rmtree(job_dir, ignore_errors=True)
+        album_dir = self._get_album_dir(album_id)
+        if album_dir.exists():
+            shutil.rmtree(album_dir, ignore_errors=True)
