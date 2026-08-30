@@ -204,67 +204,53 @@ class JMDownloader:
                 _report(0, 0, f"正在获取 JM{album_id} 信息...")
                 option = _build_option(self._config, download_dir)
 
-                # 创建进度追踪器
-                class ProgressTracker:
-                    def __init__(self):
-                        self.total_images = 0
-                        self.downloaded = 0
-                        self.current_chapter = ""
-
-                    def on_album(self, album):
-                        """专辑信息获取完成"""
-                        self.total_images = sum(len(photo) for photo in album)
-                        _report(0, self.total_images, f"共 {len(album)} 章，{self.total_images} 张图片")
-
-                    def on_photo(self, photo, index):
-                        """章节开始下载"""
-                        self.current_chapter = f"第 {index}/{len(photo.album)} 章"
-                        _report(self.downloaded, self.total_images, f"下载中 {self.current_chapter}")
-
-                    def on_image(self, image, index, photo):
-                        """图片下载完成"""
-                        self.downloaded += 1
-                        if self.downloaded % 5 == 0 or self.downloaded == self.total_images:
-                            _report(
-                                self.downloaded,
-                                self.total_images,
-                                f"下载进度 {self.downloaded}/{self.total_images}"
-                            )
-
-                tracker = ProgressTracker()
-
-                # 使用 jmcomic 的回调机制
-                class ProgressOption(jmcomic.JmOption):
-                    """带进度回调的选项"""
-
-                    def __init__(self, option_dict, tracker):
-                        super().__init__(option_dict)
-                        self._tracker = tracker
-
-                    def before_album(self, album):
-                        self._tracker.on_album(album)
-
-                    def before_photo(self, photo, index):
-                        self._tracker.on_photo(photo, index)
-
-                    def after_image(self, image, index, photo):
-                        self._tracker.on_image(image, index, photo)
-
-                # 构建带进度的选项
-                progress_option = ProgressOption(option._option_dict, tracker)
-
                 # 在线程池中执行同步下载
                 _report(0, 0, "开始下载图片...")
-                result = await asyncio.to_thread(
-                    jmcomic.download_album,
-                    album_id,
-                    progress_option,
-                    extra=Feature.export_pdf(
-                        pdf_dir=str(pdf_dir),
-                        filename_rule="Aid",
-                        delete_original_file=True,
-                    ),
-                )
+
+                def _download_with_progress():
+                    """带进度监控的下载"""
+                    import threading
+                    import time as _time
+
+                    # 启动进度监控线程
+                    stop_event = threading.Event()
+
+                    def _monitor_progress():
+                        """监控下载目录中的文件数量"""
+                        _time.sleep(2)  # 等待下载开始
+                        while not stop_event.is_set():
+                            try:
+                                # 统计已下载的图片数量
+                                image_count = 0
+                                for dirpath, dirnames, filenames in os.walk(download_dir):
+                                    for f in filenames:
+                                        if f.endswith(('.jpg', '.webp', '.png')):
+                                            image_count += 1
+                                if image_count > 0:
+                                    _report(image_count, 0, f"已下载 {image_count} 张图片...")
+                            except Exception:
+                                pass
+                            _time.sleep(3)  # 每3秒检查一次
+
+                    import os
+                    monitor_thread = threading.Thread(target=_monitor_progress, daemon=True)
+                    monitor_thread.start()
+
+                    try:
+                        result = jmcomic.download_album(
+                            album_id,
+                            option,
+                            extra=Feature.export_pdf(
+                                pdf_dir=str(pdf_dir),
+                                filename_rule="Aid",
+                                delete_original_file=True,
+                            ),
+                        )
+                        return result
+                    finally:
+                        stop_event.set()
+
+                result = await asyncio.to_thread(_download_with_progress)
 
                 _report(tracker.total_images, tracker.total_images, "下载完成，正在生成 PDF...")
 
