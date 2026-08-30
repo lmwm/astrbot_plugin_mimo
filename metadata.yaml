@@ -5,16 +5,20 @@ name: astrbot_plugin_resource_query
 display_name: "资源查询"
 
 # 插件完整描述（支持多行）
-desc: "多平台资源查询插件，支持小米 MiMo 用量查询、华数广电流量/话费查询等"
+desc: |
+  多平台资源查询插件，支持：
+  - 小米 MiMo 用量查询
+  - 华数广电流量/话费查询
+  - JMComic 漫画下载（仅私聊）
 
 # 插件市场卡片上的短描述（一句话）
-short_desc: "查询小米 MiMo 用量、华数广电流量话费"
+short_desc: "查询 MiMo 用量、华数流量、JMComic 下载"
 
 # 插件作者
 author: "御命"
 
 # 插件版本号（每次更新递增，触发 AstrBot 更新检测）
-version: "3.8.4"
+version: "3.9.0"
 
 # 插件仓库地址（用于插件市场来源归属和安装）
 repo: "https://github.com/lmwm/astrbot_plugin_resource_query"

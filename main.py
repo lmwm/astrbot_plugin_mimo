@@ -4,6 +4,7 @@
 支持平台：
   - MiMo：小米 MiMo 平台用量查询
   - 华数广电：流量/通话/余额查询
+  - JMComic：漫画下载（仅私聊）
 
 指令：
   /query                    — 查询帮助
@@ -16,6 +17,7 @@
   /query wasu login         — 华数登录
   /query wasu list          — 列出所有华数账号
   /query wasu del <序号>    — 删除华数账号
+  /jm <ID>                  — 下载 JMComic 漫画 PDF（仅私聊）
 """
 
 import asyncio
@@ -23,11 +25,12 @@ import os
 from pathlib import Path
 
 from astrbot.api import AstrBotConfig
-from astrbot.api.event import AstrMessageEvent, filter
+from astrbot.api.event import AstrMessageEvent, MessageChain, filter
 from astrbot.api.star import Context, Star
 from astrbot.core.utils.session_waiter import SessionController, session_waiter
 
 from .account import AccountManager
+from .jm import JMDownloader, normalize_album_id
 from .mimo import (
     LoginError,
     MimoPlatform,
@@ -53,13 +56,14 @@ _DEFAULT_UA = os.getenv(
 class ResourceQueryPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig | None = None):
         super().__init__(context)
-        self.config = config
+        self.config = config or {}
         self._plugin_dir = Path(__file__).parent
 
         # 初始化管理器和平台模块
         self._accounts = AccountManager(_PLUGIN_NAME, self._plugin_dir)
         self._mimo = MimoPlatform(self._plugin_dir)
         self._wasu = WasuPlatform(self._plugin_dir)
+        self._jm = JMDownloader(self.config)
 
         # 为现有账号填充默认 device_id 和 ua
         self._fill_default_fields()
@@ -651,3 +655,70 @@ class ResourceQueryPlugin(Star):
             yield event.plain_result(f"{result}\n{reload_result}")
         else:
             yield event.plain_result(result)
+
+    # ================== JM 下载 ==================
+
+    @filter.command("jm", desc="下载 JMComic 漫画 PDF：/jm <数字ID>")
+    async def jm_command(self, event: AstrMessageEvent, jm_id: str = ""):
+        """/jm — 下载 JMComic 漫画（仅私聊）"""
+        event.stop_event()
+
+        # 检查是否启用
+        cfg = self.config if self.config else {}
+        if not cfg.get("jm_enabled", True):
+            yield event.plain_result("JM 下载功能当前已关闭。")
+            return
+
+        # 只允许私聊
+        if event.get_group_id():
+            yield event.plain_result("❌ JM 下载仅支持私聊使用，请私聊发送命令。")
+            return
+
+        # 解析 ID
+        album_id = normalize_album_id(jm_id)
+        if album_id is None:
+            yield event.plain_result("用法：/jm <数字ID>\n例如：/jm 123456 或 /jm JM123456")
+            return
+
+        # 是否发送文件
+        send_file = cfg.get("jm_send_file", True)
+
+        # 发送开始提示
+        yield event.plain_result(f"📥 开始下载 JM{album_id}，请稍候...")
+
+        # 执行下载
+        result = await self._jm.download(album_id, send_file=send_file)
+
+        if result["success"]:
+            yield event.plain_result(result["message"])
+
+            # 发送文件
+            if send_file and "pdf_path" in result:
+                try:
+                    pdf_path = result["pdf_path"]
+                    pdf_name = result["pdf_name"]
+
+                    # 通过私聊发送文件
+                    sender_id = event.get_sender_id()
+                    upload_result = await event.bot.api.call_action(
+                        "upload_private_file",
+                        user_id=int(sender_id),
+                        file=pdf_path,
+                        name=pdf_name,
+                    )
+                    self.logger.info(f"JM PDF upload result: {upload_result}")
+
+                    # 清理已发送的文件
+                    try:
+                        from pathlib import Path
+                        Path(pdf_path).unlink(missing_ok=True)
+                    except Exception:
+                        pass
+
+                except Exception as e:
+                    self.logger.exception(f"JM PDF upload failed: {e}")
+                    yield event.plain_result(
+                        f"⚠️ PDF 已生成但发送失败：{e}\n请检查机器人是否有文件上传权限。"
+                    )
+        else:
+            yield event.plain_result(f"❌ {result['message']}")

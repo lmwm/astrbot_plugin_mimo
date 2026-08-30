@@ -1,3 +1,25 @@
+## v3.9.0 (2025-01-XX)
+
+### ✨ 新增
+- 新增 JMComic 漫画下载功能（`/jm <ID>`）
+- 仅支持私聊使用，通过私聊发送 PDF 文件
+- 支持配置是否发送文件、Cookie、代理、超时、重试等
+- 新增 `jm.py` 模块处理 JMComic 下载
+- 新增 `jmcomic` 和 `img2pdf` 依赖
+
+### 📝 配置项
+- `jm_enabled`: 启用/禁用 JM 下载功能
+- `jm_send_file`: 是否发送 PDF 文件
+- `jm_cookies`: JMComic Cookie
+- `jm_proxy`: JMComic 代理
+- `jm_timeout`: 请求超时
+- `jm_retry_times`: 重试次数
+- `jm_image_threads`: 图片下载并发数
+- `jm_photo_threads`: 章节下载并发数
+- `jm_max_concurrent`: 同时下载数量
+
+---
+
 ## v3.8.4 (2025-01-XX)
 
 ### ♻️ 优化
