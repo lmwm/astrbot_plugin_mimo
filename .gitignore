@@ -2,4 +2,6 @@
 *.pyc
 *.pyo
 .DS_Store
+jm_pdf/
+jm_images/
 
