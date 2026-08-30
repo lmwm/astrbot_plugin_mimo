@@ -253,7 +253,7 @@ class JMDownloader:
 
                 result = await asyncio.to_thread(_download_with_progress)
 
-                _report(tracker.total_images, tracker.total_images, "下载完成，正在生成 PDF...")
+                _report(0, 0, "下载完成，正在生成 PDF...")
 
                 album = result.detail
                 resolved_id = str(album.id)
@@ -279,7 +279,7 @@ class JMDownloader:
                     response["pdf_path"] = str(persist_path)
                     response["pdf_name"] = pdf_name
 
-                _report(tracker.total_images, tracker.total_images, "PDF 生成完成")
+                _report(0, 0, "PDF 生成完成")
                 return response
 
             except MissingAlbumPhotoException:
