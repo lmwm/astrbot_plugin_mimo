@@ -269,7 +269,8 @@ class ResourceQueryPlugin(Star):
                 "用法:\n"
                 "  /query mimo — 查询 MiMo 用量\n"
                 "  /query wasu — 查询华数广电\n"
-                "  /query update — 检查更新\n\n"
+                "  /query update — 检查更新\n"
+                "  /query update force — 强制重新安装\n\n"
                 "输入 /query <平台> 查看更多命令"
             )
             return
@@ -282,8 +283,10 @@ class ResourceQueryPlugin(Star):
             async for r in self._handle_wasu(event, args[2:]):
                 yield r
         elif platform == "update":
-            yield event.plain_result("🔄 正在检查更新...")
-            async for r in self._handle_update(event):
+            # 检查是否有 force 参数
+            force = len(args) > 2 and args[2].lower() == "force"
+            yield event.plain_result("正在检查更新...")
+            async for r in self._handle_update(event, force=force):
                 yield r
         else:
             yield event.plain_result(f"❌ 未知平台: {platform}\n支持: mimo, wasu")
@@ -639,16 +642,26 @@ class ResourceQueryPlugin(Star):
 
     # ================== 更新 ==================
 
-    async def _handle_update(self, event: AstrMessageEvent):
-        """处理更新命令"""
-        check = await check_update(self.config)
+    async def _handle_update(self, event: AstrMessageEvent, force: bool = False):
+        """处理更新命令
+
+        Args:
+            event: 消息事件。
+            force: 是否强制更新（即使版本相同）。
+        """
+        check = await check_update(self.config, force=force)
         if check.get("error"):
-            yield event.plain_result(f"❌ 检查更新失败: {check['error']}")
+            yield event.plain_result(f"检查更新失败: {check['error']}")
             return
         if not check["has_update"]:
-            yield event.plain_result(f"✅ 已是最新版本 v{check['current']}")
+            yield event.plain_result(f"已是最新版本 v{check['current']}")
             return
-        yield event.plain_result(f"🆕 发现新版本 v{check['latest']}（当前 v{check['current']}）\n正在下载并安装...")
+
+        if force:
+            yield event.plain_result(f"强制重新安装 v{check['current']}...")
+        else:
+            yield event.plain_result(f"发现新版本 v{check['latest']}（当前 v{check['current']}）\n正在下载并安装...")
+
         result = await do_update(self.config)
         if "✅" in result:
             reload_result = await reload_plugin(self.context)

@@ -35,8 +35,21 @@ def _get_plugin_version() -> str:
     return "0.0.0"
 
 
-async def check_update(config) -> dict:
-    """检查 GitHub 是否有新版本（支持代理和重试）"""
+async def check_update(config, force: bool = False) -> dict:
+    """检查 GitHub 是否有新版本（支持代理和重试）
+
+    Args:
+        config: 插件配置。
+        force: 是否强制更新（即使版本相同）。
+
+    Returns:
+        包含以下字段的字典：
+        - latest: 远程版本号
+        - current: 当前版本号
+        - has_update: 是否有更新
+        - error: 错误信息
+        - force: 是否强制更新
+    """
     cfg = config if config else {}
     proxy = cfg.get("proxy") or os.getenv("MIMO_GH_PROXY", "https://gh-proxy.cn/")
     max_retries = int(cfg.get("update_max_retries") or 3)
@@ -80,8 +93,9 @@ async def check_update(config) -> dict:
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(None, _fetch)
     result["has_update"] = bool(
-        result["latest"] and result["latest"] != current_version
+        force or (result["latest"] and result["latest"] != current_version)
     )
+    result["force"] = force
     return result
 
 
