@@ -661,8 +661,6 @@ class ResourceQueryPlugin(Star):
     @filter.command("jm", desc="下载 JMComic 漫画 PDF：/jm <数字ID>")
     async def jm_command(self, event: AstrMessageEvent, jm_id: str = ""):
         """/jm — 下载 JMComic 漫画（仅私聊）"""
-        event.stop_event()
-
         # 检查是否启用
         cfg = self.config if self.config else {}
         if not cfg.get("jm_enabled", True):
