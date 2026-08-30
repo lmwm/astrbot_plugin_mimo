@@ -11,11 +11,11 @@ from __future__ import annotations
 import asyncio
 import re
 import shutil
-import tempfile
 import time
 from pathlib import Path
 
 import jmcomic
+from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 from jmcomic import Feature
 from jmcomic.jm_exception import (
     MissingAlbumPhotoException,
@@ -23,8 +23,8 @@ from jmcomic.jm_exception import (
     RequestRetryAllFailException,
 )
 
-# 临时目录
-TEMP_ROOT = Path(tempfile.gettempdir()) / "astrbot_jm_downloader"
+# 存储目录：AstrBot 数据目录/JMDownload
+JM_ROOT = Path(get_astrbot_data_path()) / "JMDownload"
 
 # ID 匹配模式
 ID_PATTERN = re.compile(r"\d{3,12}")
@@ -134,19 +134,20 @@ class JMDownloader:
     def __init__(self, config: dict):
         self._config = config
         self._semaphore = asyncio.Semaphore(int(config.get("jm_max_concurrent", 1)))
-        TEMP_ROOT.mkdir(parents=True, exist_ok=True)
+        JM_ROOT.mkdir(parents=True, exist_ok=True)
         self._cleanup_stale_jobs()
 
     def _cleanup_stale_jobs(self) -> None:
-        """清理过期的临时任务目录"""
+        """清理过期的临时任务目录（超过1小时）"""
         cutoff = time.time() - 3600
         try:
-            children = list(TEMP_ROOT.iterdir())
+            children = list(JM_ROOT.iterdir())
         except OSError:
             return
         for path in children:
             try:
-                if path.is_dir() and path.stat().st_mtime < cutoff:
+                # 只清理临时下载目录，不清理 ready 目录
+                if path.is_dir() and path.name != "ready" and path.stat().st_mtime < cutoff:
                     shutil.rmtree(path, ignore_errors=True)
             except OSError:
                 continue
@@ -172,11 +173,11 @@ class JMDownloader:
 
         async with self._semaphore:
             self._cleanup_stale_jobs()
-            job_root = Path(
-                tempfile.mkdtemp(prefix=f"jm{album_id}-", dir=str(TEMP_ROOT))
-            )
-            download_dir = job_root / "download"
-            pdf_dir = job_root / "pdf"
+            # 创建临时下载目录
+            job_dir = JM_ROOT / f"jm{album_id}-{int(time.time())}"
+            job_dir.mkdir(parents=True, exist_ok=True)
+            download_dir = job_dir / "download"
+            pdf_dir = job_dir / "pdf"
             download_dir.mkdir(parents=True, exist_ok=True)
             pdf_dir.mkdir(parents=True, exist_ok=True)
 
@@ -211,10 +212,10 @@ class JMDownloader:
                 }
 
                 if send_file:
-                    # 复制到永久临时目录（不随 job 清理）
-                    persist_dir = TEMP_ROOT / "ready"
-                    persist_dir.mkdir(exist_ok=True)
-                    persist_path = persist_dir / pdf_name
+                    # 复制到 ready 目录（不会被临时清理）
+                    ready_dir = JM_ROOT / "ready"
+                    ready_dir.mkdir(exist_ok=True)
+                    persist_path = ready_dir / pdf_name
                     shutil.copy2(pdf_path, persist_path)
                     response["pdf_path"] = str(persist_path)
                     response["pdf_name"] = pdf_name
@@ -242,10 +243,11 @@ class JMDownloader:
                     "message": f"JM{album_id} 下载失败（{type(e).__name__}）",
                 }
             finally:
-                shutil.rmtree(job_root, ignore_errors=True)
+                # 清理临时下载目录
+                shutil.rmtree(job_dir, ignore_errors=True)
 
     def cleanup_ready_files(self) -> None:
         """清理已发送的就绪文件"""
-        ready_dir = TEMP_ROOT / "ready"
+        ready_dir = JM_ROOT / "ready"
         if ready_dir.exists():
             shutil.rmtree(ready_dir, ignore_errors=True)
