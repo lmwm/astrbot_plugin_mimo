@@ -686,8 +686,52 @@ class ResourceQueryPlugin(Star):
         # 发送开始提示
         yield event.plain_result(f"📥 开始下载 JM{album_id}，请稍候...")
 
+        # 进度消息追踪
+        last_progress_msg = ""
+        progress_message_id = None
+
+        async def send_progress(current: int, total: int, msg: str):
+            """发送或更新进度消息"""
+            nonlocal last_progress_msg, progress_message_id
+
+            # 构建进度消息
+            if total > 0 and current > 0:
+                percent = int(current / total * 100)
+                bar_len = 10
+                filled = int(bar_len * current / total)
+                bar = "█" * filled + "░" * (bar_len - filled)
+                progress_msg = f"📥 JM{album_id}\n[{bar}] {percent}% ({current}/{total})\n{msg}"
+            else:
+                progress_msg = f"📥 JM{album_id}\n{msg}"
+
+            # 避免重复发送相同消息
+            if progress_msg == last_progress_msg:
+                return
+            last_progress_msg = progress_msg
+
+            try:
+                await event.send(MessageChain().message(progress_msg))
+            except Exception:
+                pass
+
+        # 进度回调函数
+        def progress_callback(current: int, total: int, msg: str):
+            """同步回调，转换为异步发送"""
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(send_progress(current, total, msg))
+                else:
+                    loop.run_until_complete(send_progress(current, total, msg))
+            except Exception:
+                pass
+
         # 执行下载
-        result = await self._jm.download(album_id, send_file=send_file)
+        result = await self._jm.download(
+            album_id,
+            send_file=send_file,
+            progress_callback=progress_callback,
+        )
 
         if result["success"]:
             yield event.plain_result(result["message"])

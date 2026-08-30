@@ -4,6 +4,7 @@
   - 下载 JMComic 漫画
   - 合成 PDF 文件
   - 通过私聊发送文件
+  - 下载进度回调
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import re
 import shutil
 import time
 from pathlib import Path
+from typing import Callable
 
 import jmcomic
 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
@@ -31,6 +33,9 @@ ID_PATTERN = re.compile(r"\d{3,12}")
 
 # 文件名非法字符
 INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|\x00-\x1f]')
+
+# 进度回调类型：(当前进度, 总数, 消息)
+ProgressCallback = Callable[[int, int, str], None]
 
 
 def _parse_cookies(raw: str) -> dict[str, str]:
@@ -152,12 +157,18 @@ class JMDownloader:
             except OSError:
                 continue
 
-    async def download(self, album_id: str, send_file: bool = True) -> dict:
+    async def download(
+        self,
+        album_id: str,
+        send_file: bool = True,
+        progress_callback: ProgressCallback | None = None,
+    ) -> dict:
         """下载漫画并生成 PDF
 
         Args:
             album_id: 漫画 ID。
             send_file: 是否返回文件路径用于发送。
+            progress_callback: 进度回调函数 (current, total, message)。
 
         Returns:
             包含以下字段的字典：
@@ -171,6 +182,14 @@ class JMDownloader:
         if not self._config.get("jm_enabled", True):
             return {"success": False, "message": "JM 下载功能当前已关闭"}
 
+        def _report(current: int, total: int, msg: str):
+            """报告进度"""
+            if progress_callback:
+                try:
+                    progress_callback(current, total, msg)
+                except Exception:
+                    pass
+
         async with self._semaphore:
             self._cleanup_stale_jobs()
             # 创建临时下载目录
@@ -182,19 +201,72 @@ class JMDownloader:
             pdf_dir.mkdir(parents=True, exist_ok=True)
 
             try:
+                _report(0, 0, f"正在获取 JM{album_id} 信息...")
                 option = _build_option(self._config, download_dir)
 
+                # 创建进度追踪器
+                class ProgressTracker:
+                    def __init__(self):
+                        self.total_images = 0
+                        self.downloaded = 0
+                        self.current_chapter = ""
+
+                    def on_album(self, album):
+                        """专辑信息获取完成"""
+                        self.total_images = sum(len(photo) for photo in album)
+                        _report(0, self.total_images, f"共 {len(album)} 章，{self.total_images} 张图片")
+
+                    def on_photo(self, photo, index):
+                        """章节开始下载"""
+                        self.current_chapter = f"第 {index}/{len(photo.album)} 章"
+                        _report(self.downloaded, self.total_images, f"下载中 {self.current_chapter}")
+
+                    def on_image(self, image, index, photo):
+                        """图片下载完成"""
+                        self.downloaded += 1
+                        if self.downloaded % 5 == 0 or self.downloaded == self.total_images:
+                            _report(
+                                self.downloaded,
+                                self.total_images,
+                                f"下载进度 {self.downloaded}/{self.total_images}"
+                            )
+
+                tracker = ProgressTracker()
+
+                # 使用 jmcomic 的回调机制
+                class ProgressOption(jmcomic.JmOption):
+                    """带进度回调的选项"""
+
+                    def __init__(self, option_dict, tracker):
+                        super().__init__(option_dict)
+                        self._tracker = tracker
+
+                    def before_album(self, album):
+                        self._tracker.on_album(album)
+
+                    def before_photo(self, photo, index):
+                        self._tracker.on_photo(photo, index)
+
+                    def after_image(self, image, index, photo):
+                        self._tracker.on_image(image, index, photo)
+
+                # 构建带进度的选项
+                progress_option = ProgressOption(option._option_dict, tracker)
+
                 # 在线程池中执行同步下载
+                _report(0, 0, "开始下载图片...")
                 result = await asyncio.to_thread(
                     jmcomic.download_album,
                     album_id,
-                    option,
+                    progress_option,
                     extra=Feature.export_pdf(
                         pdf_dir=str(pdf_dir),
                         filename_rule="Aid",
                         delete_original_file=True,
                     ),
                 )
+
+                _report(tracker.total_images, tracker.total_images, "下载完成，正在生成 PDF...")
 
                 album = result.detail
                 resolved_id = str(album.id)
@@ -220,6 +292,7 @@ class JMDownloader:
                     response["pdf_path"] = str(persist_path)
                     response["pdf_name"] = pdf_name
 
+                _report(tracker.total_images, tracker.total_images, "PDF 生成完成")
                 return response
 
             except MissingAlbumPhotoException:
