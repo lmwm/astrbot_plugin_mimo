@@ -141,22 +141,38 @@ class JMDownloader:
         self._config = config
         self._semaphore = asyncio.Semaphore(int(config.get("jm_max_concurrent", 1)))
         JM_ROOT.mkdir(parents=True, exist_ok=True)
-        self._cleanup_stale_jobs()
 
-    def _cleanup_stale_jobs(self) -> None:
-        """清理过期的临时任务目录（超过1小时）"""
-        cutoff = time.time() - 3600
+    async def get_album_info(self, album_id: str) -> dict:
+        """获取漫画信息
+
+        Args:
+            album_id: 漫画 ID。
+
+        Returns:
+            漫画信息字典。
+        """
         try:
-            children = list(JM_ROOT.iterdir())
-        except OSError:
-            return
-        for path in children:
-            try:
-                # 只清理临时下载目录，不清理 ready 目录
-                if path.is_dir() and path.name != "ready" and path.stat().st_mtime < cutoff:
-                    shutil.rmtree(path, ignore_errors=True)
-            except OSError:
-                continue
+            option = _build_option(self._config, JM_ROOT / "temp")
+            # 使用 jmcomic 的 API 获取专辑信息
+            client = option.new_jm_client()
+            album = client.get_album_detail(album_id)
+            return {
+                "id": str(album.id),
+                "name": str(album.name),
+                "author": str(getattr(album, 'author', '未知')),
+                "chapter_count": len(album),
+                "image_count": sum(len(photo) for photo in album),
+                "tags": list(getattr(album, 'tags', [])),
+            }
+        except Exception as e:
+            return {
+                "id": album_id,
+                "name": "未知",
+                "chapter_count": 0,
+                "image_count": 0,
+                "tags": [],
+                "error": str(e),
+            }
 
     async def download(
         self,
@@ -178,6 +194,7 @@ class JMDownloader:
             - pdf_path: PDF 文件路径（仅 send_file=True 且成功时）
             - pdf_name: PDF 文件名（仅 send_file=True 且成功时）
             - file_size_mb: 文件大小（MB）
+            - album_info: 漫画信息字典
         """
         # 检查是否启用
         if not self._config.get("jm_enabled", True):
@@ -192,21 +209,24 @@ class JMDownloader:
                     pass
 
         async with self._semaphore:
-            self._cleanup_stale_jobs()
-            # 创建临时下载目录
-            job_dir = JM_ROOT / f"jm{album_id}-{int(time.time())}"
+            # 创建下载目录（保留文件，不清理）
+            job_dir = JM_ROOT / f"jm{album_id}"
             job_dir.mkdir(parents=True, exist_ok=True)
-            download_dir = job_dir / "download"
+            download_dir = job_dir / "images"
             pdf_dir = job_dir / "pdf"
             download_dir.mkdir(parents=True, exist_ok=True)
             pdf_dir.mkdir(parents=True, exist_ok=True)
 
+            # 获取漫画信息
+            album_info = await self.get_album_info(album_id)
+
             try:
-                _report(0, 0, f"正在获取 JM{album_id} 信息...")
+                _report(0, 0, "准备下载...")
                 option = _build_option(self._config, download_dir)
 
                 # 在线程池中执行同步下载
-                _report(0, 0, "开始下载图片...")
+                total_images = album_info.get("image_count", 0)
+                _report(0, total_images, "开始下载图片...")
 
                 def _download_with_progress():
                     """带进度监控的下载"""
@@ -228,12 +248,11 @@ class JMDownloader:
                                         if f.endswith(('.jpg', '.webp', '.png')):
                                             image_count += 1
                                 if image_count > 0:
-                                    _report(image_count, 0, f"已下载 {image_count} 张图片...")
+                                    _report(image_count, total_images, f"已下载 {image_count}/{total_images} 张图片")
                             except Exception:
                                 pass
                             _time.sleep(3)  # 每3秒检查一次
 
-                    import os
                     monitor_thread = threading.Thread(target=_monitor_progress, daemon=True)
                     monitor_thread.start()
 
@@ -244,7 +263,7 @@ class JMDownloader:
                             extra=Feature.export_pdf(
                                 pdf_dir=str(pdf_dir),
                                 filename_rule="Aid",
-                                delete_original_file=True,
+                                delete_original_file=False,  # 不删除原图
                             ),
                         )
                         return result
@@ -253,7 +272,7 @@ class JMDownloader:
 
                 result = await asyncio.to_thread(_download_with_progress)
 
-                _report(0, 0, "下载完成，正在生成 PDF...")
+                _report(total_images, total_images, "下载完成，正在生成 PDF...")
 
                 album = result.detail
                 resolved_id = str(album.id)
@@ -262,52 +281,54 @@ class JMDownloader:
                 file_size_mb = pdf_path.stat().st_size / (1024 * 1024)
                 pdf_name = _safe_pdf_name(resolved_id, str(album.name))
 
+                # 更新漫画信息
+                album_info.update({
+                    "id": resolved_id,
+                    "name": str(album.name),
+                    "image_count": sum(len(photo) for photo in album),
+                })
+
                 response = {
                     "success": True,
-                    "message": f"JM{resolved_id} PDF 已生成（{file_size_mb:.2f} MiB）",
+                    "message": f"下载完成，共 {album_info['image_count']} 张图片，PDF {file_size_mb:.2f} MB",
                     "album_id": resolved_id,
                     "album_name": str(album.name),
+                    "album_info": album_info,
                     "file_size_mb": file_size_mb,
+                    "image_dir": str(download_dir),
                 }
 
                 if send_file:
-                    # 复制到 ready 目录（不会被临时清理）
-                    ready_dir = JM_ROOT / "ready"
-                    ready_dir.mkdir(exist_ok=True)
-                    persist_path = ready_dir / pdf_name
-                    shutil.copy2(pdf_path, persist_path)
-                    response["pdf_path"] = str(persist_path)
+                    response["pdf_path"] = str(pdf_path)
                     response["pdf_name"] = pdf_name
 
-                _report(0, 0, "PDF 生成完成")
+                _report(total_images, total_images, "全部完成")
                 return response
 
             except MissingAlbumPhotoException:
                 return {
                     "success": False,
-                    "message": f"没有找到 JM{album_id}。请检查 ID；若仅登录可见，请配置 cookies。",
+                    "message": f"没有找到 JM{album_id}，请检查 ID 或配置 cookies",
                 }
             except RequestRetryAllFailException:
                 return {
                     "success": False,
-                    "message": "JMComic 站点连接失败。请稍后重试，或配置代理。",
+                    "message": "JMComic 站点连接失败，请稍后重试或配置代理",
                 }
             except PartialDownloadFailedException:
                 return {
                     "success": False,
-                    "message": "部分图片下载失败，请稍后重试。",
+                    "message": "部分图片下载失败，请稍后重试",
                 }
             except Exception as e:
                 return {
                     "success": False,
                     "message": f"JM{album_id} 下载失败（{type(e).__name__}）",
                 }
-            finally:
-                # 清理临时下载目录
-                shutil.rmtree(job_dir, ignore_errors=True)
+            # 不清理文件，保留下载内容
 
-    def cleanup_ready_files(self) -> None:
-        """清理已发送的就绪文件"""
-        ready_dir = JM_ROOT / "ready"
-        if ready_dir.exists():
-            shutil.rmtree(ready_dir, ignore_errors=True)
+    def cleanup_files(self, album_id: str) -> None:
+        """清理指定漫画的下载文件"""
+        job_dir = JM_ROOT / f"jm{album_id}"
+        if job_dir.exists():
+            shutil.rmtree(job_dir, ignore_errors=True)

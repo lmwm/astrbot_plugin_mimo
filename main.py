@@ -664,12 +664,12 @@ class ResourceQueryPlugin(Star):
         # 检查是否启用
         cfg = self.config if self.config else {}
         if not cfg.get("jm_enabled", True):
-            yield event.plain_result("JM 下载功能当前已关闭。")
+            yield event.plain_result("JM 下载功能当前已关闭")
             return
 
         # 只允许私聊
         if event.get_group_id():
-            yield event.plain_result("❌ JM 下载仅支持私聊使用，请私聊发送命令。")
+            yield event.plain_result("JM 下载仅支持私聊使用，请私聊发送命令")
             return
 
         # 解析 ID
@@ -681,26 +681,40 @@ class ResourceQueryPlugin(Star):
         # 是否发送文件
         send_file = cfg.get("jm_send_file", True)
 
-        # 发送开始提示
-        yield event.plain_result(f"📥 开始下载 JM{album_id}，请稍候...")
+        # 先获取漫画信息
+        yield event.plain_result(f"正在获取 JM{album_id} 信息...")
+        album_info = await self._jm.get_album_info(album_id)
+
+        # 发送漫画信息
+        info_lines = [
+            f"JM{album_id} 漫画信息",
+            f"名称：{album_info.get('name', '未知')}",
+            f"作者：{album_info.get('author', '未知')}",
+            f"章节：{album_info.get('chapter_count', 0)} 章",
+            f"图片：{album_info.get('image_count', 0)} 张",
+        ]
+        if album_info.get('tags'):
+            info_lines.append(f"标签：{', '.join(album_info['tags'][:5])}")
+        info_lines.append("")
+        info_lines.append("开始下载，请稍候...")
+        yield event.plain_result("\n".join(info_lines))
 
         # 进度消息追踪
         last_progress_msg = ""
-        progress_message_id = None
 
         async def send_progress(current: int, total: int, msg: str):
             """发送或更新进度消息"""
-            nonlocal last_progress_msg, progress_message_id
+            nonlocal last_progress_msg
 
             # 构建进度消息
             if total > 0 and current > 0:
                 percent = int(current / total * 100)
                 bar_len = 10
                 filled = int(bar_len * current / total)
-                bar = "█" * filled + "░" * (bar_len - filled)
-                progress_msg = f"📥 JM{album_id}\n[{bar}] {percent}% ({current}/{total})\n{msg}"
+                bar = "=" * filled + "-" * (bar_len - filled)
+                progress_msg = f"下载进度 [{bar}] {percent}% ({current}/{total})"
             else:
-                progress_msg = f"📥 JM{album_id}\n{msg}"
+                progress_msg = msg
 
             # 避免重复发送相同消息
             if progress_msg == last_progress_msg:
@@ -750,17 +764,10 @@ class ResourceQueryPlugin(Star):
                     )
                     self.logger.info(f"JM PDF upload result: {upload_result}")
 
-                    # 清理已发送的文件
-                    try:
-                        from pathlib import Path
-                        Path(pdf_path).unlink(missing_ok=True)
-                    except Exception:
-                        pass
-
                 except Exception as e:
                     self.logger.exception(f"JM PDF upload failed: {e}")
                     yield event.plain_result(
-                        f"⚠️ PDF 已生成但发送失败：{e}\n请检查机器人是否有文件上传权限。"
+                        f"PDF 已生成但发送失败：{e}\n请检查机器人是否有文件上传权限"
                     )
         else:
-            yield event.plain_result(f"❌ {result['message']}")
+            yield event.plain_result(result["message"])
