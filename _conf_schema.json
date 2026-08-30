@@ -10,59 +10,5 @@
         "type": "int",
         "default": 3,
         "hint": "自动更新时网络请求失败的重试次数"
-    },
-    "jm_enabled": {
-        "description": "启用 JM 下载功能",
-        "type": "bool",
-        "default": true,
-        "hint": "关闭后 /jm 命令将不可用"
-    },
-    "jm_send_file": {
-        "description": "是否发送 PDF 文件",
-        "type": "bool",
-        "default": true,
-        "hint": "关闭后只提示下载结果，不发送文件"
-    },
-    "jm_cookies": {
-        "description": "JMComic Cookie",
-        "type": "string",
-        "default": "",
-        "hint": "可选，格式为 k=v; k2=v2，用于访问仅登录可见内容"
-    },
-    "jm_proxy": {
-        "description": "JMComic 代理",
-        "type": "string",
-        "default": "",
-        "hint": "可选，例如 http://127.0.0.1:7890，留空使用系统代理"
-    },
-    "jm_timeout": {
-        "description": "请求超时（秒）",
-        "type": "int",
-        "default": 20,
-        "hint": "单次网络请求超时时间，范围 5-120"
-    },
-    "jm_retry_times": {
-        "description": "重试次数",
-        "type": "int",
-        "default": 3,
-        "hint": "网络请求重试次数，范围 1-10"
-    },
-    "jm_image_threads": {
-        "description": "图片下载并发数",
-        "type": "int",
-        "default": 16,
-        "hint": "单章节图片下载并发数，范围 1-32"
-    },
-    "jm_photo_threads": {
-        "description": "章节下载并发数",
-        "type": "int",
-        "default": 4,
-        "hint": "章节下载并发数，范围 1-16"
-    },
-    "jm_max_concurrent": {
-        "description": "同时下载数量",
-        "type": "int",
-        "default": 1,
-        "hint": "同时处理的漫画数量，范围 1-3"
     }
 }
