@@ -153,8 +153,8 @@ class JMDownloader:
         """
         try:
             option = _build_option(self._config, JM_ROOT / "temp")
-            # 使用 jmcomic 的 API 获取专辑信息
-            client = option.new_jm_client()
+            # 使用 jmcomic 的 client 获取专辑信息
+            client = option.copy().new_jm_client()
             album = client.get_album_detail(album_id)
             return {
                 "id": str(album.id),
@@ -165,14 +165,28 @@ class JMDownloader:
                 "tags": list(getattr(album, 'tags', [])),
             }
         except Exception as e:
-            return {
-                "id": album_id,
-                "name": "未知",
-                "chapter_count": 0,
-                "image_count": 0,
-                "tags": [],
-                "error": str(e),
-            }
+            # 如果获取失败，尝试使用另一种方式
+            try:
+                import jmcomic as jm
+                client = jm.JmOption.default().new_jm_client()
+                album = client.get_album_detail(album_id)
+                return {
+                    "id": str(album.id),
+                    "name": str(album.name),
+                    "author": str(getattr(album, 'author', '未知')),
+                    "chapter_count": len(album),
+                    "image_count": sum(len(photo) for photo in album),
+                    "tags": list(getattr(album, 'tags', [])),
+                }
+            except Exception:
+                return {
+                    "id": album_id,
+                    "name": "未知",
+                    "chapter_count": 0,
+                    "image_count": 0,
+                    "tags": [],
+                    "error": str(e),
+                }
 
     async def download(
         self,
