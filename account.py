@@ -30,10 +30,22 @@ class AccountManager:
         data_path.mkdir(parents=True, exist_ok=True)
         return data_path
 
+    def _get_config_path(self) -> Path:
+        """获取配置根目录"""
+        config_path = self._get_data_path() / "config"
+        config_path.mkdir(parents=True, exist_ok=True)
+        return config_path
+
+    def _get_platform_path(self, platform: str) -> Path:
+        """获取指定平台的配置目录"""
+        platform_path = self._get_config_path() / platform
+        platform_path.mkdir(parents=True, exist_ok=True)
+        return platform_path
+
     # ── 文件名生成 ──
 
     def _get_account_filename(self, acc: dict) -> str:
-        """获取账号配置文件名（格式：平台_名称.json）
+        """获取账号配置文件名（格式：名称.json）
 
         Args:
             acc: 账号配置字典。
@@ -41,15 +53,15 @@ class AccountManager:
         Returns:
             配置文件名。
         """
-        platform = acc.get("platform", "unknown")
         name = acc.get("name", "").strip()
         if not name:
-            name = "unnamed"
+            # 使用账号或手机号作为名称
+            name = acc.get("account") or acc.get("phone") or "unnamed"
         # 清理文件名中的非法字符
         name = "".join(c for c in name if c.isalnum() or c in "-_\u4e00-\u9fff")
         if not name:
             name = "unnamed"
-        return f"{platform}_{name}.json"
+        return f"{name}.json"
 
     # ── 账号读写 ──
 
@@ -60,28 +72,37 @@ class AccountManager:
             账号配置列表。
         """
         accounts = []
-        data_path = self._get_data_path()
+        config_path = self._get_config_path()
 
-        # 读取所有 json 文件（排除 accounts.json）
-        for json_file in data_path.glob("*.json"):
-            if json_file.name == "accounts.json":
+        # 遍历所有平台目录
+        for platform_dir in config_path.iterdir():
+            if not platform_dir.is_dir():
                 continue
-            try:
-                acc = json.loads(json_file.read_text(encoding="utf-8"))
-                if isinstance(acc, dict):
-                    acc["_config_file"] = json_file.name
-                    # 读取对应的模板文件
-                    template_file = data_path / json_file.name.replace(".json", ".txt")
-                    if template_file.exists():
-                        acc["template"] = template_file.read_text(encoding="utf-8")
-                    elif not acc.get("template"):
-                        acc["template"] = self._get_default_template(acc.get("platform", ""))
-                    accounts.append(acc)
-            except (json.JSONDecodeError, OSError):
+            platform = platform_dir.name
+            # 跳过非平台目录
+            if platform not in ("mimo", "wasu"):
                 continue
 
-        # 兼容旧版本：从 accounts.json 读取并迁移
-        self._migrate_old_accounts(data_path, accounts)
+            # 读取该平台下的所有 json 文件
+            for json_file in platform_dir.glob("*.json"):
+                try:
+                    acc = json.loads(json_file.read_text(encoding="utf-8"))
+                    if isinstance(acc, dict):
+                        acc["platform"] = platform
+                        acc["_config_file"] = json_file.name
+                        acc["_config_dir"] = str(platform_dir)
+                        # 读取对应的模板文件
+                        template_file = platform_dir / json_file.name.replace(".json", ".txt")
+                        if template_file.exists():
+                            acc["template"] = template_file.read_text(encoding="utf-8")
+                        elif not acc.get("template"):
+                            acc["template"] = self._get_default_template(platform)
+                        accounts.append(acc)
+                except (json.JSONDecodeError, OSError):
+                    continue
+
+        # 兼容旧版本：从旧目录迁移
+        self._migrate_old_accounts(accounts)
 
         # 为没有名称的账号自动填充默认名称并保存
         if self._fill_default_names(accounts):
@@ -95,48 +116,64 @@ class AccountManager:
         Args:
             accounts: 账号配置列表。
         """
-        data_path = self._get_data_path()
+        config_path = self._get_config_path()
 
         # 第零步：为没有名称的账号自动生成默认名称
         self._fill_default_names(accounts)
 
-        # 第一步：收集新账号的文件名（不写入磁盘）
-        new_filenames: set[str] = set()
-        acc_file_pairs: list[tuple[dict, str]] = []
+        # 第一步：按平台分组，收集新账号的文件名（不写入磁盘）
+        platform_files: dict[str, set[str]] = {}
+        acc_file_pairs: list[tuple[dict, str, str]] = []  # (acc, platform, filename)
+
         for acc in accounts:
+            platform = acc.get("platform", "unknown")
             filename = self._get_account_filename(acc)
             # 处理文件名冲突：追加数字后缀
+            if platform not in platform_files:
+                platform_files[platform] = set()
             original = filename
             counter = 2
-            while filename in new_filenames:
+            while filename in platform_files[platform]:
                 stem = original.rsplit(".", 1)[0]
                 filename = f"{stem}_{counter}.json"
                 counter += 1
-            new_filenames.add(filename)
-            acc_file_pairs.append((acc, filename))
+            platform_files[platform].add(filename)
+            acc_file_pairs.append((acc, platform, filename))
 
         # 第二步：写入所有新文件
-        for acc, filename in acc_file_pairs:
-            filepath = data_path / filename
-            save_acc = {k: v for k, v in acc.items() if not k.startswith("_") and k != "template"}
+        for acc, platform, filename in acc_file_pairs:
+            platform_dir = self._get_platform_path(platform)
+            filepath = platform_dir / filename
+            save_acc = {k: v for k, v in acc.items() if not k.startswith("_") and k != "template" and k != "platform"}
             filepath.write_text(
                 json.dumps(save_acc, ensure_ascii=False, indent=2),
                 encoding="utf-8"
             )
             template = acc.get("template", "")
             template_filename = filename.replace(".json", ".txt")
-            template_filepath = data_path / template_filename
+            template_filepath = platform_dir / template_filename
             template_filepath.write_text(template, encoding="utf-8")
 
         # 第三步：删除不在新列表中的旧文件
-        for old_file in data_path.glob("*.json"):
-            if old_file.name == "accounts.json":
+        for platform_dir in config_path.iterdir():
+            if not platform_dir.is_dir():
                 continue
-            if old_file.name not in new_filenames:
-                old_file.unlink(missing_ok=True)
-                template_file = data_path / old_file.name.replace(".json", ".txt")
-                if template_file.exists():
-                    template_file.unlink(missing_ok=True)
+            platform = platform_dir.name
+            if platform not in platform_files:
+                # 删除空平台目录
+                if not any(platform_dir.iterdir()):
+                    platform_dir.rmdir()
+                continue
+            valid_filenames = platform_files[platform]
+            for old_file in platform_dir.glob("*.json"):
+                if old_file.name not in valid_filenames:
+                    old_file.unlink(missing_ok=True)
+                    template_file = platform_dir / old_file.name.replace(".json", ".txt")
+                    if template_file.exists():
+                        template_file.unlink(missing_ok=True)
+            # 删除空平台目录
+            if not any(platform_dir.iterdir()):
+                platform_dir.rmdir()
 
     def _fill_default_names(self, accounts: list) -> bool:
         """为没有名称的账号自动生成默认名称（如：账号001）
@@ -221,29 +258,69 @@ class AccountManager:
                 return i
         return -1
 
-    def _migrate_old_accounts(self, data_path: Path, accounts: list):
-        """兼容旧版本：从 accounts.json 迁移"""
-        old_file = data_path / "accounts.json"
-        if not old_file.exists():
-            return
-        try:
-            old_data = json.loads(old_file.read_text(encoding="utf-8"))
-            if not isinstance(old_data, list):
-                return
-            for acc in old_data:
-                if isinstance(acc, dict):
-                    filename = self._get_account_filename(acc)
-                    filepath = data_path / filename
-                    if not filepath.exists():
-                        filepath.write_text(
-                            json.dumps(acc, ensure_ascii=False, indent=2),
-                            encoding="utf-8"
-                        )
-                        acc["_config_file"] = filename
-                        accounts.append(acc)
-            old_file.unlink()
-        except (json.JSONDecodeError, OSError):
-            pass
+    def _migrate_old_accounts(self, accounts: list):
+        """兼容旧版本：从旧目录结构迁移"""
+        data_path = self._get_data_path()
+
+        # 迁移旧的 accounts.json
+        old_accounts_file = data_path / "accounts.json"
+        if old_accounts_file.exists():
+            try:
+                old_data = json.loads(old_accounts_file.read_text(encoding="utf-8"))
+                if isinstance(old_data, list):
+                    for acc in old_data:
+                        if isinstance(acc, dict):
+                            accounts.append(acc)
+                old_accounts_file.unlink()
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        # 迁移旧的单独配置文件（格式：平台_名称.json）
+        for old_file in data_path.glob("*.json"):
+            if old_file.name == "accounts.json" or old_file.name == "var_config.json":
+                continue
+            try:
+                # 从文件名解析平台
+                parts = old_file.name.split("_", 1)
+                if len(parts) == 2:
+                    platform = parts[0]
+                    if platform in ("mimo", "wasu"):
+                        acc = json.loads(old_file.read_text(encoding="utf-8"))
+                        if isinstance(acc, dict):
+                            acc["platform"] = platform
+                            accounts.append(acc)
+                        # 删除旧文件
+                        old_file.unlink(missing_ok=True)
+                        template_file = data_path / old_file.name.replace(".json", ".txt")
+                        if template_file.exists():
+                            template_file.unlink(missing_ok=True)
+            except (json.JSONDecodeError, OSError):
+                continue
+
+        # 迁移旧目录结构（config 下直接有 mimo_xxx.json 文件）
+        config_path = self._get_config_path()
+        for old_file in config_path.glob("*.json"):
+            if old_file.name == "var_config.json":
+                continue
+            try:
+                parts = old_file.name.split("_", 1)
+                if len(parts) == 2:
+                    platform = parts[0]
+                    if platform in ("mimo", "wasu"):
+                        acc = json.loads(old_file.read_text(encoding="utf-8"))
+                        if isinstance(acc, dict):
+                            acc["platform"] = platform
+                            accounts.append(acc)
+                        old_file.unlink(missing_ok=True)
+                        template_file = config_path / old_file.name.replace(".json", ".txt")
+                        if template_file.exists():
+                            template_file.unlink(missing_ok=True)
+            except (json.JSONDecodeError, OSError):
+                continue
+
+        # 如果有迁移的账号，保存到新结构
+        if accounts:
+            self.save_all_accounts(accounts)
 
     # ── 模板管理 ──
 

@@ -164,8 +164,8 @@ class ResourceQueryPlugin(Star):
         import re
         from astrbot.api.web import json_response
 
-        # 检查是否有用户自定义配置
-        config_path = self._accounts._get_data_path() / "var_config.json"
+        # 检查是否有用户自定义配置（存放在 config 目录下）
+        config_path = self._accounts._get_config_path() / "var_config.json"
         if config_path.exists():
             try:
                 user_config = json.loads(config_path.read_text(encoding="utf-8"))
@@ -249,8 +249,8 @@ class ResourceQueryPlugin(Star):
         if not payload:
             return error_response("缺少配置数据")
 
-        # 保存到配置文件
-        config_path = self._accounts._get_data_path() / "var_config.json"
+        # 保存到配置文件（config 目录下）
+        config_path = self._accounts._get_config_path() / "var_config.json"
         try:
             config_path.write_text(
                 json.dumps(payload, ensure_ascii=False, indent=2),
