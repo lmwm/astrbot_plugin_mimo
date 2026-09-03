@@ -284,6 +284,7 @@ class ResourceQueryPlugin(Star):
         default_config = {
             "jm_enabled": True,
             "jm_send_file": True,
+            "jm_max_file_size": 100,  # 文件大小限制（MB），0 表示不限制
             "jm_cookies": "",
             "jm_proxy": "",
             "jm_timeout": 20,
@@ -775,6 +776,8 @@ class ResourceQueryPlugin(Star):
 
         # 是否发送文件
         send_file = jm_cfg.get("jm_send_file", True)
+        # 文件大小限制（MB），0 表示不限制
+        max_file_size_mb = jm_cfg.get("jm_max_file_size", 100)
 
         # 获取漫画信息
         yield event.plain_result(f"正在获取 JM{album_id} 信息...")
@@ -801,17 +804,22 @@ class ResourceQueryPlugin(Star):
                 info_lines.append(f"\n本地已有缓存，PDF {local_cache['pdf_size_mb']:.2f} MB")
                 yield event.plain_result("\n".join(info_lines))
 
-                # 直接发送文件（使用 chain_result 兼容各平台）
+                # 检查文件大小限制
                 if send_file and local_cache.get("pdf_path"):
-                    try:
-                        yield event.chain_result([
-                            File(name=local_cache["pdf_name"], file_=local_cache["pdf_path"])
-                        ])
-                    except Exception as e:
-                        self.logger.exception(f"JM PDF upload failed: {e}")
+                    if max_file_size_mb > 0 and local_cache['pdf_size_mb'] > max_file_size_mb:
                         yield event.plain_result(
-                            f"发送失败：{e}\n请检查机器人是否有文件上传权限"
+                            f"文件大小 {local_cache['pdf_size_mb']:.2f} MB 超过限制 {max_file_size_mb} MB，跳过发送"
                         )
+                    else:
+                        try:
+                            yield event.chain_result([
+                                File(name=local_cache["pdf_name"], file_=local_cache["pdf_path"])
+                            ])
+                        except Exception as e:
+                            self.logger.exception(f"JM PDF upload failed: {e}")
+                            yield event.plain_result(
+                                f"发送失败：{e}\n请检查机器人是否有文件上传权限"
+                            )
                 return
 
         # 无缓存或强制重新下载，开始下载
@@ -871,19 +879,27 @@ class ResourceQueryPlugin(Star):
 
             # 发送文件（使用 chain_result 兼容各平台）
             if send_file and "pdf_path" in result:
-                try:
-                    pdf_path = result["pdf_path"]
-                    pdf_name = result["pdf_name"]
-
-                    # 使用 chain_result 发送文件，兼容微信、QQ 等各平台
-                    yield event.chain_result([
-                        File(name=pdf_name, file_=pdf_path)
-                    ])
-
-                except Exception as e:
-                    self.logger.exception(f"JM PDF upload failed: {e}")
+                # 检查文件大小限制
+                file_size_mb = result.get("file_size_mb", 0)
+                if max_file_size_mb > 0 and file_size_mb > max_file_size_mb:
                     yield event.plain_result(
-                        f"PDF 已生成但发送失败：{e}\n请检查机器人是否有文件上传权限"
+                        f"文件大小 {file_size_mb:.2f} MB 超过限制 {max_file_size_mb} MB，跳过发送\n"
+                        f"文件已保存到：{result['pdf_path']}"
                     )
+                else:
+                    try:
+                        pdf_path = result["pdf_path"]
+                        pdf_name = result["pdf_name"]
+
+                        # 使用 chain_result 发送文件，兼容微信、QQ 等各平台
+                        yield event.chain_result([
+                            File(name=pdf_name, file_=pdf_path)
+                        ])
+
+                    except Exception as e:
+                        self.logger.exception(f"JM PDF upload failed: {e}")
+                        yield event.plain_result(
+                            f"PDF 已生成但发送失败：{e}\n请检查机器人是否有文件上传权限"
+                        )
         else:
             yield event.plain_result(result["message"])
