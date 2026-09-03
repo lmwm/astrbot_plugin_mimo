@@ -158,6 +158,12 @@ class JMDownloader:
         """获取漫画存储目录"""
         return JM_ROOT / f"jm{album_id}"
 
+    def _get_pdf_dir(self) -> Path:
+        """获取统一的 PDF 存储目录"""
+        pdf_dir = JM_ROOT / "PDF"
+        pdf_dir.mkdir(parents=True, exist_ok=True)
+        return pdf_dir
+
     def _get_info_file(self, album_id: str) -> Path:
         """获取漫画信息文件路径"""
         return self._get_album_dir(album_id) / "info.json"
@@ -197,11 +203,37 @@ class JMDownloader:
         if not album_dir.exists():
             return None
 
-        pdf_dir = album_dir / "pdf"
         image_dir = album_dir / "images"
 
-        # 检查 PDF
-        pdf_files = list(pdf_dir.glob("*.pdf")) if pdf_dir.exists() else []
+        # 检查统一 PDF 目录中的文件（优先）
+        pdf_dir = self._get_pdf_dir()
+        pdf_files = list(pdf_dir.glob(f"JM{album_id}*.pdf"))
+
+        # 兼容旧位置：检查漫画目录下的 pdf 子目录，自动迁移到新位置
+        if not pdf_files:
+            old_pdf_dir = album_dir / "pdf"
+            if old_pdf_dir.exists():
+                old_pdf_files = list(old_pdf_dir.glob("*.pdf"))
+                if old_pdf_files:
+                    # 迁移旧文件到新位置
+                    for old_file in old_pdf_files:
+                        # 生成规范的文件名
+                        album_info = self._load_info(album_id) or {}
+                        album_name = album_info.get("name", "")
+                        if album_name and album_name != "未知":
+                            new_name = _safe_pdf_name(album_id, album_name)
+                        else:
+                            new_name = old_file.name
+                        new_path = pdf_dir / new_name
+                        if not new_path.exists():
+                            shutil.move(str(old_file), str(new_path))
+                        else:
+                            old_file.unlink()
+                    # 清理旧目录
+                    shutil.rmtree(old_pdf_dir, ignore_errors=True)
+                    # 重新检查新位置
+                    pdf_files = list(pdf_dir.glob(f"JM{album_id}*.pdf"))
+
         has_pdf = len(pdf_files) > 0
         pdf_path = pdf_files[0] if pdf_files else None
 
@@ -326,9 +358,13 @@ class JMDownloader:
             album_dir = self._get_album_dir(album_id)
             album_dir.mkdir(parents=True, exist_ok=True)
             download_dir = album_dir / "images"
-            pdf_dir = album_dir / "pdf"
+            # 临时 PDF 目录（jmcomic 生成 PDF 的位置）
+            temp_pdf_dir = album_dir / "pdf"
             download_dir.mkdir(parents=True, exist_ok=True)
-            pdf_dir.mkdir(parents=True, exist_ok=True)
+            temp_pdf_dir.mkdir(parents=True, exist_ok=True)
+
+            # 统一的 PDF 存储目录
+            pdf_dir = self._get_pdf_dir()
 
             # 获取漫画信息
             album_info = await self.get_album_info(album_id)
@@ -368,7 +404,7 @@ class JMDownloader:
                             album_id,
                             option,
                             extra=Feature.export_pdf(
-                                pdf_dir=str(pdf_dir),
+                                pdf_dir=str(temp_pdf_dir),
                                 filename_rule="Aid",
                                 delete_original_file=False,
                             ),
@@ -383,10 +419,26 @@ class JMDownloader:
 
                 album = result.detail
                 resolved_id = str(album.id)
-                pdf_path = _find_pdf(pdf_dir, resolved_id)
-                _validate_pdf(pdf_path)
-                file_size_mb = pdf_path.stat().st_size / (1024 * 1024)
+                # 从临时目录找到生成的 PDF
+                temp_pdf_path = _find_pdf(temp_pdf_dir, resolved_id)
+                _validate_pdf(temp_pdf_path)
+
+                # 生成规范的文件名并移动到统一目录
                 pdf_name = _safe_pdf_name(resolved_id, str(album.name))
+                final_pdf_path = pdf_dir / pdf_name
+
+                # 如果目标文件已存在，先删除
+                if final_pdf_path.exists():
+                    final_pdf_path.unlink()
+
+                # 移动 PDF 到统一目录
+                shutil.move(str(temp_pdf_path), str(final_pdf_path))
+
+                file_size_mb = final_pdf_path.stat().st_size / (1024 * 1024)
+
+                # 清理临时 PDF 目录
+                if temp_pdf_dir.exists():
+                    shutil.rmtree(temp_pdf_dir, ignore_errors=True)
 
                 # 更新漫画信息
                 album_info.update({
@@ -403,7 +455,7 @@ class JMDownloader:
                     "album_name": str(album.name),
                     "album_info": album_info,
                     "file_size_mb": file_size_mb,
-                    "pdf_path": str(pdf_path),
+                    "pdf_path": str(final_pdf_path),
                     "pdf_name": pdf_name,
                     "image_dir": str(download_dir),
                     "from_cache": False,

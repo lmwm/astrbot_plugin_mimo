@@ -18,7 +18,7 @@ short_desc: "查询 MiMo 用量、华数流量、JMComic 下载"
 author: "御命"
 
 # 插件版本号（每次更新递增，触发 AstrBot 更新检测）
-version: "3.11.0"
+version: "3.12.0"
 
 # 插件仓库地址（用于插件市场来源归属和安装）
 repo: "https://github.com/lmwm/astrbot_plugin_resource_query"
