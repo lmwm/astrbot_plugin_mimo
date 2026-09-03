@@ -813,7 +813,7 @@ class ResourceQueryPlugin(Star):
                     else:
                         try:
                             yield event.chain_result([
-                                File(name=local_cache["pdf_name"], file_=local_cache["pdf_path"])
+                                File(name=local_cache["pdf_name"], file=local_cache["pdf_path"])
                             ])
                         except Exception as e:
                             self.logger.exception(f"JM PDF upload failed: {e}")
@@ -893,7 +893,7 @@ class ResourceQueryPlugin(Star):
 
                         # 使用 chain_result 发送文件，兼容微信、QQ 等各平台
                         yield event.chain_result([
-                            File(name=pdf_name, file_=pdf_path)
+                            File(name=pdf_name, file=pdf_path)
                         ])
 
                     except Exception as e:
