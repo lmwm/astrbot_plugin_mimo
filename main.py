@@ -812,18 +812,16 @@ class ResourceQueryPlugin(Star):
         last_progress_msg = ""
 
         async def send_progress(current: int, total: int, msg: str):
-            """发送或更新进度消息"""
+            """发送或更新进度消息（只发送有进度的消息）"""
             nonlocal last_progress_msg
 
+            # 只处理有进度值的消息
+            if total <= 0 or current <= 0:
+                return
+
             # 构建进度消息
-            if total > 0 and current > 0:
-                percent = int(current / total * 100)
-                bar_len = 10
-                filled = int(bar_len * current / total)
-                bar = "=" * filled + "-" * (bar_len - filled)
-                progress_msg = f"下载进度 [{bar}] {percent}% ({current}/{total})"
-            else:
-                progress_msg = msg
+            percent = int(current / total * 100)
+            progress_msg = f"下载中 {percent}%"
 
             # 避免重复发送相同消息
             if progress_msg == last_progress_msg:
