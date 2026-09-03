@@ -1,3 +1,37 @@
+## v3.16.0 (2025-01-XX)
+
+### ♻️ 重构
+- 将 JMComic 下载功能拆分为独立模块 `jmcomic_downloader`
+- 核心下载和图片转 PDF 功能解耦，可独立使用
+- 新增独立模块的配置管理、数据模型和工具函数
+- 原插件 `jm.py` 改为适配器，兼容原有接口
+- 支持脱离 AstrBot 框架单独使用 JMComic 下载功能
+
+### 📁 新增文件
+- `jmcomic_downloader/` - 独立 JMComic 下载模块
+  - `__init__.py` - 模块初始化
+  - `core.py` - 核心下载和 PDF 生成功能
+  - `config.py` - 配置管理
+  - `models.py` - 数据模型
+  - `utils.py` - 工具函数
+  - `README.md` - 使用文档
+
+### 🎯 架构改进
+```
+v3.15.0 架构：                    v3.16.0 架构：
+astrbot_plugin_resource_query/    astrbot_plugin_resource_query/
+└── jm.py (816行)                 └── jm.py (适配器)
+    ├─ 下载逻辑                      └─ 接口适配
+    ├─ PDF 生成
+    └─ 缓存管理                   jmcomic_downloader/ (独立模块)
+                                      ├─ core.py (核心功能)
+                                      ├─ config.py (配置)
+                                      ├─ models.py (模型)
+                                      └─ utils.py (工具)
+```
+
+---
+
 ## v3.14.0 (2025-01-XX)
 
 ### ♻️ 优化
