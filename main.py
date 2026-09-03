@@ -777,7 +777,7 @@ class ResourceQueryPlugin(Star):
         # 是否发送文件
         send_file = jm_cfg.get("jm_send_file", True)
         # 文件大小限制（MB），0 表示不限制
-        max_file_size_mb = jm_cfg.get("jm_max_file_size", 100)
+        max_file_size_mb = jm_cfg.get("jm_max_file_size", 10)
 
         # 获取漫画信息
         yield event.plain_result(f"正在获取 JM{album_id} 信息...")
