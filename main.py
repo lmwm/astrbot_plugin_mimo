@@ -748,9 +748,11 @@ class ResourceQueryPlugin(Star):
     @filter.command("jm", desc="下载 JMComic 漫画 PDF：/jm <数字ID> [redownload]")
     async def jm_command(self, event: AstrMessageEvent, jm_id: str = "", option: str = ""):
         """/jm — 下载 JMComic 漫画（仅私聊）"""
+        # 从 JM 配置读取（而非 AstrBot 原生配置）
+        jm_cfg = self._jm._config
+
         # 检查是否启用
-        cfg = self.config if self.config else {}
-        if not cfg.get("jm_enabled", True):
+        if not jm_cfg.get("jm_enabled", True):
             yield event.plain_result("JM 下载功能当前已关闭")
             return
 
@@ -771,16 +773,13 @@ class ResourceQueryPlugin(Star):
             return
 
         # 是否发送文件
-        send_file = cfg.get("jm_send_file", True)
+        send_file = jm_cfg.get("jm_send_file", True)
 
-        # 检查本地缓存
-        local_cache = self._jm.check_local(album_id)
-
-        # 先获取漫画信息
+        # 获取漫画信息
         yield event.plain_result(f"正在获取 JM{album_id} 信息...")
         album_info = await self._jm.get_album_info(album_id)
 
-        # 发送漫画信息
+        # 构建信息消息
         info_lines = [f"JM{album_id} 漫画信息"]
         if album_info.get('name') and album_info['name'] != '未知':
             info_lines.append(f"名称：{album_info['name']}")
@@ -793,16 +792,34 @@ class ResourceQueryPlugin(Star):
         if album_info.get('tags'):
             info_lines.append(f"标签：{', '.join(album_info['tags'][:5])}")
 
-        # 显示本地缓存状态
-        if local_cache:
-            if local_cache['has_pdf']:
+        # 如果不强制重新下载，检查本地缓存
+        if not force_redownload:
+            local_cache = self._jm.check_local(album_id)
+            if local_cache and local_cache['has_pdf']:
+                # 本地已有缓存，直接使用，不调用 download
                 info_lines.append(f"\n本地已有缓存，PDF {local_cache['pdf_size_mb']:.2f} MB")
-                info_lines.append("如需重新下载，请使用 /jm <ID> redownload")
-            elif local_cache['image_count'] > 0:
-                info_lines.append(f"\n本地已有 {local_cache['image_count']} 张图片缓存")
-        else:
-            info_lines.append("\n开始下载，请稍候...")
+                yield event.plain_result("\n".join(info_lines))
 
+                # 直接发送文件
+                if send_file and local_cache.get("pdf_path"):
+                    try:
+                        sender_id = event.get_sender_id()
+                        upload_result = await event.bot.api.call_action(
+                            "upload_private_file",
+                            user_id=int(sender_id),
+                            file=local_cache["pdf_path"],
+                            name=local_cache["pdf_name"],
+                        )
+                        self.logger.info(f"JM PDF upload result: {upload_result}")
+                    except Exception as e:
+                        self.logger.exception(f"JM PDF upload failed: {e}")
+                        yield event.plain_result(
+                            f"发送失败：{e}\n请检查机器人是否有文件上传权限"
+                        )
+                return
+
+        # 无缓存或强制重新下载，开始下载
+        info_lines.append("\n开始下载，请稍候...")
         yield event.plain_result("\n".join(info_lines))
 
         # 进度消息追踪
@@ -844,20 +861,17 @@ class ResourceQueryPlugin(Star):
             except Exception:
                 pass
 
-        # 执行下载
+        # 执行下载（此时不会有缓存，会真正下载）
         result = await self._jm.download(
             album_id,
             send_file=send_file,
             progress_callback=progress_callback,
-            force_redownload=force_redownload,
+            force_redownload=True,  # 已经检查过缓存，这里强制下载
         )
 
         if result["success"]:
-            # 如果是缓存结果，显示不同的消息
-            if result.get("from_cache"):
-                yield event.plain_result(f"使用本地缓存 - {result['message']}")
-            else:
-                yield event.plain_result(result["message"])
+            # 发送下载结果
+            yield event.plain_result(result["message"])
 
             # 发送文件
             if send_file and "pdf_path" in result:
