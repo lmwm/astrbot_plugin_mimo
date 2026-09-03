@@ -780,51 +780,33 @@ class ResourceQueryPlugin(Star):
         max_file_size_mb = jm_cfg.get("jm_max_file_size", 10)
 
         # 获取漫画信息
-        yield event.plain_result(f"正在获取 JM{album_id} 信息...")
         album_info = await self._jm.get_album_info(album_id)
 
-        # 构建信息消息
-        info_lines = [f"JM{album_id} 漫画信息"]
+        # 构建简短信息
+        info_parts = [f"JM{album_id}"]
         if album_info.get('name') and album_info['name'] != '未知':
-            info_lines.append(f"名称：{album_info['name']}")
-        if album_info.get('author') and album_info['author'] != '未知':
-            info_lines.append(f"作者：{album_info['author']}")
-        if album_info.get('chapter_count'):
-            info_lines.append(f"章节：{album_info['chapter_count']} 章")
+            info_parts.append(album_info['name'])
         if album_info.get('image_count'):
-            info_lines.append(f"图片：{album_info['image_count']} 张")
-        if album_info.get('tags'):
-            info_lines.append(f"标签：{', '.join(album_info['tags'][:5])}")
+            info_parts.append(f"{album_info['image_count']}P")
 
         # 如果不强制重新下载，检查本地缓存
         if not force_redownload:
             local_cache = self._jm.check_local(album_id)
             if local_cache and local_cache['has_pdf']:
-                # 本地已有缓存，直接使用，不调用 download
-                info_lines.append(f"\n本地已有缓存，PDF {local_cache['pdf_size_mb']:.2f} MB")
-                yield event.plain_result("\n".join(info_lines))
-
                 # 检查文件大小限制
                 if send_file and local_cache.get("pdf_path"):
                     if max_file_size_mb > 0 and local_cache['pdf_size_mb'] > max_file_size_mb:
-                        yield event.plain_result(
-                            f"文件大小 {local_cache['pdf_size_mb']:.2f} MB 超过限制 {max_file_size_mb} MB，跳过发送"
-                        )
+                        yield event.plain_result(f"{' | '.join(info_parts)}\n文件过大，跳过发送")
                     else:
-                        try:
-                            yield event.chain_result([
-                                File(name=local_cache["pdf_name"], file=local_cache["pdf_path"])
-                            ])
-                        except Exception as e:
-                            self.logger.exception(f"JM PDF upload failed: {e}")
-                            yield event.plain_result(
-                                f"发送失败：{e}\n请检查机器人是否有文件上传权限"
-                            )
+                        yield event.chain_result([
+                            File(name=local_cache["pdf_name"], file=local_cache["pdf_path"])
+                        ])
+                else:
+                    yield event.plain_result(f"{' | '.join(info_parts)}\n本地已有缓存")
                 return
 
-        # 无缓存或强制重新下载，开始下载
-        info_lines.append("\n开始下载，请稍候...")
-        yield event.plain_result("\n".join(info_lines))
+        # 无缓存或强制重新下载
+        yield event.plain_result(f"{' | '.join(info_parts)}\n正在下载...")
 
         # 进度消息追踪
         last_progress_msg = ""
@@ -874,18 +856,12 @@ class ResourceQueryPlugin(Star):
         )
 
         if result["success"]:
-            # 发送下载结果
-            yield event.plain_result(result["message"])
-
             # 发送文件（使用 chain_result 兼容各平台）
             if send_file and "pdf_path" in result:
                 # 检查文件大小限制
                 file_size_mb = result.get("file_size_mb", 0)
                 if max_file_size_mb > 0 and file_size_mb > max_file_size_mb:
-                    yield event.plain_result(
-                        f"文件大小 {file_size_mb:.2f} MB 超过限制 {max_file_size_mb} MB，跳过发送\n"
-                        f"文件已保存到：{result['pdf_path']}"
-                    )
+                    yield event.plain_result("文件过大，跳过发送")
                 else:
                     try:
                         pdf_path = result["pdf_path"]
@@ -898,8 +874,6 @@ class ResourceQueryPlugin(Star):
 
                     except Exception as e:
                         self.logger.exception(f"JM PDF upload failed: {e}")
-                        yield event.plain_result(
-                            f"PDF 已生成但发送失败：{e}\n请检查机器人是否有文件上传权限"
-                        )
+                        yield event.plain_result("发送失败，请检查权限")
         else:
             yield event.plain_result(result["message"])
