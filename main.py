@@ -27,6 +27,7 @@ from pathlib import Path
 
 from astrbot.api import AstrBotConfig
 from astrbot.api.event import AstrMessageEvent, MessageChain, filter
+from astrbot.api.message_components import File
 from astrbot.api.star import Context, Star
 from astrbot.core.utils.session_waiter import SessionController, session_waiter
 
@@ -800,17 +801,12 @@ class ResourceQueryPlugin(Star):
                 info_lines.append(f"\n本地已有缓存，PDF {local_cache['pdf_size_mb']:.2f} MB")
                 yield event.plain_result("\n".join(info_lines))
 
-                # 直接发送文件
+                # 直接发送文件（使用 chain_result 兼容各平台）
                 if send_file and local_cache.get("pdf_path"):
                     try:
-                        sender_id = event.get_sender_id()
-                        upload_result = await event.bot.api.call_action(
-                            "upload_private_file",
-                            user_id=int(sender_id),
-                            file=local_cache["pdf_path"],
-                            name=local_cache["pdf_name"],
-                        )
-                        self.logger.info(f"JM PDF upload result: {upload_result}")
+                        yield event.chain_result([
+                            File(name=local_cache["pdf_name"], file_=local_cache["pdf_path"])
+                        ])
                     except Exception as e:
                         self.logger.exception(f"JM PDF upload failed: {e}")
                         yield event.plain_result(
@@ -873,21 +869,16 @@ class ResourceQueryPlugin(Star):
             # 发送下载结果
             yield event.plain_result(result["message"])
 
-            # 发送文件
+            # 发送文件（使用 chain_result 兼容各平台）
             if send_file and "pdf_path" in result:
                 try:
                     pdf_path = result["pdf_path"]
                     pdf_name = result["pdf_name"]
 
-                    # 通过私聊发送文件
-                    sender_id = event.get_sender_id()
-                    upload_result = await event.bot.api.call_action(
-                        "upload_private_file",
-                        user_id=int(sender_id),
-                        file=pdf_path,
-                        name=pdf_name,
-                    )
-                    self.logger.info(f"JM PDF upload result: {upload_result}")
+                    # 使用 chain_result 发送文件，兼容微信、QQ 等各平台
+                    yield event.chain_result([
+                        File(name=pdf_name, file_=pdf_path)
+                    ])
 
                 except Exception as e:
                     self.logger.exception(f"JM PDF upload failed: {e}")
