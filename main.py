@@ -747,7 +747,7 @@ class ResourceQueryPlugin(Star):
 
     # ================== JM 下载 ==================
 
-    @filter.command("jm", desc="下载 JMComic 漫画 PDF：/jm <数字ID> [redownload]")
+    @filter.command("jm", alias={"JM", "Jm", "jM"}, desc="下载 JMComic 漫画 PDF：/jm <数字ID> [redownload]")
     async def jm_command(self, event: AstrMessageEvent, jm_id: str = "", option: str = ""):
         """/jm — 下载 JMComic 漫画（仅私聊）"""
         # 从 JM 配置读取（而非 AstrBot 原生配置）
