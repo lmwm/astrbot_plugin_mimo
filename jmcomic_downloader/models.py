@@ -1,12 +1,12 @@
 """
 数据模型定义
 
-定义 JMComic 下载器中使用的数据结构。
+定义 JMComic 下载管理器中使用的数据结构。
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 
 @dataclass
@@ -17,11 +17,33 @@ class AlbumInfo:
     author: str = "未知"
     chapter_count: int = 0
     image_count: int = 0
-    tags: list[str] = None
+    tags: list[str] = field(default_factory=list)
     
-    def __post_init__(self):
-        if self.tags is None:
-            self.tags = []
+    def to_dict(self) -> dict:
+        """转换为字典格式"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "author": self.author,
+            "chapter_count": self.chapter_count,
+            "image_count": self.image_count,
+            "tags": self.tags,
+        }
+
+
+@dataclass
+class ProgressInfo:
+    """进度信息"""
+    current: int = 0
+    total: int = 0
+    message: str = ""
+    
+    @property
+    def percent(self) -> int:
+        """计算进度百分比"""
+        if self.total <= 0:
+            return 0
+        return int(self.current / self.total * 100)
 
 
 @dataclass
@@ -52,14 +74,7 @@ class DownloadResult:
         }
         
         if self.album_info:
-            result["album_info"] = {
-                "id": self.album_info.id,
-                "name": self.album_info.name,
-                "author": self.album_info.author,
-                "chapter_count": self.album_info.chapter_count,
-                "image_count": self.album_info.image_count,
-                "tags": self.album_info.tags,
-            }
+            result["album_info"] = self.album_info.to_dict()
         
         if self.pdf_path:
             result["pdf_path"] = self.pdf_path
@@ -69,3 +84,7 @@ class DownloadResult:
             result["image_dir"] = self.image_dir
             
         return result
+
+
+# 进度回调函数类型定义
+ProgressCallback = Callable[[ProgressInfo], None]

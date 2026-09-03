@@ -1,3 +1,39 @@
+## v3.17.0 (2025-01-XX)
+
+### ♻️ 重大重构
+- 采用管理器架构设计，将各个功能模块化
+- 新增 JMManager 管理器，协调下载器、转换器和缓存管理器
+- 下载器、PDF转换器、缓存管理器独立且可插拔
+- 支持扩展新的下载器和转换器
+
+### 📁 新增模块
+- `jmcomic_downloader/` - JMComic 下载管理器
+  - `manager.py` - JM 管理器核心类
+  - `downloaders/` - 下载器模块
+    - `base.py` - 下载器基类
+    - `jmcomic.py` - JMComic 下载器实现
+  - `converters/` - 转换器模块
+    - `base.py` - 转换器基类
+    - `pdf.py` - PDF 转换器实现
+  - `cache/` - 缓存管理模块
+    - `manager.py` - 缓存管理器
+
+### 🎯 架构设计
+```
+JMManager（管理器）
+├── Downloader（下载器）
+│   └── JMComicDownloader - 从 JMComic 网站下载漫画图片
+├── PDFConverter（PDF转换器）
+│   └── PDFConverter - 将图片转换为 PDF 文件
+└── CacheManager（缓存管理器）
+    └── CacheManager - 管理本地缓存和信息
+```
+
+### 🐛 修复
+- 修复 PDF 转换器无法找到子目录中图片的问题
+
+---
+
 ## v3.16.0 (2025-01-XX)
 
 ### ♻️ 重构

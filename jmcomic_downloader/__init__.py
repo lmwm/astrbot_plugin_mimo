@@ -1,34 +1,37 @@
 """
-JMComic 下载器 - 独立模块
+JMComic 下载管理器
 
-本模块提供 JMComic 漫画的下载、PDF 生成和本地缓存管理功能。
-可以独立于 AstrBot 框架使用。
+一个模块化的 JMComic 漫画下载管理系统，提供以下功能：
+  - 下载管理：从 JMComic 网站下载漫画图片
+  - PDF 转换：将下载的图片转换为 PDF 文件
+  - 缓存管理：本地缓存和信息管理
+  - 消息适配：支持不同平台的消息发送
 
-主要功能：
-  - 从 JMComic 网站下载漫画图片
-  - 将下载的图片合并为 PDF 文件
-  - 支持本地缓存，避免重复下载
-  - 支持下载进度回调
-  - 支持代理和 Cookie 配置
+架构设计：
+  JMManager（管理器）
+    ├── Downloader（下载器）
+    ├── PDFConverter（PDF转换器）
+    ├── CacheManager（缓存管理器）
+    └── MessageAdapter（消息适配器）
 
 使用示例：
-    from jmcomic_downloader import JMComicDownloader
+    from jmcomic_downloader import JMManager
     
-    # 初始化下载器
-    downloader = JMComicDownloader(config={
+    # 初始化管理器
+    manager = JMManager(config={
         "jm_proxy": "http://127.0.0.1:7890",
         "jm_cookies": "csrf=abc123"
     })
     
     # 下载漫画
-    result = await downloader.download("123456")
-    if result["success"]:
-        print(f"PDF 路径: {result['pdf_path']}")
+    result = await manager.download("123456")
+    if result.success:
+        print(f"PDF 路径: {result.pdf_path}")
 """
 
-from .core import JMComicDownloader
-from .models import DownloadResult, AlbumInfo
-from .config import DownloaderConfig
+from .manager import JMManager
+from .models import DownloadResult, AlbumInfo, ProgressInfo
+from .config import ManagerConfig
 
-__version__ = "1.0.0"
-__all__ = ["JMComicDownloader", "DownloadResult", "AlbumInfo", "DownloaderConfig"]
+__version__ = "2.0.0"
+__all__ = ["JMManager", "DownloadResult", "AlbumInfo", "ProgressInfo", "ManagerConfig"]

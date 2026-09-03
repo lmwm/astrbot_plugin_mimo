@@ -1,41 +1,79 @@
-# JMComic 下载器
+# JMComic 下载管理器
 
-独立的 JMComic 漫画下载和 PDF 生成模块，可以脱离 AstrBot 框架单独使用。
+一个模块化的 JMComic 漫画下载管理系统，采用管理器架构设计，各个功能模块独立且可插拔。
+
+## 架构设计
+
+```
+JMManager（管理器）
+├── Downloader（下载器）
+│   └── JMComicDownloader - 从 JMComic 网站下载漫画图片
+├── PDFConverter（PDF转换器）
+│   └── PDFConverter - 将图片转换为 PDF 文件
+└── CacheManager（缓存管理器）
+    └── CacheManager - 管理本地缓存和信息
+```
+
+## 目录结构
+
+```
+jmcomic_downloader/
+├── __init__.py          # 模块初始化，导出管理器
+├── manager.py           # JM管理器，协调各个功能
+├── config.py            # 配置管理
+├── models.py            # 数据模型
+├── utils.py             # 工具函数
+├── README.md            # 使用文档
+├── downloaders/         # 下载器模块
+│   ├── __init__.py
+│   ├── base.py          # 下载器基类
+│   └── jmcomic.py       # JMComic下载器实现
+├── converters/          # 转换器模块
+│   ├── __init__.py
+│   ├── base.py          # 转换器基类
+│   └── pdf.py           # PDF转换器实现
+└── cache/               # 缓存管理模块
+    ├── __init__.py
+    └── manager.py       # 缓存管理器
+```
 
 ## 功能特性
 
+### 下载器（Downloader）
 - 从 JMComic 网站下载漫画图片
-- 将下载的图片合并为 PDF 文件
-- 支持本地缓存，避免重复下载
-- 支持下载进度回调
 - 支持代理和 Cookie 配置
 - 支持并发下载控制
+- 支持进度回调
 
-## 安装
+### PDF转换器（PDFConverter）
+- 将下载的图片转换为 PDF 文件
+- 支持多种图片格式（JPG、PNG、WebP）
+- 自动排序图片
+- 验证生成的 PDF 文件
 
-### 依赖项
+### 缓存管理器（CacheManager）
+- 管理漫画信息缓存
+- 管理 PDF 文件缓存
+- 自动迁移旧目录结构
+- 支持缓存清理
 
-```bash
-pip install jmcomic>=2.7.0,<3 img2pdf>=0.5.1
-```
+## 使用示例
 
-### 使用方式
-
-#### 基本使用
+### 基本使用
 
 ```python
 import asyncio
-from jmcomic_downloader import JMComicDownloader
+from jmcomic_downloader import JMManager
 
 async def main():
-    # 初始化下载器
-    downloader = JMComicDownloader(config={
-        "jm_proxy": "http://127.0.0.1:7890",  # 可选：代理配置
-        "jm_cookies": "csrf=abc123",           # 可选：Cookie 配置
+    # 初始化管理器
+    manager = JMManager(config={
+        "jm_proxy": "http://127.0.0.1:7890",
+        "jm_cookies": "csrf=abc123",
     })
     
     # 下载漫画
-    result = await downloader.download("123456")
+    result = await manager.download("123456")
     
     if result.success:
         print(f"下载成功！")
@@ -45,26 +83,24 @@ async def main():
     else:
         print(f"下载失败: {result.message}")
 
-# 运行
 asyncio.run(main())
 ```
 
-#### 带进度回调的使用
+### 带进度回调的使用
 
 ```python
 import asyncio
-from jmcomic_downloader import JMComicDownloader
+from jmcomic_downloader import JMManager, ProgressInfo
 
-def progress_callback(current: int, total: int, message: str):
+def progress_callback(info: ProgressInfo):
     """进度回调函数"""
-    if total > 0:
-        percent = int(current / total * 100)
-        print(f"进度: {percent}% - {message}")
+    if info.total > 0:
+        print(f"进度: {info.percent}% - {info.message}")
 
 async def main():
-    downloader = JMComicDownloader()
+    manager = JMManager()
     
-    result = await downloader.download(
+    result = await manager.download(
         "123456",
         progress_callback=progress_callback,
     )
@@ -75,32 +111,14 @@ async def main():
 asyncio.run(main())
 ```
 
-#### 强制重新下载
+### 检查本地缓存
 
 ```python
 async def main():
-    downloader = JMComicDownloader()
-    
-    # 强制重新下载（忽略本地缓存）
-    result = await downloader.download(
-        "123456",
-        force_redownload=True,
-    )
-    
-    if result.success:
-        print(f"PDF 路径: {result.pdf_path}")
-
-asyncio.run(main())
-```
-
-#### 检查本地缓存
-
-```python
-async def main():
-    downloader = JMComicDownloader()
+    manager = JMManager()
     
     # 检查本地是否有缓存
-    local = downloader.check_local("123456")
+    local = manager.check_local("123456")
     if local:
         print(f"本地已有缓存")
         print(f"PDF 路径: {local['pdf_path']}")
@@ -111,14 +129,14 @@ async def main():
 asyncio.run(main())
 ```
 
-#### 获取漫画信息
+### 获取漫画信息
 
 ```python
 async def main():
-    downloader = JMComicDownloader()
+    manager = JMManager()
     
     # 获取漫画信息（优先从缓存读取）
-    info = await downloader.get_album_info("123456")
+    info = await manager.get_album_info("123456")
     
     print(f"漫画名称: {info.name}")
     print(f"作者: {info.author}")
@@ -143,25 +161,19 @@ asyncio.run(main())
 | `jm_max_concurrent` | int | `1` | 同时下载漫画数量 |
 | `download_dir` | str | `None` | 下载目录路径 |
 
-## 目录结构
+## 数据模型
 
-```
-JMDownload/
-├── jm123456/                    ← 漫画目录
-│   ├── JM123456-漫画名/         ← 图片目录
-│   │   ├── 0001.jpg
-│   │   ├── 0002.jpg
-│   │   └── ...
-│   ├── JM123456-漫画名.pdf      ← PDF 文件
-│   └── info.json                ← 漫画信息缓存
-└── jm789012/
-    └── ...
-```
+### AlbumInfo（漫画信息）
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `id` | str | 漫画 ID |
+| `name` | str | 漫画名称 |
+| `author` | str | 作者 |
+| `chapter_count` | int | 章节数量 |
+| `image_count` | int | 图片数量 |
+| `tags` | list[str] | 标签列表 |
 
-## 返回结果
-
-`download()` 方法返回 `DownloadResult` 对象，包含以下属性：
-
+### DownloadResult（下载结果）
 | 属性 | 类型 | 说明 |
 |------|------|------|
 | `success` | bool | 是否成功 |
@@ -176,27 +188,49 @@ JMDownload/
 | `from_cache` | bool | 是否来自本地缓存 |
 | `image_dir` | str | 图片目录路径 |
 
-## 漫画信息
-
-`AlbumInfo` 对象包含以下属性：
-
+### ProgressInfo（进度信息）
 | 属性 | 类型 | 说明 |
 |------|------|------|
-| `id` | str | 漫画 ID |
-| `name` | str | 漫画名称 |
-| `author` | str | 作者 |
-| `chapter_count` | int | 章节数量 |
-| `image_count` | int | 图片数量 |
-| `tags` | list[str] | 标签列表 |
+| `current` | int | 当前进度 |
+| `total` | int | 总数 |
+| `message` | str | 进度消息 |
+| `percent` | int | 进度百分比（只读） |
 
-## 错误处理
+## 扩展开发
 
-下载失败时，`DownloadResult.message` 会包含具体的错误信息：
+### 添加新的下载器
 
-- 漫画不存在：`没有找到 JM123456，请检查 ID 或配置 cookies`
-- 网络连接失败：`JMComic 站点连接失败，请稍后重试或配置代理`
-- 部分下载失败：`部分图片下载失败，请稍后重试`
-- 其他错误：`JM123456 下载失败（异常类型）`
+1. 继承 `BaseDownloader` 基类
+2. 实现 `download()` 和 `get_album_info()` 方法
+3. 在管理器中注册新的下载器
+
+```python
+from jmcomic_downloader.downloaders.base import BaseDownloader
+
+class NewDownloader(BaseDownloader):
+    async def download(self, album_id, download_dir, progress_callback=None):
+        # 实现下载逻辑
+        pass
+    
+    async def get_album_info(self, album_id):
+        # 实现获取信息逻辑
+        pass
+```
+
+### 添加新的转换器
+
+1. 继承 `BaseConverter` 基类
+2. 实现 `convert()` 方法
+3. 在管理器中注册新的转换器
+
+```python
+from jmcomic_downloader.converters.base import BaseConverter
+
+class NewConverter(BaseConverter):
+    def convert(self, image_dir, output_path):
+        # 实现转换逻辑
+        pass
+```
 
 ## 注意事项
 
@@ -204,3 +238,4 @@ JMDownload/
 2. 下载的漫画会缓存到本地，避免重复下载
 3. 可以通过 `force_redownload=True` 强制重新下载
 4. 下载目录默认为当前工作目录下的 `JMDownload` 文件夹
+5. 各个功能模块独立，可以单独使用或替换
