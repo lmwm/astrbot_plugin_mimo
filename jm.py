@@ -149,10 +149,44 @@ def _count_images(directory: Path) -> int:
 class JMDownloader:
     """JMComic 下载管理器"""
 
-    def __init__(self, config: dict):
-        self._config = config
-        self._semaphore = asyncio.Semaphore(int(config.get("jm_max_concurrent", 1)))
+    def __init__(self, config_path: Path):
+        """初始化 JM 下载管理器
+
+        Args:
+            config_path: JM 配置目录路径（config/jm/）
+        """
+        self._config_path = config_path
+        self._config_path.mkdir(parents=True, exist_ok=True)
+        self._config = self._load_config()
+        self._semaphore = asyncio.Semaphore(int(self._config.get("jm_max_concurrent", 1)))
         JM_ROOT.mkdir(parents=True, exist_ok=True)
+
+    def _load_config(self) -> dict:
+        """加载 JM 配置"""
+        config_file = self._config_path / "config.json"
+        default_config = {
+            "jm_enabled": True,
+            "jm_send_file": True,
+            "jm_cookies": "",
+            "jm_proxy": "",
+            "jm_timeout": 20,
+            "jm_retry_times": 3,
+            "jm_image_threads": 16,
+            "jm_photo_threads": 4,
+            "jm_max_concurrent": 1,
+        }
+        if config_file.exists():
+            try:
+                saved = json.loads(config_file.read_text(encoding="utf-8"))
+                default_config.update(saved)
+            except (json.JSONDecodeError, OSError):
+                pass
+        return default_config
+
+    def reload_config(self):
+        """重新加载配置"""
+        self._config = self._load_config()
+        self._semaphore = asyncio.Semaphore(int(self._config.get("jm_max_concurrent", 1)))
 
     def _get_album_dir(self, album_id: str) -> Path:
         """获取漫画存储目录"""

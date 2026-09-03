@@ -1,3 +1,28 @@
+## v3.14.0 (2025-01-XX)
+
+### ♻️ 优化
+- 变量配置按平台分组存储：`config/mimo/var_config.json` 和 `config/wasu/var_config.json`
+- JM 下载配置独立存储：`config/jm/config.json`
+- JM 配置保存后自动重新加载，无需重启插件
+- 自动兼容旧版 AstrBot 配置文件
+
+### 📁 最终目录结构
+```
+config/
+├── mimo/
+│   ├── 测试账号.json
+│   ├── 测试账号.txt
+│   └── var_config.json        ← MiMo 变量配置
+├── wasu/
+│   ├── 13800138000.json
+│   ├── 13800138000.txt
+│   └── var_config.json        ← 华数变量配置
+└── jm/
+    └── config.json            ← JM 下载配置
+```
+
+---
+
 ## v3.13.0 (2025-01-XX)
 
 ### ♻️ 优化

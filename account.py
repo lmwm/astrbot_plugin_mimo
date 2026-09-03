@@ -42,6 +42,12 @@ class AccountManager:
         platform_path.mkdir(parents=True, exist_ok=True)
         return platform_path
 
+    def _get_jm_config_path(self) -> Path:
+        """获取 JM 下载配置目录"""
+        jm_path = self._get_config_path() / "jm"
+        jm_path.mkdir(parents=True, exist_ok=True)
+        return jm_path
+
     # ── 文件名生成 ──
 
     def _get_account_filename(self, acc: dict) -> str:

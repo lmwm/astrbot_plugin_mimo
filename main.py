@@ -63,7 +63,7 @@ class ResourceQueryPlugin(Star):
         self._accounts = AccountManager(_PLUGIN_NAME, self._plugin_dir)
         self._mimo = MimoPlatform(self._plugin_dir)
         self._wasu = WasuPlatform(self._plugin_dir)
-        self._jm = JMDownloader(self.config)
+        self._jm = JMDownloader(self._accounts._get_jm_config_path())
 
         # 为现有账号填充默认 device_id 和 ua
         self._fill_default_fields()
@@ -164,16 +164,6 @@ class ResourceQueryPlugin(Star):
         import re
         from astrbot.api.web import json_response
 
-        # 检查是否有用户自定义配置（存放在 config 目录下）
-        config_path = self._accounts._get_config_path() / "var_config.json"
-        if config_path.exists():
-            try:
-                user_config = json.loads(config_path.read_text(encoding="utf-8"))
-                if user_config:
-                    return json_response(user_config)
-            except (json.JSONDecodeError, OSError):
-                pass
-
         # 变量描述映射（默认值）
         var_descriptions = {
             "label": "账号名称",
@@ -225,15 +215,34 @@ class ResourceQueryPlugin(Star):
                     # 从模板中提取变量名
                     vars_found = re.findall(r"\{(\w+)\}", content)
                     platform_defaults = var_defaults.get(platform, {})
-                    vars_list = [
-                        {
-                            "name": v,
-                            "desc": var_descriptions.get(v, v),
-                            "default": platform_defaults.get(v, ""),
-                            "show": True
-                        }
-                        for v in dict.fromkeys(vars_found)  # 去重并保持顺序
-                    ]
+
+                    # 检查是否有用户自定义配置（存放在平台目录下）
+                    platform_config_path = self._accounts._get_platform_path(platform) / "var_config.json"
+                    user_vars = {}
+                    if platform_config_path.exists():
+                        try:
+                            user_config = json.loads(platform_config_path.read_text(encoding="utf-8"))
+                            if user_config and "variables" in user_config:
+                                # 构建用户配置的变量映射
+                                for v in user_config["variables"]:
+                                    user_vars[v["name"]] = v
+                        except (json.JSONDecodeError, OSError):
+                            pass
+
+                    vars_list = []
+                    for v in dict.fromkeys(vars_found):  # 去重并保持顺序
+                        if v in user_vars:
+                            # 使用用户配置
+                            vars_list.append(user_vars[v])
+                        else:
+                            # 使用默认配置
+                            vars_list.append({
+                                "name": v,
+                                "desc": var_descriptions.get(v, v),
+                                "default": platform_defaults.get(v, ""),
+                                "show": True
+                            })
+
                     result[platform] = {
                         "variables": vars_list
                     }
@@ -243,39 +252,67 @@ class ResourceQueryPlugin(Star):
         return json_response(result)
 
     async def save_template_vars(self):
-        """保存模板变量配置"""
+        """保存模板变量配置（按平台分组存储）"""
         from astrbot.api.web import error_response, json_response, request
         payload = await request.json(default={})
         if not payload:
             return error_response("缺少配置数据")
 
-        # 保存到配置文件（config 目录下）
-        config_path = self._accounts._get_config_path() / "var_config.json"
-        try:
-            config_path.write_text(
-                json.dumps(payload, ensure_ascii=False, indent=2),
-                encoding="utf-8"
-            )
-        except OSError as e:
-            return error_response(f"保存失败: {e}")
+        # 按平台分别保存到各自的目录
+        for platform, config_data in payload.items():
+            if platform not in ("mimo", "wasu"):
+                continue
+            platform_config_path = self._accounts._get_platform_path(platform) / "var_config.json"
+            try:
+                platform_config_path.write_text(
+                    json.dumps(config_data, ensure_ascii=False, indent=2),
+                    encoding="utf-8"
+                )
+            except OSError as e:
+                return error_response(f"保存 {platform} 配置失败: {e}")
 
         return json_response({"status": "ok"})
 
     async def get_jm_config(self):
         """获取 JM 下载配置"""
         from astrbot.api.web import json_response
-        cfg = self.config if self.config else {}
-        return json_response({
-            "jm_enabled": cfg.get("jm_enabled", True),
-            "jm_send_file": cfg.get("jm_send_file", True),
-            "jm_cookies": cfg.get("jm_cookies", ""),
-            "jm_proxy": cfg.get("jm_proxy", ""),
-            "jm_timeout": cfg.get("jm_timeout", 20),
-            "jm_retry_times": cfg.get("jm_retry_times", 3),
-            "jm_image_threads": cfg.get("jm_image_threads", 16),
-            "jm_photo_threads": cfg.get("jm_photo_threads", 4),
-            "jm_max_concurrent": cfg.get("jm_max_concurrent", 1),
-        })
+
+        # 从 config/jm/config.json 读取配置
+        jm_config_path = self._accounts._get_jm_config_path() / "config.json"
+        default_config = {
+            "jm_enabled": True,
+            "jm_send_file": True,
+            "jm_cookies": "",
+            "jm_proxy": "",
+            "jm_timeout": 20,
+            "jm_retry_times": 3,
+            "jm_image_threads": 16,
+            "jm_photo_threads": 4,
+            "jm_max_concurrent": 1,
+        }
+
+        if jm_config_path.exists():
+            try:
+                saved_config = json.loads(jm_config_path.read_text(encoding="utf-8"))
+                default_config.update(saved_config)
+            except (json.JSONDecodeError, OSError):
+                pass
+        else:
+            # 兼容旧配置：从 AstrBot 配置文件迁移
+            cfg = self.config if self.config else {}
+            for key in default_config:
+                if key in cfg:
+                    default_config[key] = cfg[key]
+            # 保存到新位置
+            try:
+                jm_config_path.write_text(
+                    json.dumps(default_config, ensure_ascii=False, indent=2),
+                    encoding="utf-8"
+                )
+            except OSError:
+                pass
+
+        return json_response(default_config)
 
     async def save_jm_config(self):
         """保存 JM 下载配置"""
@@ -283,15 +320,27 @@ class ResourceQueryPlugin(Star):
         payload = await request.json(default={})
         if not payload:
             return error_response("缺少配置数据")
-        cfg = self.config if self.config else {}
-        for key in (
-            "jm_enabled", "jm_send_file", "jm_cookies", "jm_proxy",
-            "jm_timeout", "jm_retry_times", "jm_image_threads",
-            "jm_photo_threads", "jm_max_concurrent",
-        ):
-            if key in payload:
-                cfg[key] = payload[key]
-        self.config.save_config()
+
+        # 保存到 config/jm/config.json
+        jm_config_path = self._accounts._get_jm_config_path() / "config.json"
+        try:
+            # 读取现有配置并更新
+            existing = {}
+            if jm_config_path.exists():
+                try:
+                    existing = json.loads(jm_config_path.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    pass
+            existing.update(payload)
+            jm_config_path.write_text(
+                json.dumps(existing, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+            # 重新加载 JM 配置
+            self._jm.reload_config()
+        except OSError as e:
+            return error_response(f"保存失败: {e}")
+
         return json_response({"status": "ok"})
 
     # ================== 主指令 ==================
