@@ -284,7 +284,7 @@ class ResourceQueryPlugin(Star):
         default_config = {
             "jm_enabled": True,
             "jm_send_file": True,
-            "jm_max_file_size": 100,  # 文件大小限制（MB），0 表示不限制
+            "jm_max_file_size": 10,  # 文件大小限制（MB），0 表示不限制
             "jm_cookies": "",
             "jm_proxy": "",
             "jm_timeout": 20,
