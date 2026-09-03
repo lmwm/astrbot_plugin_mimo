@@ -203,8 +203,6 @@ class JMDownloader:
         if not album_dir.exists():
             return None
 
-        image_dir = album_dir / "images"
-
         # 检查漫画目录下的 PDF 文件
         pdf_files = list(album_dir.glob(f"JM{album_id}*.pdf"))
 
@@ -233,11 +231,25 @@ class JMDownloader:
                     # 重新检查
                     pdf_files = list(album_dir.glob(f"JM{album_id}*.pdf"))
 
+        # 兼容旧位置：检查 images 子目录，迁移到漫画目录
+        old_images_dir = album_dir / "images"
+        if old_images_dir.exists():
+            # 移动子目录到漫画目录
+            for item in old_images_dir.iterdir():
+                dest = album_dir / item.name
+                if not dest.exists():
+                    shutil.move(str(item), str(dest))
+            # 清理空目录
+            try:
+                old_images_dir.rmdir()
+            except OSError:
+                pass
+
         has_pdf = len(pdf_files) > 0
         pdf_path = pdf_files[0] if pdf_files else None
 
-        # 统计图片
-        image_count = _count_images(image_dir)
+        # 统计图片（直接在漫画目录下）
+        image_count = _count_images(album_dir)
 
         # 加载信息
         album_info = self._load_info(album_id) or {}
@@ -353,13 +365,11 @@ class JMDownloader:
                 }
 
         async with self._semaphore:
-            # 创建下载目录
+            # 创建下载目录（直接使用漫画目录）
             album_dir = self._get_album_dir(album_id)
             album_dir.mkdir(parents=True, exist_ok=True)
-            download_dir = album_dir / "images"
             # 临时 PDF 目录（jmcomic 生成 PDF 的位置）
             temp_pdf_dir = album_dir / "pdf"
-            download_dir.mkdir(parents=True, exist_ok=True)
             temp_pdf_dir.mkdir(parents=True, exist_ok=True)
 
             # 获取漫画信息
@@ -368,7 +378,7 @@ class JMDownloader:
 
             try:
                 _report(0, total_images, "准备下载...")
-                option = _build_option(self._config, download_dir)
+                option = _build_option(self._config, album_dir)
 
                 # 在线程池中执行同步下载
                 _report(0, total_images, "开始下载图片...")
@@ -385,7 +395,7 @@ class JMDownloader:
                         _time.sleep(2)
                         while not stop_event.is_set():
                             try:
-                                image_count = _count_images(download_dir)
+                                image_count = _count_images(album_dir)
                                 if image_count > 0:
                                     _report(image_count, total_images, f"已下载 {image_count}/{total_images} 张图片")
                             except Exception:
@@ -453,7 +463,7 @@ class JMDownloader:
                     "file_size_mb": file_size_mb,
                     "pdf_path": str(final_pdf_path),
                     "pdf_name": pdf_name,
-                    "image_dir": str(download_dir),
+                    "image_dir": str(album_dir),
                     "from_cache": False,
                 }
 
