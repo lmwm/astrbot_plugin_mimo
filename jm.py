@@ -21,9 +21,9 @@ import json
 from pathlib import Path
 from typing import Callable
 
-# 导入独立模块
-from jmcomic_downloader import JMComicDownloader
-from jmcomic_downloader.utils import normalize_album_id
+# 导入独立模块（位于插件内部）
+from .jmcomic_downloader import JMComicDownloader
+from .jmcomic_downloader.utils import normalize_album_id
 
 # 类型定义
 ProgressCallback = Callable[[int, int, str], None]
