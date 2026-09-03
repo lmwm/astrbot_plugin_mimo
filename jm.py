@@ -390,9 +390,9 @@ class JMDownloader:
             album_id: 漫画 ID
 
         Returns:
-            漫画目录路径，如 JMDownload/jm123456/
+            漫画目录路径，如 JMDownload/JM123456/
         """
-        return JM_ROOT / f"jm{album_id}"
+        return JM_ROOT / f"JM{album_id}"
 
     def _get_pdf_path(self, album_id: str, album_name: str = "") -> Path:
         """获取 PDF 文件路径
