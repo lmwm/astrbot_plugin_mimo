@@ -95,6 +95,9 @@ class ResourceQueryPlugin(Star):
         context.register_web_api(
             f"/{_PLUGIN_NAME}/jm-config", self.save_jm_config, ["POST"], "保存 JM 下载配置"
         )
+        context.register_web_api(
+            f"/{_PLUGIN_NAME}/mimo/login", self.mimo_login, ["POST"], "MiMo 登录"
+        )
 
     def _fill_default_fields(self):
         """为缺少 device_id 和 ua 的账号填充默认值"""
@@ -346,6 +349,81 @@ class ResourceQueryPlugin(Star):
 
         return json_response({"status": "ok"})
 
+    async def mimo_login(self):
+        """MiMo 登录"""
+        from astrbot.api.web import error_response, json_response, request
+        import asyncio
+        
+        payload = await request.json(default={})
+        index = payload.get("index")
+        account = payload.get("account", "").strip()
+        password = payload.get("password", "").strip()
+        otp_code = payload.get("otp_code", "").strip()
+        
+        if index is None:
+            return error_response("缺少 index 参数")
+        
+        try:
+            index = int(index)
+        except (TypeError, ValueError):
+            return error_response("index 必须是整数")
+        
+        # 获取账号列表
+        all_accounts = self._accounts.get_all_accounts()
+        mimo_accounts = [(i, acc) for i, acc in enumerate(all_accounts) if acc.get("platform") == "mimo"]
+        
+        if index < 0 or index >= len(mimo_accounts):
+            return error_response("账号索引无效")
+        
+        real_idx, acc = mimo_accounts[index]
+        
+        # 更新账号密码
+        if account:
+            acc["account"] = account
+        if password:
+            acc["password"] = password
+        
+        # 执行登录
+        loop = asyncio.get_event_loop()
+        
+        try:
+            result = await loop.run_in_executor(
+                None, 
+                lambda: self._mimo.login_account(acc, otp_code=otp_code if otp_code else None)
+            )
+            
+            # 更新账号信息
+            acc.update(result)
+            all_accounts[real_idx] = acc
+            self._accounts.save_all_accounts(all_accounts)
+            
+            return json_response({
+                "status": "ok",
+                "message": "登录成功",
+                "account": {
+                    "userId": acc.get("userId", ""),
+                    "serviceToken": acc.get("serviceToken", ""),
+                    "passToken": acc.get("passToken", "")
+                }
+            })
+        except Exception as e:
+            error_name = type(e).__name__
+            if error_name == "OtpRequired":
+                return json_response({
+                    "status": "otp_required",
+                    "message": "验证码已发送，请输入验证码"
+                })
+            elif error_name == "LoginError":
+                return json_response({
+                    "status": "error",
+                    "message": f"登录失败: {e}"
+                })
+            else:
+                return json_response({
+                    "status": "error",
+                    "message": f"登录错误: {e}"
+                })
+
     # ================== 主指令 ==================
 
     @filter.command("query")
@@ -355,7 +433,7 @@ class ResourceQueryPlugin(Star):
 
         if len(args) == 1:
             yield event.plain_result(
-                "📊 资源查询插件\n"
+                "📊 资源查询插件 v3.19.0\n"
                 "────────────────\n"
                 "用法:\n"
                 "  /query mimo — 查询所有 MiMo 用量\n"
