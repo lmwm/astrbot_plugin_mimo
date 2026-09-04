@@ -392,10 +392,18 @@ class ResourceQueryPlugin(Star):
                 return
             yield event.plain_result("🔍 正在查询所有 MiMo 账号...")
             all_accounts = self._accounts.get_all_accounts()
+            
+            # 分离已登录和未登录的账号
+            logged_in = []
+            skipped = []
             for idx, acc in mimo_indices:
-                all_accounts[idx] = await self._mimo.ensure_account(acc)
-            self._accounts.save_all_accounts(all_accounts)
-            for idx, acc in mimo_indices:
+                if not acc.get("serviceToken"):
+                    skipped.append(acc.get("name") or acc.get("account") or f"账号{idx + 1}")
+                    continue
+                logged_in.append((idx, acc))
+            
+            # 只查询已登录的账号
+            for idx, acc in logged_in:
                 result = await self._mimo.query_one(acc)
                 label = acc.get("name") or acc.get("account") or f"账号{idx + 1}"
                 if "error" in result:
@@ -407,6 +415,10 @@ class ResourceQueryPlugin(Star):
                     self._mimo.limits.update(acc, usage.get("accountRateLimit", {}))
                     mr = MimoResult(success=True, account_name=label, data=result, prev_limit=prev, template=template)
                     yield event.plain_result(mr.to_text())
+            
+            # 提示跳过的账号
+            if skipped:
+                yield event.plain_result(f"⚠️ 跳过未登录的账号: {', '.join(skipped)}\n使用 /query mimo login 账号 密码 登录")
             return
 
         sub_cmd = args[0].lower()
@@ -450,19 +462,22 @@ class ResourceQueryPlugin(Star):
             query_idx = int(sub_cmd) - 1
             if 0 <= query_idx < len(mimo_indices):
                 real_idx, acc = mimo_indices[query_idx]
+                
+                # 检查账号是否已登录
+                if not acc.get("serviceToken"):
+                    yield event.plain_result(f"❌ 账号 {acc.get('name') or acc.get('account') or f'账号{query_idx + 1}'} 未登录\n使用 /query mimo login 账号 密码 登录")
+                    return
+                
                 yield event.plain_result("🔍 正在查询...")
-                all_accounts = self._accounts.get_all_accounts()
-                all_accounts[real_idx] = await self._mimo.ensure_account(acc)
-                self._accounts.save_all_accounts(all_accounts)
-                result = await self._mimo.query_one(all_accounts[real_idx])
-                label = all_accounts[real_idx].get("name") or all_accounts[real_idx].get("account") or f"账号{query_idx + 1}"
-                template = all_accounts[real_idx].get("template") or None
+                result = await self._mimo.query_one(acc)
+                label = acc.get("name") or acc.get("account") or f"账号{query_idx + 1}"
+                template = acc.get("template") or None
                 if "error" in result:
                     yield event.plain_result(f"📋 {label}\n❌ {result['error']}")
                 else:
-                    prev = self._mimo.limits.get_prev(all_accounts[real_idx])
+                    prev = self._mimo.limits.get_prev(acc)
                     usage = result.get("usage", {}).get("data", {})
-                    self._mimo.limits.update(all_accounts[real_idx], usage.get("accountRateLimit", {}))
+                    self._mimo.limits.update(acc, usage.get("accountRateLimit", {}))
                     mr = MimoResult(success=True, account_name=label, data=result, prev_limit=prev, template=template)
                     yield event.plain_result(mr.to_text())
             else:
@@ -563,10 +578,32 @@ class ResourceQueryPlugin(Star):
             except OtpRequired:
                 yield event.plain_result(f"📱 {account} 需要短信验证，验证码已发送\n请直接回复 6 位验证码：")
             except LoginError as e:
-                yield event.plain_result(f"❌ {account} 登录失败: {e}")
+                # 登录失败时保存账号但标记为未登录
+                acc["serviceToken"] = ""
+                acc["passToken"] = ""
+                all_accounts = self._accounts.get_all_accounts()
+                for i, a in enumerate(all_accounts):
+                    if a.get("platform") == "mimo" and a.get("account") == account:
+                        all_accounts[i] = acc
+                        break
+                else:
+                    all_accounts.append(acc)
+                self._accounts.save_all_accounts(all_accounts)
+                yield event.plain_result(f"❌ {account} 登录失败: {e}\n账号已保存，查询时将跳过")
                 return
             except (OSError, StsError) as e:
-                yield event.plain_result(f"❌ {account} 网络错误: {e}")
+                # 网络错误时保存账号但标记为未登录
+                acc["serviceToken"] = ""
+                acc["passToken"] = ""
+                all_accounts = self._accounts.get_all_accounts()
+                for i, a in enumerate(all_accounts):
+                    if a.get("platform") == "mimo" and a.get("account") == account:
+                        all_accounts[i] = acc
+                        break
+                else:
+                    all_accounts.append(acc)
+                self._accounts.save_all_accounts(all_accounts)
+                yield event.plain_result(f"❌ {account} 网络错误: {e}\n账号已保存，查询时将跳过")
                 return
 
             @session_waiter(timeout=120, record_history_chains=False)
