@@ -166,6 +166,10 @@ class AccountManager:
                 continue
             platform = platform_dir.name
             if platform not in platform_files:
+                # 该平台已无账号，删除该平台目录下的所有文件
+                for old_file in platform_dir.glob("*"):
+                    if old_file.is_file():
+                        old_file.unlink(missing_ok=True)
                 # 删除空平台目录
                 if not any(platform_dir.iterdir()):
                     platform_dir.rmdir()
