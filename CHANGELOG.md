@@ -1,3 +1,27 @@
+## v3.19.0 (2025-01-XX)
+
+### ♻️ 简化命令
+- 精简 MiMo 命令，只保留查询功能
+- 精简华数命令，只保留 list 和 del 功能
+- 删除所有登录相关命令，登录改为网页管理界面操作
+- 支持使用账号名称代替序号
+
+### 🎯 保留的命令
+- `/query mimo` — 查询所有 MiMo 账号
+- `/query mimo <序号或名称>` — 查询指定 MiMo 账号
+- `/query wasu list` — 列出所有华数账号
+- `/query wasu del <序号或名称>` — 删除华数账号
+
+### ❌ 删除的命令
+- `/query mimo login` — 已移至网页管理界面
+- `/query mimo list` — 已移至网页管理界面
+- `/query mimo del` — 已移至网页管理界面
+- `/query wasu` — 已移至网页管理界面
+- `/query wasu <序号>` — 已移至网页管理界面
+- `/query wasu login` — 已移至网页管理界面
+
+---
+
 ## v3.18.0 (2025-01-XX)
 
 ### ♻️ 优化
