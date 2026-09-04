@@ -56,6 +56,16 @@
     .nav-tab.active { background: var(--primary); color: white; }
     .nav-tab:hover:not(.active) { background: var(--bg); }
 
+    /* 子标签页 */
+    .sub-tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
+    .sub-tab { padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; background: transparent; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .sub-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .sub-tab:hover:not(.active) { color: var(--text); }
+
+    /* 子页面容器 */
+    .sub-page { display: none; }
+    .sub-page.active { display: block; }
+
     /* 页面容器 */
     .page { display: none; }
     .page.active { display: block; }
@@ -232,38 +242,82 @@
 
       <!-- 顶部导航 -->
       <div class="nav-tabs">
-        <button class="nav-tab active" onclick="switchPage('accounts')">📋 账号管理</button>
-        <button class="nav-tab" onclick="switchPage('variables')">⚙️ 变量配置</button>
-        <button class="nav-tab" onclick="switchPage('jm')">🎮 JM 设置</button>
+        <button class="nav-tab active" onclick="switchPage('mimo', event)">🤖 MiMo 账号</button>
+        <button class="nav-tab" onclick="switchPage('wasu', event)">📺 华数账号</button>
+        <button class="nav-tab" onclick="switchPage('jm', event)">🎮 JM 设置</button>
       </div>
 
-      <!-- 账号管理页面 -->
-      <div class="page active" id="page-accounts">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">账号列表</div>
-            <div style="display:flex;align-items:center;gap:12px">
-              <span style="font-size:12px;color:var(--text-muted)">共 <span id="account-count">0</span> 个账号</span>
-              <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 添加账号</button>
+      <!-- MiMo 账号页面 -->
+      <div class="page active" id="page-mimo">
+        <!-- 子标签页 -->
+        <div class="sub-tabs">
+          <button class="sub-tab active" onclick="switchSubPage('mimo', 'accounts', event)">📋 账号管理</button>
+          <button class="sub-tab" onclick="switchSubPage('mimo', 'variables', event)">⚙️ 变量配置</button>
+        </div>
+
+        <!-- MiMo 账号管理 -->
+        <div class="sub-page active" id="mimo-accounts">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🤖 MiMo 账号管理</div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="font-size:12px;color:var(--text-muted)"><span id="mimo-count">0</span> 个账号</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddMimoModal()">＋ 添加 MiMo 账号</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="account-grid" id="mimo-account-list"></div>
             </div>
           </div>
-          <div class="card-body">
-            <div class="account-grid" id="account-list"></div>
+        </div>
+
+        <!-- MiMo 变量配置 -->
+        <div class="sub-page" id="mimo-variables">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚙️ MiMo 变量配置</div>
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); saveMimoVarConfig()">💾 保存配置</button>
+            </div>
+            <div class="card-body">
+              <div id="mimo-var-list"></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 变量配置页面 -->
-      <div class="page" id="page-variables">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">模板变量配置</div>
-            <button class="btn btn-primary btn-sm" onclick="saveVarConfig()">💾 保存配置</button>
+      <!-- 华数账号页面 -->
+      <div class="page" id="page-wasu">
+        <!-- 子标签页 -->
+        <div class="sub-tabs">
+          <button class="sub-tab active" onclick="switchSubPage('wasu', 'accounts', event)">📋 账号管理</button>
+          <button class="sub-tab" onclick="switchSubPage('wasu', 'variables', event)">⚙️ 变量配置</button>
+        </div>
+
+        <!-- 华数账号管理 -->
+        <div class="sub-page active" id="wasu-accounts">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📺 华数广电账号管理</div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="font-size:12px;color:var(--text-muted)"><span id="wasu-count">0</span> 个账号</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddWasuModal()">＋ 添加华数账号</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="account-grid" id="wasu-account-list"></div>
+            </div>
           </div>
-          <div class="card-body">
-            <div class="var-config-layout">
-              <div class="var-platform-list" id="var-platform-list"></div>
-              <div class="var-list" id="var-list"></div>
+        </div>
+
+        <!-- 华数变量配置 -->
+        <div class="sub-page" id="wasu-variables">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚙️ 华数变量配置</div>
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); saveWasuVarConfig()">💾 保存配置</button>
+            </div>
+            <div class="card-body">
+              <div id="wasu-var-list"></div>
             </div>
           </div>
         </div>
@@ -359,77 +413,147 @@
     </div>
   </div>
 
-  <!-- 账号编辑模态框 -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal">
+  <!-- MiMo 账号添加/编辑模态框 -->
+  <div class="modal-overlay" id="mimo-modal">
+    <div class="modal" style="max-width: 700px;">
       <div class="modal-header">
-        <div class="modal-title" id="modal-title">添加账号</div>
-        <button class="btn btn-ghost" onclick="closeModal()">✕</button>
+        <div class="modal-title" id="mimo-modal-title">添加 MiMo 账号</div>
+        <button class="btn btn-ghost" onclick="closeMimoModal()">✕</button>
       </div>
       <div class="modal-body">
-        <!-- 平台选择 -->
+        <!-- 顶部标签：账号配置 / 消息模板 -->
         <div class="form-group">
-          <label class="form-label">平台</label>
           <div class="platform-tabs">
-            <div class="platform-tab active" data-platform="mimo" onclick="switchPlatform('mimo')">🤖 MiMo</div>
-            <div class="platform-tab" data-platform="wasu" onclick="switchPlatform('wasu')">📺 华数广电</div>
+            <div class="platform-tab active" data-section="account" onclick="switchMimoModalSection('account')">📋 账号配置</div>
+            <div class="platform-tab" data-section="template" onclick="switchMimoModalSection('template')">📝 消息模板</div>
           </div>
         </div>
 
-        <!-- 通用字段 -->
-        <div class="form-group">
-          <label class="form-label">账号名称（可选，用于区分多个账号）</label>
-          <input class="form-input" id="field-name" placeholder="如：我的MiMo账号">
-        </div>
+        <!-- 账号配置部分 -->
+        <div id="mimo-account-section">
+          <div class="form-group">
+            <label class="form-label">账号名称（可选）</label>
+            <input class="form-input" id="mimo-field-name" placeholder="如：我的MiMo账号">
+          </div>
 
-        <!-- MiMo 字段 -->
-        <div id="section-mimo">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">账号 *</label>
-              <input class="form-input" id="field-account" placeholder="小米账号">
+          <!-- 登录方式选择 -->
+          <div class="form-group">
+            <label class="form-label">登录方式</label>
+            <div class="platform-tabs">
+              <div class="platform-tab active" data-method="password" onclick="switchMimoLoginMethod('password')">账号密码</div>
+              <div class="platform-tab" data-method="token" onclick="switchMimoLoginMethod('token')">ServiceToken</div>
             </div>
-            <div class="form-group">
-              <label class="form-label">密码 *</label>
-              <div class="password-wrapper">
-                <input class="form-input" id="field-password" type="password" placeholder="密码">
-                <button class="password-toggle" onclick="togglePassword()">👁</button>
+          </div>
+
+          <!-- 账号密码登录 -->
+          <div id="mimo-password-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">小米账号 *</label>
+                <input class="form-input" id="mimo-field-account" placeholder="手机号或邮箱">
+              </div>
+              <div class="form-group">
+                <label class="form-label">密码 *</label>
+                <div class="password-wrapper">
+                  <input class="form-input" id="mimo-field-password" type="password" placeholder="密码">
+                  <button class="password-toggle" onclick="toggleMimoPassword()">👁</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">设备标识</label>
+                <input class="form-input" id="mimo-field-device-id" placeholder="留空使用默认值">
+              </div>
+              <div class="form-group">
+                <label class="form-label">User-Agent</label>
+                <input class="form-input" id="mimo-field-ua" placeholder="留空使用默认值">
+              </div>
+            </div>
+            <!-- OTP 验证码 -->
+            <div class="form-group" id="mimo-otp-section" style="display: none;">
+              <label class="form-label">短信验证码</label>
+              <input class="form-input" id="mimo-field-otp" placeholder="6位数字验证码" maxlength="6">
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                验证码已发送到您的手机，请输入6位数字验证码
               </div>
             </div>
           </div>
-          <div class="form-row">
+
+          <!-- ServiceToken 登录 -->
+          <div id="mimo-token-section" style="display: none;">
             <div class="form-group">
-              <label class="form-label">设备标识</label>
-              <input class="form-input" id="field-device-id" placeholder="留空使用默认值">
+              <label class="form-label">ServiceToken *</label>
+              <input class="form-input" id="mimo-field-service-token" placeholder="粘贴 ServiceToken" style="font-family: monospace; font-size: 12px;">
             </div>
             <div class="form-group">
-              <label class="form-label">User-Agent</label>
-              <input class="form-input" id="field-ua" placeholder="留空使用默认值">
+              <label class="form-label">User ID *</label>
+              <input class="form-input" id="mimo-field-user-id" placeholder="小米用户 ID">
             </div>
           </div>
+
+          <div id="mimo-login-status" style="margin-top: 12px; padding: 10px; border-radius: 8px; display: none;"></div>
         </div>
 
-        <!-- 华数字段 -->
-        <div id="section-wasu" style="display:none">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">手机号 *</label>
-              <input class="form-input" id="field-phone" placeholder="手机号">
+        <!-- 消息模板部分 -->
+        <div id="mimo-template-section" style="display: none;">
+          <div class="form-group">
+            <div class="template-header">
+              <label class="form-label" style="margin-bottom:0">消息模板</label>
+              <button class="btn btn-ghost btn-sm" onclick="resetMimoFieldTemplate()">↺ 恢复默认</button>
             </div>
-            <div class="form-group">
-              <label class="form-label">User Key *</label>
-              <input class="form-input" id="field-user-key" placeholder="User Key">
+            <div class="template-layout">
+              <div class="template-editor">
+                <div class="template-label">模板编辑</div>
+                <textarea class="form-textarea" id="mimo-field-template" oninput="syncMimoPreviewHeight()" style="min-height: 300px;"></textarea>
+              </div>
+              <div class="template-preview-box">
+                <div class="template-label">预览效果</div>
+                <div class="template-preview" id="mimo-field-template-preview" style="min-height: 300px;"></div>
+              </div>
             </div>
+            <div class="variable-tags" id="mimo-field-variable-tags"></div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Token *</label>
-              <input class="form-input" id="field-token" placeholder="Token">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Sign</label>
-              <input class="form-input" id="field-sign" placeholder="Sign（可选）">
-            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeMimoModal()">取消</button>
+        <button class="btn btn-secondary" id="mimo-login-btn" onclick="mimoLoginOnly()">🔑 登录</button>
+        <button class="btn btn-primary" id="mimo-save-btn" onclick="saveMimoAccount()">💾 保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 华数账号添加/编辑模态框 -->
+  <div class="modal-overlay" id="wasu-modal">
+    <div class="modal" style="max-width: 550px;">
+      <div class="modal-header">
+        <div class="modal-title" id="wasu-modal-title">添加华数账号</div>
+        <button class="btn btn-ghost" onclick="closeWasuModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">账号名称（可选）</label>
+          <input class="form-input" id="wasu-field-name" placeholder="如：我的华数账号">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">手机号 *</label>
+            <input class="form-input" id="wasu-field-phone" placeholder="手机号">
+          </div>
+          <div class="form-group">
+            <label class="form-label">User Key *</label>
+            <input class="form-input" id="wasu-field-user-key" placeholder="User Key">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Token *</label>
+            <input class="form-input" id="wasu-field-token" placeholder="Token">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sign</label>
+            <input class="form-input" id="wasu-field-sign" placeholder="Sign（可选）">
           </div>
         </div>
 
@@ -437,24 +561,24 @@
         <div class="form-group">
           <div class="template-header">
             <label class="form-label" style="margin-bottom:0">消息模板</label>
-            <button class="btn btn-ghost btn-sm" onclick="resetTemplate()">↺ 恢复默认</button>
+            <button class="btn btn-ghost btn-sm" onclick="resetWasuTemplate()">↺ 恢复默认</button>
           </div>
           <div class="template-layout">
             <div class="template-editor">
               <div class="template-label">模板编辑</div>
-              <textarea class="form-textarea" id="field-template" oninput="syncPreviewHeight()"></textarea>
+              <textarea class="form-textarea" id="wasu-field-template" oninput="syncWasuPreviewHeight()"></textarea>
             </div>
             <div class="template-preview-box">
               <div class="template-label">预览效果</div>
-              <div class="template-preview" id="template-preview"></div>
+              <div class="template-preview" id="wasu-template-preview"></div>
             </div>
           </div>
-          <div class="variable-tags" id="variable-tags"></div>
+          <div class="variable-tags" id="wasu-variable-tags"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
-        <button class="btn btn-primary" onclick="saveAccount()">保存</button>
+        <button class="btn btn-secondary" onclick="closeWasuModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveWasuAccount()">保存</button>
       </div>
     </div>
   </div>
@@ -475,6 +599,8 @@
       </div>
     </div>
   </div>
+
+  <!-- 删除确认模态框 -->
 
   <!-- 添加变量模态框 -->
   <div class="modal-overlay" id="add-var-modal">
@@ -518,19 +644,129 @@
     // 变量配置结构：{ mimo: { variables: [{name, desc, default, show}], sample_data: {} }, wasu: {...} }
     let templateVars = {};
 
-    // 页面切换
-    function switchPage(page) {
+    // ==================== URL Hash 状态管理 ====================
+    
+    /**
+     * 解析 URL hash 获取当前页面状态
+     * 格式: #page 或 #page/subpage
+     */
+    function parseHash() {
+      const hash = window.location.hash.replace('#', '').split('/');
+      return {
+        page: hash[0] || 'mimo',
+        subPage: hash[1] || 'accounts'
+      };
+    }
+
+    /**
+     * 更新 URL hash（不触发页面跳转）
+     */
+    function updateHash(page, subPage) {
+      const newHash = subPage ? `${page}/${subPage}` : page;
+      history.replaceState(null, '', `#${newHash}`);
+    }
+
+    // 页面切换（支持 event 参数，兼容 onclick 调用）
+    function switchPage(page, eventObj) {
+      const evt = eventObj || event;
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
       document.getElementById('page-' + page).classList.add('active');
-      event.target.classList.add('active');
+      if (evt && evt.target) {
+        evt.target.classList.add('active');
+      } else {
+        // 从 hash 恢复时，手动找到对应的 tab 并激活
+        document.querySelectorAll('.nav-tab').forEach(t => {
+          if (t.getAttribute('onclick')?.includes(`'${page}'`)) {
+            t.classList.add('active');
+          }
+        });
+      }
+      // 更新 hash，默认显示 accounts 子页面
+      updateHash(page, 'accounts');
+      // 激活对应的子页面
+      const pageEl = document.getElementById('page-' + page);
+      if (pageEl) {
+        pageEl.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+        pageEl.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+        const defaultSub = pageEl.querySelector('.sub-page');
+        if (defaultSub) defaultSub.classList.add('active');
+        const defaultTab = pageEl.querySelector('.sub-tab');
+        if (defaultTab) defaultTab.classList.add('active');
+      }
+    }
+
+    function switchSubPage(parent, sub, eventObj) {
+      const evt = eventObj || event;
+      const page = document.getElementById('page-' + parent);
+      if (!page) return;
+      page.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+      page.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+      const targetSubPage = document.getElementById(parent + '-' + sub);
+      if (targetSubPage) targetSubPage.classList.add('active');
+      if (evt && evt.target) {
+        evt.target.classList.add('active');
+      } else {
+        // 从 hash 恢复时，手动找到对应的 tab 并激活
+        page.querySelectorAll('.sub-tab').forEach(t => {
+          if (t.getAttribute('onclick')?.includes(`'${sub}'`)) {
+            t.classList.add('active');
+          }
+        });
+      }
+      // 更新 hash
+      updateHash(parent, sub);
+    }
+
+    /**
+     * 从 URL hash 恢复页面状态
+     */
+    function restorePageState() {
+      const { page, subPage } = parseHash();
+      const validPages = ['mimo', 'wasu', 'jm'];
+      const pageName = validPages.includes(page) ? page : 'mimo';
+      
+      // 切换主页面
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      const targetPage = document.getElementById('page-' + pageName);
+      if (targetPage) targetPage.classList.add('active');
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        if (t.getAttribute('onclick')?.includes(`'${pageName}'`)) {
+          t.classList.add('active');
+        }
+      });
+      
+      // 切换子页面（仅对有子页面的主页面生效）
+      if (pageName !== 'jm' && targetPage) {
+        const validSubPages = ['accounts', 'variables'];
+        const subName = validSubPages.includes(subPage) ? subPage : 'accounts';
+        targetPage.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+        targetPage.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+        const targetSubPage = document.getElementById(pageName + '-' + subName);
+        if (targetSubPage) targetSubPage.classList.add('active');
+        targetPage.querySelectorAll('.sub-tab').forEach(t => {
+          if (t.getAttribute('onclick')?.includes(`'${subName}'`)) {
+            t.classList.add('active');
+          }
+        });
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await bridge.ready();
       await loadDefaults();
       await loadAccounts();
-      renderVarPlatformList();
+      renderMimoVarList();
+      renderWasuVarList();
+      
+      // 从 URL hash 恢复页面状态
+      restorePageState();
+    });
+
+    // 监听浏览器前进/后退按钮
+    window.addEventListener('popstate', () => {
+      restorePageState();
     });
 
     async function loadDefaults() {
@@ -553,46 +789,79 @@
         accounts = result.accounts || [];
         renderAccounts();
       } catch (e) {
-        document.getElementById('account-list').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">加载失败</div></div>';
+        document.getElementById('mimo-account-list').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">加载失败</div></div>';
       }
     }
 
     // ==================== 账号管理 ====================
 
     function renderAccounts() {
-      const list = document.getElementById('account-list');
-      document.getElementById('account-count').textContent = accounts.length;
-      if (!accounts || accounts.length === 0) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">暂无账号</div><div class="empty-text">点击上方按钮添加您的第一个账号</div></div>';
+      const mimoAccounts = accounts.filter(acc => acc.platform === 'mimo');
+      const wasuAccounts = accounts.filter(acc => acc.platform === 'wasu');
+      
+      document.getElementById('mimo-count').textContent = mimoAccounts.length;
+      document.getElementById('wasu-count').textContent = wasuAccounts.length;
+      
+      renderMimoAccounts(mimoAccounts);
+      renderWasuAccounts(wasuAccounts);
+    }
+
+    function renderMimoAccounts(mimoAccounts) {
+      const list = document.getElementById('mimo-account-list');
+      if (!mimoAccounts || mimoAccounts.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🤖</div><div class="empty-title">暂无 MiMo 账号</div><div class="empty-text">点击上方按钮添加 MiMo 账号</div></div>';
         return;
       }
-      list.innerHTML = accounts.map((acc, i) => `
-        <div class="account-card">
+      list.innerHTML = mimoAccounts.map((acc, i) => {
+        const globalIndex = accounts.indexOf(acc);
+        return `
+        <div class="account-card" onclick="editMimoAccount(${globalIndex})" style="cursor: pointer;">
           <div class="account-card-header">
-            <div class="account-avatar ${acc.platform === 'mimo' ? 'avatar-mimo' : 'avatar-wasu'}">
-              ${acc.platform === 'mimo' ? '🤖' : '📺'}
-            </div>
+            <div class="account-avatar avatar-mimo">🤖</div>
             <div class="account-info">
-              <div class="account-name">${acc.name || acc.account || acc.phone || '账号' + (i+1)}</div>
-              <span class="account-platform platform-${acc.platform}">${acc.platform === 'mimo' ? 'MiMo' : '华数广电'}</span>
+              <div class="account-name">${acc.name || acc.account || 'MiMo账号'}</div>
+              <span class="account-platform platform-mimo">MiMo</span>
             </div>
           </div>
           <div class="account-stats">
-            ${acc.platform === 'mimo' ? `
-              <div><div class="stat-label">账号</div><div class="stat-value">${acc.account || '-'}</div></div>
-              <div><div class="stat-label">登录状态</div><div class="stat-value ${acc.serviceToken ? 'success' : 'warning'}">${acc.serviceToken ? '✓ 已登录' : '○ 未登录'}</div></div>
-            ` : `
-              <div><div class="stat-label">手机号</div><div class="stat-value">${acc.phone || '-'}</div></div>
-              <div><div class="stat-label">配置状态</div><div class="stat-value ${acc.user_key ? 'success' : 'warning'}">${acc.user_key ? '✓ 已配置' : '○ 未配置'}</div></div>
-            `}
-            <div><div class="stat-label">消息模板</div><div class="stat-value">${acc.template ? '📝 自定义' : '📄 默认'}</div></div>
+            <div><div class="stat-label">账号</div><div class="stat-value">${acc.account || '-'}</div></div>
+            <div><div class="stat-label">登录状态</div><div class="stat-value ${acc.serviceToken ? 'success' : 'warning'}">${acc.serviceToken ? '✓ 已登录' : '○ 未登录'}</div></div>
           </div>
           <div class="account-actions">
-            <button class="btn btn-secondary btn-sm" onclick="editAccount(${i})">✏️ 编辑</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteAccount(${i})">🗑️ 删除</button>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); editMimoAccount(${globalIndex})">✏️ 编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteAccount(${globalIndex})">🗑️ 删除</button>
           </div>
         </div>
-      `).join('');
+      `}).join('');
+    }
+
+    function renderWasuAccounts(wasuAccounts) {
+      const list = document.getElementById('wasu-account-list');
+      if (!wasuAccounts || wasuAccounts.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📺</div><div class="empty-title">暂无华数账号</div><div class="empty-text">点击上方按钮添加华数账号</div></div>';
+        return;
+      }
+      list.innerHTML = wasuAccounts.map((acc, i) => {
+        const globalIndex = accounts.indexOf(acc);
+        return `
+        <div class="account-card" onclick="editWasuAccount(${globalIndex})" style="cursor: pointer;">
+          <div class="account-card-header">
+            <div class="account-avatar avatar-wasu">📺</div>
+            <div class="account-info">
+              <div class="account-name">${acc.name || acc.phone || '华数账号'}</div>
+              <span class="account-platform platform-wasu">华数广电</span>
+            </div>
+          </div>
+          <div class="account-stats">
+            <div><div class="stat-label">手机号</div><div class="stat-value">${acc.phone || '-'}</div></div>
+            <div><div class="stat-label">配置状态</div><div class="stat-value ${acc.user_key ? 'success' : 'warning'}">${acc.user_key ? '✓ 已配置' : '○ 未配置'}</div></div>
+          </div>
+          <div class="account-actions">
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); editWasuAccount(${globalIndex})">✏️ 编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteAccount(${globalIndex})">🗑️ 删除</button>
+          </div>
+        </div>
+      `}).join('');
     }
 
     function generateDefaultName(platform) {
@@ -608,99 +877,137 @@
       return '账号' + String(nextNum).padStart(3, '0');
     }
 
-    function openAddModal() {
-      editingIndex = -1;
-      currentPlatform = 'mimo';
-      document.getElementById('modal-title').textContent = '添加账号';
-      resetForm();
-      updatePlatformUI();
-      loadTemplateForPlatform('mimo');
-      openModal();
+    // ==================== MiMo 账号管理 ====================
+
+    let mimoEditingIndex = -1;
+    let mimoLoginMethod = 'password';
+    let mimoOtpMode = false;
+
+    function openAddMimoModal() {
+      mimoEditingIndex = -1;
+      mimoLoginMethod = 'password';
+      mimoOtpMode = false;
+      document.getElementById('mimo-modal-title').textContent = '添加 MiMo 账号';
+      document.getElementById('mimo-field-name').value = '';
+      document.getElementById('mimo-field-account').value = '';
+      document.getElementById('mimo-field-password').value = '';
+      document.getElementById('mimo-field-device-id').value = '';
+      document.getElementById('mimo-field-ua').value = '';
+      document.getElementById('mimo-field-otp').value = '';
+      document.getElementById('mimo-otp-section').style.display = 'none';
+      document.getElementById('mimo-field-service-token').value = '';
+      document.getElementById('mimo-field-user-id').value = '';
+      document.getElementById('mimo-field-template').value = defaultTemplates['mimo'] || '';
+      document.getElementById('mimo-login-status').style.display = 'none';
+      updateMimoLoginMethodUI();
+      
+      // 默认显示账号配置部分
+      switchMimoModalSection('account');
+      
+      document.getElementById('mimo-modal').classList.add('active');
+      
+      // 启动ResizeObserver
+      setTimeout(startObserveMimoTemplate, 100);
     }
 
-    function editAccount(index) {
-      editingIndex = index;
-      const acc = accounts[index];
-      currentPlatform = acc.platform || 'mimo';
-      document.getElementById('modal-title').textContent = '编辑账号';
-      document.getElementById('field-name').value = acc.name || '';
-      document.getElementById('field-account').value = acc.account || '';
-      document.getElementById('field-password').value = acc.password || '';
-      document.getElementById('field-device-id').value = acc.device_id || '';
-      document.getElementById('field-ua').value = acc.ua || '';
-      document.getElementById('field-phone').value = acc.phone || '';
-      document.getElementById('field-user-key').value = acc.user_key || '';
-      document.getElementById('field-token').value = acc.token || '';
-      document.getElementById('field-sign').value = acc.sign || '';
-      document.getElementById('field-template').value = acc.template || defaultTemplates[currentPlatform] || '';
-      updatePlatformUI();
-      updateVariableTags();
-      updateTemplatePreview();
-      openModal();
+    function editMimoAccount(globalIndex) {
+      mimoEditingIndex = globalIndex;
+      const acc = accounts[globalIndex];
+      document.getElementById('mimo-modal-title').textContent = '编辑 MiMo 账号';
+      document.getElementById('mimo-field-name').value = acc.name || '';
+      document.getElementById('mimo-field-account').value = acc.account || '';
+      document.getElementById('mimo-field-password').value = acc.password || '';
+      document.getElementById('mimo-field-device-id').value = acc.device_id || '';
+      document.getElementById('mimo-field-ua').value = acc.ua || '';
+      document.getElementById('mimo-field-otp').value = '';
+      document.getElementById('mimo-otp-section').style.display = 'none';
+      document.getElementById('mimo-field-service-token').value = acc.serviceToken || '';
+      document.getElementById('mimo-field-user-id').value = acc.userId || '';
+      document.getElementById('mimo-field-template').value = acc.template || defaultTemplates['mimo'] || '';
+      document.getElementById('mimo-login-status').style.display = 'none';
+      
+      // 如果已有serviceToken，切换到token模式
+      if (acc.serviceToken) {
+        mimoLoginMethod = 'token';
+      } else {
+        mimoLoginMethod = 'password';
+      }
+      mimoOtpMode = false;
+      updateMimoLoginMethodUI();
+      
+      // 默认显示账号配置部分
+      switchMimoModalSection('account');
+      
+      document.getElementById('mimo-modal').classList.add('active');
+      
+      // 启动ResizeObserver
+      setTimeout(startObserveMimoTemplate, 100);
     }
 
-    function openModal() { document.getElementById('modal').classList.add('active'); }
-    function closeModal() { document.getElementById('modal').classList.remove('active'); }
-
-    function resetForm() {
-      document.getElementById('field-name').value = '';
-      document.getElementById('field-account').value = '';
-      document.getElementById('field-password').value = '';
-      document.getElementById('field-device-id').value = '';
-      document.getElementById('field-ua').value = '';
-      document.getElementById('field-phone').value = '';
-      document.getElementById('field-user-key').value = '';
-      document.getElementById('field-token').value = '';
-      document.getElementById('field-sign').value = '';
-      document.getElementById('field-template').value = '';
+    function closeMimoModal() {
+      document.getElementById('mimo-modal').classList.remove('active');
+      mimoEditingIndex = -1;
+      // 断开 ResizeObserver 避免内存泄漏
+      mimoTemplateResizeObserver.disconnect();
     }
 
-    function switchPlatform(platform) {
-      if (currentPlatform === platform) return;
-      currentPlatform = platform;
-      updatePlatformUI();
-      loadTemplateForPlatform(platform);
+    function switchMimoLoginMethod(method) {
+      mimoLoginMethod = method;
+      updateMimoLoginMethodUI();
     }
 
-    function updatePlatformUI() {
-      document.querySelectorAll('.platform-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.platform === currentPlatform);
+    function switchMimoModalSection(section) {
+      document.querySelectorAll('#mimo-modal .platform-tab[data-section]').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.section === section);
       });
-      document.getElementById('section-mimo').style.display = currentPlatform === 'mimo' ? 'block' : 'none';
-      document.getElementById('section-wasu').style.display = currentPlatform === 'wasu' ? 'block' : 'none';
-      updateVariableTags();
-      updateTemplatePreview();
+      document.getElementById('mimo-account-section').style.display = section === 'account' ? 'block' : 'none';
+      document.getElementById('mimo-template-section').style.display = section === 'template' ? 'block' : 'none';
+      
+      // 切换到模板时更新预览
+      if (section === 'template') {
+        updateMimoFieldVariableTags();
+        updateMimoFieldTemplatePreview();
+      }
     }
 
-    function loadTemplateForPlatform(platform) {
-      const templateField = document.getElementById('field-template');
-      templateField.value = defaultTemplates[platform] || '';
-      updateTemplatePreview();
+    function updateMimoLoginMethodUI() {
+      // 只更新登录方式相关的标签，不影响其他标签
+      document.querySelectorAll('#mimo-modal .platform-tab[data-method]').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.method === mimoLoginMethod);
+      });
+      document.getElementById('mimo-password-section').style.display = mimoLoginMethod === 'password' ? 'block' : 'none';
+      document.getElementById('mimo-token-section').style.display = mimoLoginMethod === 'token' ? 'block' : 'none';
     }
 
-    function updateVariableTags() {
-      const platformVars = templateVars[currentPlatform] || {};
-      const vars = (platformVars.variables || []).filter(v => v.show !== false);
-      document.getElementById('variable-tags').innerHTML = vars.length > 0 
-        ? '<span style="font-size:11px;color:var(--text-muted);margin-right:4px">快速插入：</span>' +
-          vars.map(v =>
-            `<span class="variable-tag" onclick="insertVariable('${v.name}')" title="{${v.name}}">${v.desc}</span>`
-          ).join('')
-        : '';
+    function toggleMimoPassword() {
+      const i = document.getElementById('mimo-field-password');
+      i.type = i.type === 'password' ? 'text' : 'password';
     }
 
-    function insertVariable(name) {
-      const ta = document.getElementById('field-template');
-      const pos = ta.selectionStart;
-      ta.value = ta.value.slice(0, pos) + `{${name}}` + ta.value.slice(pos);
-      ta.focus();
-      updateTemplatePreview();
+    function showMimoLoginStatus(msg, type) {
+      const el = document.getElementById('mimo-login-status');
+      el.style.display = 'block';
+      el.textContent = msg;
+      el.style.background = type === 'error' ? '#fef2f2' : type === 'success' ? '#f0fdf4' : '#fffbeb';
+      el.style.color = type === 'error' ? '#dc2626' : type === 'success' ? '#16a34a' : '#d97706';
+      el.style.border = `1px solid ${type === 'error' ? '#fecaca' : type === 'success' ? '#bbf7d0' : '#fde68a'}`;
     }
 
-    function updateTemplatePreview() {
-      const template = document.getElementById('field-template').value || defaultTemplates[currentPlatform] || '';
-      const platformVars = templateVars[currentPlatform] || {};
-      // 使用变量的默认值构建预览数据
+    // ==================== 通用模板预览函数 ====================
+
+    /**
+     * 通用模板预览更新函数
+     * @param {string} platform - 平台名称 ('mimo' 或 'wasu')
+     * @param {boolean} useDefault - 是否使用默认模板作为回退
+     */
+    function updateTemplatePreviewGeneric(platform, useDefault = false) {
+      const templateEl = document.getElementById(`${platform}-field-template`);
+      const previewEl = document.getElementById(`${platform}-field-template-preview`);
+      if (!templateEl || !previewEl) return;
+      
+      const defaultTpl = useDefault ? (defaultTemplates[platform] || '') : '';
+      const template = templateEl.value || defaultTpl;
+      const platformVars = templateVars[platform] || {};
       const sample = {};
       (platformVars.variables || []).forEach(v => {
         sample[v.name] = v.default || '';
@@ -709,96 +1016,430 @@
       for (const [k, v] of Object.entries(sample)) {
         result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
       }
-      document.getElementById('template-preview').textContent = result || '（请在左侧输入模板）';
+      previewEl.textContent = result || '（请在左侧输入模板）';
     }
 
-    // 同步预览高度到编辑框高度
-    function syncPreviewHeight() {
-      const textarea = document.getElementById('field-template');
-      const preview = document.getElementById('template-preview');
+    /**
+     * 通用预览高度同步函数
+     * @param {string} platform - 平台名称
+     * @param {boolean} updatePreview - 是否同时更新预览内容
+     */
+    function syncPreviewHeightGeneric(platform, updatePreview = true) {
+      const textarea = document.getElementById(`${platform}-field-template`);
+      const preview = document.getElementById(`${platform}-field-template-preview`);
       if (textarea && preview) {
-        // 使用 offsetHeight 获取完整高度（包含 padding 和 border）
         preview.style.height = textarea.offsetHeight + 'px';
       }
-      updateTemplatePreview();
+      if (updatePreview) {
+        updateTemplatePreviewGeneric(platform, platform === 'wasu');
+      }
     }
 
-    // 监听 textarea 大小变化
-    const resizeObserver = new ResizeObserver(entries => {
+    /**
+     * 通用变量标签更新函数
+     * @param {string} platform - 平台名称
+     */
+    function updateVariableTagsGeneric(platform) {
+      const platformVars = templateVars[platform] || {};
+      const vars = (platformVars.variables || []).filter(v => v.show !== false);
+      const container = document.getElementById(`${platform}-field-variable-tags`);
+      if (container) {
+        container.innerHTML = vars.length > 0
+          ? '<span style="font-size:11px;color:var(--text-muted);margin-right:4px">快速插入：</span>' +
+            vars.map(v =>
+              `<span class="variable-tag" onclick="insertVariableGeneric('${platform}', '${v.name}')" title="{${v.name}}">${v.desc}</span>`
+            ).join('')
+          : '';
+      }
+    }
+
+    /**
+     * 通用变量插入函数
+     * @param {string} platform - 平台名称
+     * @param {string} name - 变量名
+     */
+    function insertVariableGeneric(platform, name) {
+      const ta = document.getElementById(`${platform}-field-template`);
+      if (!ta) return;
+      const pos = ta.selectionStart;
+      ta.value = ta.value.slice(0, pos) + `{${name}}` + ta.value.slice(pos);
+      ta.focus();
+      updateTemplatePreviewGeneric(platform, platform === 'wasu');
+    }
+
+    /**
+     * 通用模板重置函数
+     * @param {string} platform - 平台名称
+     */
+    function resetTemplateGeneric(platform) {
+      const templateEl = document.getElementById(`${platform}-field-template`);
+      if (templateEl) {
+        templateEl.value = defaultTemplates[platform] || '';
+        updateTemplatePreviewGeneric(platform, true);
+        showToast('已恢复默认模板');
+      }
+    }
+
+    // ==================== MiMo 模板预览（使用通用函数） ====================
+
+    function updateMimoFieldVariableTags() {
+      updateVariableTagsGeneric('mimo');
+    }
+
+    function insertMimoFieldVariable(name) {
+      insertVariableGeneric('mimo', name);
+    }
+
+    function updateMimoFieldTemplatePreview() {
+      updateTemplatePreviewGeneric('mimo', false);
+    }
+
+    function resetMimoFieldTemplate() {
+      resetTemplateGeneric('mimo');
+    }
+
+    function syncMimoPreviewHeight() {
+      syncPreviewHeightGeneric('mimo', true);
+    }
+
+    // 使用ResizeObserver监听textarea大小变化
+    const mimoTemplateResizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
-        const preview = document.getElementById('template-preview');
+        const preview = document.getElementById('mimo-field-template-preview');
         if (preview) {
-          // 使用 offsetHeight 而不是 contentRect.height，以包含 padding 和 border
           preview.style.height = entry.target.offsetHeight + 'px';
         }
       }
     });
 
     // 在模态框打开时开始观察
-    function startObserveTextarea() {
-      const textarea = document.getElementById('field-template');
+    function startObserveMimoTemplate() {
+      const textarea = document.getElementById('mimo-field-template');
       if (textarea) {
-        resizeObserver.observe(textarea);
-        syncPreviewHeight();
+        mimoTemplateResizeObserver.observe(textarea);
+        syncMimoPreviewHeight();
       }
     }
 
-    function resetTemplate() {
-      document.getElementById('field-template').value = defaultTemplates[currentPlatform] || '';
-      updateTemplatePreview();
-      showToast('已恢复默认模板');
+    // ==================== 华数模板预览（使用通用函数） ====================
+
+    function updateWasuVariableTags() {
+      updateVariableTagsGeneric('wasu');
     }
 
-    function togglePassword() {
-      const i = document.getElementById('field-password');
-      i.type = i.type === 'password' ? 'text' : 'password';
+    function insertWasuVariable(name) {
+      insertVariableGeneric('wasu', name);
     }
 
-    async function saveAccount() {
-      let template = document.getElementById('field-template').value.trim();
+    function updateWasuTemplatePreview() {
+      updateTemplatePreviewGeneric('wasu', true);
+    }
+
+    function resetWasuTemplate() {
+      resetTemplateGeneric('wasu');
+    }
+
+    function syncWasuPreviewHeight() {
+      syncPreviewHeightGeneric('wasu', true);
+    }
+
+    async function saveMimoAccount() {
+      const saveBtn = document.getElementById('mimo-save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '保存中...';
+
+      try {
+        let name = document.getElementById('mimo-field-name').value.trim();
+        if (!name) {
+          name = generateDefaultName('mimo');
+        }
+
+        const account = document.getElementById('mimo-field-account').value.trim();
+        const password = document.getElementById('mimo-field-password').value.trim();
+        const template = document.getElementById('mimo-field-template').value.trim() || defaultTemplates['mimo'] || '';
+
+        if (mimoLoginMethod === 'token') {
+          // ServiceToken 模式
+          const serviceToken = document.getElementById('mimo-field-service-token').value.trim();
+          const userId = document.getElementById('mimo-field-user-id').value.trim();
+          
+          if (!serviceToken) {
+            showMimoLoginStatus('请输入 ServiceToken', 'error');
+            return;
+          }
+          if (!userId) {
+            showMimoLoginStatus('请输入 User ID', 'error');
+            return;
+          }
+
+          const acc = {
+            platform: 'mimo',
+            name: name,
+            account: account || '',
+            password: password || '',
+            device_id: document.getElementById('mimo-field-device-id').value || '',
+            ua: document.getElementById('mimo-field-ua').value || '',
+            userId: userId,
+            serviceToken: serviceToken,
+            template: template
+          };
+
+          if (mimoEditingIndex >= 0) {
+            accounts[mimoEditingIndex] = acc;
+          } else {
+            accounts.push(acc);
+          }
+
+          await saveAccounts();
+          closeMimoModal();
+          showToast(mimoEditingIndex >= 0 ? 'MiMo 账号已更新' : 'MiMo 账号已添加');
+        } else {
+          // 账号密码模式 - 只保存，不登录
+          if (!account) {
+            showMimoLoginStatus('请输入小米账号', 'error');
+            return;
+          }
+          if (!password) {
+            showMimoLoginStatus('请输入密码', 'error');
+            return;
+          }
+
+          const acc = {
+            platform: 'mimo',
+            name: name,
+            account: account,
+            password: password,
+            device_id: document.getElementById('mimo-field-device-id').value || '',
+            ua: document.getElementById('mimo-field-ua').value || '',
+            template: template
+          };
+
+          // 如果是编辑模式，保留原有的凭据
+          if (mimoEditingIndex >= 0) {
+            const oldAcc = accounts[mimoEditingIndex];
+            acc.userId = oldAcc.userId || '';
+            acc.passToken = oldAcc.passToken || '';
+            acc.serviceToken = oldAcc.serviceToken || '';
+          }
+
+          if (mimoEditingIndex >= 0) {
+            accounts[mimoEditingIndex] = acc;
+          } else {
+            accounts.push(acc);
+          }
+
+          await saveAccounts();
+          closeMimoModal();
+          showToast(mimoEditingIndex >= 0 ? 'MiMo 账号已更新' : 'MiMo 账号已添加');
+        }
+      } catch (e) {
+        showMimoLoginStatus('保存失败: ' + (e.message || '未知错误'), 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 保存';
+      }
+    }
+
+    async function mimoLoginOnly() {
+      const loginBtn = document.getElementById('mimo-login-btn');
+      loginBtn.disabled = true;
+      loginBtn.textContent = '登录中...';
+
+      try {
+        const account = document.getElementById('mimo-field-account').value.trim();
+        const password = document.getElementById('mimo-field-password').value.trim();
+        const otpCode = document.getElementById('mimo-field-otp').value.trim();
+
+        if (mimoOtpMode) {
+          if (!otpCode) {
+            showMimoLoginStatus('请输入验证码', 'error');
+            return;
+          }
+        } else {
+          if (!account) {
+            showMimoLoginStatus('请输入小米账号', 'error');
+            return;
+          }
+          if (!password) {
+            showMimoLoginStatus('请输入密码', 'error');
+            return;
+          }
+        }
+
+        showMimoLoginStatus(mimoOtpMode ? '正在验证...' : '正在登录...', 'info');
+
+        // 先保存账号（如果还没有保存）
+        let name = document.getElementById('mimo-field-name').value.trim();
+        if (!name) {
+          name = generateDefaultName('mimo');
+        }
+
+        const acc = {
+          platform: 'mimo',
+          name: name,
+          account: account,
+          password: password,
+          device_id: document.getElementById('mimo-field-device-id').value || '',
+          ua: document.getElementById('mimo-field-ua').value || ''
+        };
+
+        // 如果是编辑模式，保留原有的凭据
+        if (mimoEditingIndex >= 0) {
+          const oldAcc = accounts[mimoEditingIndex];
+          acc.userId = oldAcc.userId || '';
+          acc.passToken = oldAcc.passToken || '';
+          acc.serviceToken = oldAcc.serviceToken || '';
+        }
+
+        if (mimoEditingIndex >= 0) {
+          accounts[mimoEditingIndex] = acc;
+        } else {
+          accounts.push(acc);
+        }
+        await saveAccounts();
+
+        // 重新获取mimo账号列表和索引
+        const mimoAccounts = accounts.filter(a => a.platform === 'mimo');
+        let mimoIdx = -1;
+        for (let i = 0; i < mimoAccounts.length; i++) {
+          if (mimoAccounts[i].name === name && mimoAccounts[i].account === account) {
+            mimoIdx = i;
+            break;
+          }
+        }
+        
+        if (mimoIdx < 0) {
+          mimoIdx = mimoAccounts.length - 1;
+        }
+
+        // 调用登录API
+        const postData = {
+          index: mimoIdx,
+          account: account,
+          password: password
+        };
+        if (mimoOtpMode && otpCode) {
+          postData.otp_code = otpCode;
+        }
+
+        const result = await bridge.apiPost('mimo/login', postData);
+
+        if (result && result.status === 'ok') {
+          // 更新账号信息
+          if (result.account) {
+            const idx = accounts.indexOf(acc);
+            if (idx >= 0) {
+              accounts[idx] = { ...accounts[idx], ...result.account };
+            }
+          }
+          renderAccounts();
+          showMimoLoginStatus('登录成功！', 'success');
+          mimoOtpMode = false;
+          setTimeout(closeMimoModal, 1500);
+        } else if (result && result.status === 'otp_required') {
+          // 需要验证码
+          mimoOtpMode = true;
+          document.getElementById('mimo-otp-section').style.display = 'block';
+          document.getElementById('mimo-field-otp').focus();
+          showMimoLoginStatus('验证码已发送到您的手机，请输入6位数字验证码', 'info');
+        } else {
+          showMimoLoginStatus(result?.message || '登录失败', 'error');
+        }
+      } catch (e) {
+        showMimoLoginStatus('登录失败: ' + (e.message || '未知错误'), 'error');
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🔑 登录';
+      }
+    }
+
+    // ==================== 消息模板管理 ====================
+
+    // ==================== 华数账号管理 ====================
+
+    let wasuEditingIndex = -1;
+
+    function openAddWasuModal() {
+      wasuEditingIndex = -1;
+      document.getElementById('wasu-modal-title').textContent = '添加华数账号';
+      document.getElementById('wasu-field-name').value = '';
+      document.getElementById('wasu-field-phone').value = '';
+      document.getElementById('wasu-field-user-key').value = '';
+      document.getElementById('wasu-field-token').value = '';
+      document.getElementById('wasu-field-sign').value = '';
+      document.getElementById('wasu-field-template').value = defaultTemplates['wasu'] || '';
+      updateWasuVariableTags();
+      updateWasuTemplatePreview();
+      document.getElementById('wasu-modal').classList.add('active');
+    }
+
+    function editWasuAccount(globalIndex) {
+      wasuEditingIndex = globalIndex;
+      const acc = accounts[globalIndex];
+      document.getElementById('wasu-modal-title').textContent = '编辑华数账号';
+      document.getElementById('wasu-field-name').value = acc.name || '';
+      document.getElementById('wasu-field-phone').value = acc.phone || '';
+      document.getElementById('wasu-field-user-key').value = acc.user_key || '';
+      document.getElementById('wasu-field-token').value = acc.token || '';
+      document.getElementById('wasu-field-sign').value = acc.sign || '';
+      document.getElementById('wasu-field-template').value = acc.template || defaultTemplates['wasu'] || '';
+      updateWasuVariableTags();
+      updateWasuTemplatePreview();
+      document.getElementById('wasu-modal').classList.add('active');
+    }
+
+    function closeWasuModal() {
+      document.getElementById('wasu-modal').classList.remove('active');
+      wasuEditingIndex = -1;
+    }
+
+    async function saveWasuAccount() {
+      let template = document.getElementById('wasu-field-template').value.trim();
       if (!template) {
-        template = defaultTemplates[currentPlatform] || '';
+        template = defaultTemplates['wasu'] || '';
       }
 
-      let name = document.getElementById('field-name').value.trim();
+      let name = document.getElementById('wasu-field-name').value.trim();
       if (!name) {
-        name = generateDefaultName(currentPlatform);
+        name = generateDefaultName('wasu');
+      }
+
+      const phone = document.getElementById('wasu-field-phone').value.trim();
+      const userKey = document.getElementById('wasu-field-user-key').value.trim();
+      const token = document.getElementById('wasu-field-token').value.trim();
+
+      if (!phone) {
+        showToast('请输入手机号', 'error');
+        return;
+      }
+      if (!userKey) {
+        showToast('请输入 User Key', 'error');
+        return;
+      }
+      if (!token) {
+        showToast('请输入 Token', 'error');
+        return;
       }
 
       const acc = {
-        platform: currentPlatform,
+        platform: 'wasu',
         name: name,
-        ua: document.getElementById('field-ua').value || '',
+        phone: phone,
+        user_key: userKey,
+        token: token,
+        sign: document.getElementById('wasu-field-sign').value || '',
         template: template
       };
 
-      if (currentPlatform === 'mimo') {
-        acc.account = document.getElementById('field-account').value;
-        acc.password = document.getElementById('field-password').value;
-        acc.device_id = document.getElementById('field-device-id').value || '';
-        if (editingIndex >= 0) {
-          Object.assign(acc, {
-            userId: accounts[editingIndex].userId || '',
-            passToken: accounts[editingIndex].passToken || '',
-            serviceToken: accounts[editingIndex].serviceToken || ''
-          });
-        }
-      } else {
-        acc.phone = document.getElementById('field-phone').value;
-        acc.user_key = document.getElementById('field-user-key').value;
-        acc.token = document.getElementById('field-token').value;
-        acc.sign = document.getElementById('field-sign').value;
-      }
-
-      if (editingIndex >= 0) {
-        accounts[editingIndex] = acc;
+      if (wasuEditingIndex >= 0) {
+        accounts[wasuEditingIndex] = acc;
       } else {
         accounts.push(acc);
       }
 
       await saveAccounts();
-      closeModal();
-      showToast(editingIndex >= 0 ? '账号已更新' : '账号已添加');
+      closeWasuModal();
+      showToast(wasuEditingIndex >= 0 ? '华数账号已更新' : '华数账号已添加');
     }
 
     // ==================== 删除功能 ====================
@@ -821,6 +1462,10 @@
       if (pendingDeleteIndex < 0) return;
       const index = pendingDeleteIndex;
       const acc = accounts[index];
+      if (!acc) {
+        closeDeleteModal();
+        return;
+      }
       const name = acc.name || acc.account || acc.phone || '账号' + (index + 1);
       closeDeleteModal();
 
@@ -864,37 +1509,18 @@
 
     // ==================== 变量配置 ====================
 
-    function renderVarPlatformList() {
-      const platforms = ['mimo', 'wasu'];
-      const list = document.getElementById('var-platform-list');
-      list.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">选择平台</div>' +
-        platforms.map(p => `
-          <div class="var-platform-item ${p === varConfigPlatform ? 'active' : ''}" onclick="switchVarPlatform('${p}')">
-            ${p === 'mimo' ? '🤖 MiMo' : '📺 华数广电'}
-          </div>
-        `).join('');
-      renderVarList();
-    }
-
-    function switchVarPlatform(platform) {
-      varConfigPlatform = platform;
-      renderVarPlatformList();
-    }
-
-    function renderVarList() {
-      const platformData = templateVars[varConfigPlatform] || { variables: [], sample_data: {} };
+    function renderMimoVarList() {
+      const platformData = templateVars['mimo'] || { variables: [] };
       const vars = platformData.variables || [];
-      const list = document.getElementById('var-list');
+      const list = document.getElementById('mimo-var-list');
 
       list.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">
-            ${varConfigPlatform === 'mimo' ? '🤖 MiMo' : '📺 华数广电'} 变量列表
-          </div>
-          <button class="btn btn-primary btn-xs" onclick="openAddVarModal()">＋ 添加变量</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">变量列表</div>
+          <button class="btn btn-primary btn-xs" onclick="openAddVarModal('mimo')">＋ 添加变量</button>
         </div>
         ${vars.length > 0 ? `
-          <table class="var-table">
+          <table class="var-table" style="width:100%">
             <thead>
               <tr>
                 <th style="width:40px">显示</th>
@@ -907,11 +1533,11 @@
             <tbody>
               ${vars.map((v, i) => `
                 <tr>
-                  <td><input type="checkbox" ${v.show !== false ? 'checked' : ''} onchange="updateVarField(${i}, 'show', this.checked)"></td>
+                  <td><input type="checkbox" ${v.show !== false ? 'checked' : ''} onchange="updateVarField('mimo', ${i}, 'show', this.checked)"></td>
                   <td><span class="var-name">{${v.name}}</span></td>
-                  <td><input type="text" value="${v.desc || ''}" placeholder="中文描述" onchange="updateVarField(${i}, 'desc', this.value)"></td>
-                  <td><input type="text" value="${v.default || ''}" placeholder="默认值" onchange="updateVarField(${i}, 'default', this.value)"></td>
-                  <td><button class="btn btn-danger btn-xs" onclick="removeVariable(${i})">删除</button></td>
+                  <td><input type="text" value="${v.desc || ''}" placeholder="中文描述" onchange="updateVarField('mimo', ${i}, 'desc', this.value)" style="width:100%"></td>
+                  <td><input type="text" value="${v.default || ''}" placeholder="默认值" onchange="updateVarField('mimo', ${i}, 'default', this.value)" style="width:100%"></td>
+                  <td><button class="btn btn-danger btn-xs" onclick="removeVariable('mimo', ${i})">删除</button></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -922,19 +1548,61 @@
       `;
     }
 
-    function updateVarField(index, field, value) {
-      if (!templateVars[varConfigPlatform]) {
-        templateVars[varConfigPlatform] = { variables: [], sample_data: {} };
+    function renderWasuVarList() {
+      const platformData = templateVars['wasu'] || { variables: [] };
+      const vars = platformData.variables || [];
+      const list = document.getElementById('wasu-var-list');
+
+      list.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">变量列表</div>
+          <button class="btn btn-primary btn-xs" onclick="openAddVarModal('wasu')">＋ 添加变量</button>
+        </div>
+        ${vars.length > 0 ? `
+          <table class="var-table" style="width:100%">
+            <thead>
+              <tr>
+                <th style="width:40px">显示</th>
+                <th style="width:120px">变量名</th>
+                <th>中文描述</th>
+                <th style="width:150px">默认值</th>
+                <th style="width:60px">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${vars.map((v, i) => `
+                <tr>
+                  <td><input type="checkbox" ${v.show !== false ? 'checked' : ''} onchange="updateVarField('wasu', ${i}, 'show', this.checked)"></td>
+                  <td><span class="var-name">{${v.name}}</span></td>
+                  <td><input type="text" value="${v.desc || ''}" placeholder="中文描述" onchange="updateVarField('wasu', ${i}, 'desc', this.value)" style="width:100%"></td>
+                  <td><input type="text" value="${v.default || ''}" placeholder="默认值" onchange="updateVarField('wasu', ${i}, 'default', this.value)" style="width:100%"></td>
+                  <td><button class="btn btn-danger btn-xs" onclick="removeVariable('wasu', ${i})">删除</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : `
+          <div class="var-empty">暂无变量，点击上方按钮添加</div>
+        `}
+      `;
+    }
+
+    function updateVarField(platform, index, field, value) {
+      if (!templateVars[platform]) {
+        templateVars[platform] = { variables: [] };
       }
-      if (!templateVars[varConfigPlatform].variables) {
-        templateVars[varConfigPlatform].variables = [];
+      if (!templateVars[platform].variables) {
+        templateVars[platform].variables = [];
       }
-      if (templateVars[varConfigPlatform].variables[index]) {
-        templateVars[varConfigPlatform].variables[index][field] = value;
+      if (templateVars[platform].variables[index]) {
+        templateVars[platform].variables[index][field] = value;
       }
     }
 
-    function openAddVarModal() {
+    let addVarPlatform = 'mimo';
+
+    function openAddVarModal(platform) {
+      addVarPlatform = platform;
       document.getElementById('new-var-name').value = '';
       document.getElementById('new-var-desc').value = '';
       document.getElementById('new-var-default').value = '';
@@ -960,20 +1628,21 @@
         return;
       }
 
-      if (!templateVars[varConfigPlatform]) {
-        templateVars[varConfigPlatform] = { variables: [], sample_data: {} };
+      const platform = addVarPlatform;
+      if (!templateVars[platform]) {
+        templateVars[platform] = { variables: [] };
       }
-      if (!templateVars[varConfigPlatform].variables) {
-        templateVars[varConfigPlatform].variables = [];
+      if (!templateVars[platform].variables) {
+        templateVars[platform].variables = [];
       }
 
       // 检查是否已存在
-      if (templateVars[varConfigPlatform].variables.some(v => v.name === name)) {
+      if (templateVars[platform].variables.some(v => v.name === name)) {
         showToast('变量名已存在', 'error');
         return;
       }
 
-      templateVars[varConfigPlatform].variables.push({
+      templateVars[platform].variables.push({
         name: name,
         desc: desc || name,
         default: defaultValue || '',
@@ -981,21 +1650,47 @@
       });
 
       closeAddVarModal();
-      renderVarList();
+      
+      // 重新渲染对应的变量列表
+      if (platform === 'mimo') {
+        renderMimoVarList();
+      } else {
+        renderWasuVarList();
+      }
+      
       showToast('变量已添加');
     }
 
-    function removeVariable(index) {
-      if (!templateVars[varConfigPlatform] || !templateVars[varConfigPlatform].variables) return;
-      templateVars[varConfigPlatform].variables.splice(index, 1);
-      renderVarList();
+    function removeVariable(platform, index) {
+      if (!templateVars[platform] || !templateVars[platform].variables) return;
+      templateVars[platform].variables.splice(index, 1);
+      
+      if (platform === 'mimo') {
+        renderMimoVarList();
+      } else {
+        renderWasuVarList();
+      }
+      
       showToast('变量已删除');
     }
 
-    async function saveVarConfig() {
+    async function saveMimoVarConfig() {
+      event.stopPropagation();
+      event.preventDefault();
       try {
         await bridge.apiPost('template-vars', templateVars);
-        showToast('变量配置已保存');
+        showToast('MiMo 变量配置已保存');
+      } catch (e) {
+        showToast('保存失败: ' + (e.message || '未知错误'), 'error');
+      }
+    }
+
+    async function saveWasuVarConfig() {
+      event.stopPropagation();
+      event.preventDefault();
+      try {
+        await bridge.apiPost('template-vars', templateVars);
+        showToast('华数变量配置已保存');
       } catch (e) {
         showToast('保存失败: ' + (e.message || '未知错误'), 'error');
       }
@@ -1036,16 +1731,6 @@
         showToast('保存失败: ' + (e.message || '未知错误'), 'error');
       }
     }
-
-    // 初始化
-    document.getElementById('field-template')?.addEventListener('input', updateTemplatePreview);
-    
-    // 打开模态框时开始观察 textarea 大小变化
-    const originalOpenModal = openModal;
-    openModal = function() {
-      originalOpenModal();
-      setTimeout(startObserveTextarea, 100);
-    };
   </script>
 </body>
 </html>
